@@ -16,8 +16,8 @@
 | เนื้อหาบทเรียน | ไฟล์ TypeScript ที่เป็นข้อมูลล้วน |
 | ข้อมูล | IndexedDB (library `idb`) เก็บเป็น event log + export/import JSON |
 | ทบทวนเว้นระยะ | Leitner ระดับทักษะ |
-| เทสต์ | Vitest + Testing Library + Playwright (Android tablet / phone / iPad / desktop) |
-| อุปกรณ์ที่รองรับ | แท็บเล็ต Android, มือถือ, คอมพิวเตอร์, iPad (Safari) |
+| เทสต์ | Vitest + Testing Library + Playwright (Android tablet / phone / desktop — Chromium) |
+| อุปกรณ์ที่รองรับ | Chrome บนแท็บเล็ต Android, มือถือ และคอมพิวเตอร์ (iPad/Safari ใช้ได้แบบ best-effort ไม่ได้ทดสอบ ดู ADR-0007) |
 
 ## 2. ภาพรวมระบบ
 
@@ -235,7 +235,7 @@ import ใช้วิธีรวมโดยตัด event ที่ `id` ซ
 |---|---|
 | `npm run dev` | dev server |
 | `npm test` | Vitest (unit + component + ตรวจเนื้อหา) |
-| `npm run e2e` | Playwright 4 project |
+| `npm run e2e` | Playwright 3 project |
 | `npm run build` | build static + PWA ลง `dist/` |
 | `npm run preview` | เปิด build จริงในเครื่อง |
 | `npm run lint` | ESLint + type check |

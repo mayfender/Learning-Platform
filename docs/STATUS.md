@@ -39,6 +39,7 @@
 | 2026-09-29 | Static web + เก็บข้อมูลในเครื่อง (IndexedDB) ไม่ใช้ Claude Artifact และไม่ใช้ cloud DB |
 | 2026-09-29 | AI เขียนโค้ดเป็นหลัก ใช้ React + TypeScript |
 | 2026-09-29 | รองรับแท็บเล็ต Android, มือถือ, คอมพิวเตอร์ และ iPad |
+| 2026-09-30 | ตัด iPad ออกจากชุดทดสอบ (ลูกไม่ใช้ iPad) ทดสอบเฉพาะ Chrome บนแท็บเล็ต Android, มือถือ และคอมพิวเตอร์ ส่วน iPad ใช้ได้แบบ best-effort |
 | 2026-09-29 | Repo เป็น public และ host บน GitHub Pages ไม่ใช้ custom domain |
 | 2026-09-29 | อนุมัติ DX-ADD v2: ไม่บอกถูก/ผิดระหว่างทำ, ข้ามด่าน 5 ถ้าด่าน 4 ถูก ≤ 1 ข้อ |
 | 2026-09-29 | รับข้อเสนอ D1–D15 ของ Architect ใน Tech Spec DX-ADD ทั้งหมด |
@@ -77,3 +78,5 @@
 | 2026-09-29 | เพิ่ม role Tester และปรับลำดับงานใน roles/README.md และ CLAUDE.md |
 | 2026-09-29 | Developer แก้บั๊ก event ซ้ำ (ย้าย side effect ออกจาก setState updater) Architect ยืนยันบน dev server ว่าได้ 20/1/1 event, unit 262/262, e2e 44 ผ่าน ตรวจผ่านทั้ง Architect และ Designer |
 | 2026-09-29 | Tester ตรวจ M1 รอบ 1 (acceptance 97 เคส ตามขอบเขตที่ลด: production 119 ผ่าน/12 ไม่ผ่านต่อ project, dev TC-20 ผ่าน; ชุดเต็มก่อนลดขอบเขต 196/21) เนื้อหา คณิตศาสตร์ event และแฟลชผ่านหมด แต่พบ Major 2 (แตะซ้ำที่ตัวเลือกวิธีคิดบนอุปกรณ์แนวตั้ง, dark mode ไฮไลต์บันไดอ่านไม่ออก) และ Minor 2 → ปล่อยไม่ได้ ส่งกลับ Developer |
+| 2026-09-30 | Architect ไม่รับวิธีกันแตะเบิ้ลแบบตำแหน่ง 16px/250ms และกำหนดกฎใหม่ใน Tech Spec §3.3.1 (ไม่รับ input 400ms หลังเปลี่ยนหน้า) Developer กำลังแก้ |
+| 2026-09-30 | ตัด project ipad ออกจาก Playwright และ CI ติดตั้งเฉพาะ Chromium (ADR-0007) |

@@ -17,7 +17,6 @@ export default defineConfig({
   projects: [
     { name: 'android-tablet', use: { ...devices['Galaxy Tab S4'] } },
     { name: 'phone', use: { ...devices['Pixel 7'] } },
-    { name: 'ipad', use: { ...devices['iPad (gen 7)'] } },
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {

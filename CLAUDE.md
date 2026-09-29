@@ -29,7 +29,8 @@ React + TypeScript (strict) + Vite, PWA, IndexedDB (event log), Vitest + Playwri
 | `npm run dev` | dev server |
 | `npm run lint` | ESLint + type check + Prettier |
 | `npm test` | Vitest |
-| `npm run e2e` | Playwright 4 project (android-tablet, phone, ipad, desktop) |
+| `npm run e2e` | Playwright 3 project (android-tablet, phone, desktop) ระหว่างพัฒนาใช้ `--project=android-tablet` |
+| `npm run acceptance` | acceptance test ของ Tester (3 project เดียวกัน) |
 | `npm run build` | build ลง `dist/` |
 
 ## Git และ deploy

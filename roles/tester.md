@@ -97,7 +97,7 @@ Developer ส่งงาน ──► Tester รันและทดสอบ 
 - ไม่มีชื่อจริงหรือข้อมูลส่วนตัวอื่นนอกจากชื่อเล่น
 
 ### 6.7 อุปกรณ์
-- รัน acceptance test ทั้ง 4 project (android-tablet, phone, ipad, desktop)
+- รัน acceptance test ครบทั้ง 3 project (android-tablet, phone, desktop) ตอนส่งรายงาน ระหว่างเขียนและแก้เทสต์ให้รันเฉพาะ project เดียว
 - ทำเช็คลิสต์สำหรับอุปกรณ์จริงให้พ่อ (ข้อ 9)
 
 ## 7. ระดับความรุนแรงของบั๊ก
@@ -183,7 +183,7 @@ dev / preview, project ของ Playwright, reduced motion, dark mode
 ## 10. เกณฑ์ผ่าน (Exit Criteria)
 
 - [ ] ทุก AC มีเคสทดสอบและผ่าน
-- [ ] acceptance test ผ่านทั้ง 4 project
+- [ ] acceptance test ผ่านครบทั้ง 3 project
 - [ ] ทดสอบทั้ง dev และ preview
 - [ ] ทำ exploratory ครบตามข้อ 6.5
 - [ ] ไม่มี Blocker หรือ Major ค้าง (หรือพ่ออนุมัติให้ปล่อยพร้อม Major)
