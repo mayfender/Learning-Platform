@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+.vite/
+*.log
+.env
+.env.*
+.DS_Store
+Thumbs.db
+# ข้อมูลที่ export จากเครื่องลูก ห้าม commit
+exports/
+*.export.json
