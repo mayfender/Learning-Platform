@@ -18,6 +18,11 @@ function assertNoErrors(tracked: { pageErrors: Error[]; consoleErrors: ConsoleMe
   );
 }
 
+// §3.3.1: หน้าใหม่ไม่รับ input ภายใน 400 ms หลังการแตะที่เปลี่ยนหน้า (คนจริงไม่แตะเร็วขนาดนั้น)
+async function settle(page: Page): Promise<void> {
+  await page.waitForTimeout(450);
+}
+
 const ACK_RE = /^(รับแล้ว!|โอเค ไปต่อ!|เยี่ยม ขอบคุณ!)$/;
 const FORBIDDEN_RE = /ถูก|ผิด|คะแนน|เฉลย|วินาที|นาที|\d+:\d{2}/;
 
@@ -66,6 +71,7 @@ async function readAck(page: Page): Promise<string> {
 
 async function pick(page: Page, label: string): Promise<void> {
   await page.getByRole('button', { name: new RegExp(`^${label}`) }).click();
+  await settle(page);
 }
 
 interface PlayOptions {
@@ -78,7 +84,9 @@ async function play(page: Page, opts: PlayOptions = {}): Promise<{ acks: string[
   const acks: string[] = [];
   await page.getByRole('link', { name: 'ภารกิจสำรวจการบวก' }).click();
   await page.getByRole('button', { name: 'ต่อไป: หน้าของลูก' }).click();
+  await settle(page);
   await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
+  await settle(page);
 
   for (let s = 0; s < STAGES.length; s += 1) {
     const stage = STAGES[s]!;
@@ -92,6 +100,7 @@ async function play(page: Page, opts: PlayOptions = {}): Promise<{ acks: string[
     await expect(goButton).toBeVisible();
     await assertKidSafe(page);
     await goButton.click();
+    await settle(page);
     for (let i = 0; i < 4; i += 1) {
       await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
       await assertKidSafe(page);
@@ -127,6 +136,8 @@ test.describe('DX-ADD', () => {
     await page.getByRole('button', { name: 'ให้พ่อดูผล' }).click();
     await expect(page.getByText(/แนะนำให้เริ่มที่ ขั้นที่ 9:/)).toBeVisible();
     await assertNoHScroll(page);
+    const back = await page.getByRole('link', { name: 'กลับหน้าสำหรับพ่อ' }).boundingBox();
+    expect(back!.height).toBeGreaterThanOrEqual(48);
 
     await page.reload();
     await expect(page.getByText(/แนะนำให้เริ่มที่ ขั้นที่ 9:/)).toBeVisible();
@@ -183,6 +194,7 @@ test.describe('DX-ADD', () => {
     await createLearner(page);
     await play(page, { throughStage: 1 });
     await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await settle(page);
     await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
     await answer(page, '3');
     await readAck(page);
@@ -208,8 +220,11 @@ test.describe('DX-ADD', () => {
     await createLearner(page);
     await page.getByRole('link', { name: 'ภารกิจสำรวจการบวก' }).click();
     await page.getByRole('button', { name: 'ต่อไป: หน้าของลูก' }).click();
+    await settle(page);
     await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
+    await settle(page);
     await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await settle(page);
     await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
     await answer(page, '7');
     await readAck(page);
@@ -226,8 +241,11 @@ test.describe('DX-ADD', () => {
     await createLearner(page);
     await page.getByRole('link', { name: 'ภารกิจสำรวจการบวก' }).click();
     await page.getByRole('button', { name: 'ต่อไป: หน้าของลูก' }).click();
+    await settle(page);
     await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
+    await settle(page);
     await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await settle(page);
     const frame = page.locator('[data-testid=ten-frame]');
     for (const n of STAGES[0]!.answers) {
       await expect(page.getByText('พร้อมนะ...')).toBeVisible();
@@ -254,5 +272,38 @@ test.describe('DX-ADD', () => {
     test.skip(testInfo.project.name !== 'desktop', 'desktop เท่านั้น');
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await checkFlashDots(page);
+  });
+
+  test('7. แตะซ้ำหลังเปลี่ยนหน้า (§3.3.1): ภายใน 400 ms ถูกทิ้งไม่ว่าตำแหน่ง แล้วรับปกติ', async ({
+    page,
+  }) => {
+    const tracked = trackErrors(page);
+    await createLearner(page);
+    await play(page, { throughStage: 2 });
+    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await settle(page);
+    for (const digits of ['12', '16', '13']) {
+      await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
+      await answer(page, digits);
+      await readAck(page);
+    }
+    const option = page.getByRole('button', { name: /^จำได้เลย/ });
+    await expect(option).toBeVisible();
+    const box = (await option.boundingBox())!;
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    await page.mouse.click(x, y);
+    // ตกที่ตำแหน่งใดก็ได้ภายใน 400 ms: จุดเดิม (~120 ms) แล้วจุดอื่น 60 px (~250 ms) ต้องถูกทิ้ง
+    await page.waitForTimeout(100);
+    await page.mouse.click(x, y);
+    await page.waitForTimeout(100);
+    await page.mouse.click(x + 60, y);
+    await page.keyboard.press('5');
+    await expect(page.getByText('แตะตัวเลขด้านล่าง')).toBeVisible();
+    // หลังพ้น 400 ms รับปกติ
+    await settle(page);
+    await answer(page, '15');
+    await readAck(page);
+    assertNoErrors(tracked);
   });
 });

@@ -121,6 +121,8 @@ describe('DiagnosticResults', () => {
     expect(screen.getByText('คุยกันต่อ (Number Talks)')).toBeInTheDocument();
     expect(screen.getByText('ประวัติ')).toBeInTheDocument();
     expect(screen.getByText(DX_ADD.texts.results.retry)).toBeInTheDocument();
+    // ปุ่มเดียว ไม่ซ้อน <button> ใน <a>
+    expect(document.querySelector('a button')).toBeNull();
   });
 
   it('ซ่อนบันไดและ Number Talks เมื่อหยุดกลางทางและยังทำไม่ครบ', async () => {

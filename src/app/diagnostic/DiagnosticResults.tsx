@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 import { useProgress } from '@/app/ProgressProvider';
 import { formatText } from '@/app/diagnostic/formatText';
 import { HistoryList } from '@/app/diagnostic/HistoryList';
@@ -48,6 +48,7 @@ function strategyLabel(dx: Diagnostic, setId: string | undefined, id: string | u
 
 export function DiagnosticResults() {
   const { sessionId } = useParams();
+  const navigate = useNavigate();
   const { store, outbox, currentLearner } = useProgress();
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -62,6 +63,7 @@ export function DiagnosticResults() {
 
     async function load(): Promise<void> {
       if (!sessionId) return;
+      setLoading(true);
       const sessions = await loadDiagnosticSessions(store, outbox, { sessionId });
       const session = sessions[0];
       if (!session) {
@@ -336,9 +338,7 @@ export function DiagnosticResults() {
 
       <section className={styles.section}>
         <div className={styles.actions}>
-          <Link to={`/play/${dx.id}`}>
-            <Button>{texts.retry}</Button>
-          </Link>
+          <Button onClick={() => void navigate(`/play/${dx.id}`)}>{texts.retry}</Button>
           <Button variant="secondary" onClick={() => void onExport()}>
             ดาวน์โหลดไฟล์สำรอง (export)
           </Button>

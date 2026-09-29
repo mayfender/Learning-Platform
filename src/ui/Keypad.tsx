@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import styles from '@/ui/Keypad.module.css';
 
 export interface KeypadProps {
@@ -45,24 +45,33 @@ export function Keypad({
     onSubmit();
   }
 
+  // ตัวฟังคีย์ลงทะเบียนครั้งเดียวตอน mount (ไม่ลงทะเบียนใหม่ทุกครั้งที่ค่าเปลี่ยน เพื่อไม่ให้ลำดับ
+  // ตัวฟังบน window เปลี่ยน) และอ่านค่าล่าสุดผ่าน ref
+  const keyHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
   useEffect(() => {
-    if (disabled) return;
-    function onKeyDown(e: KeyboardEvent): void {
-      if (e.key >= '0' && e.key <= '9') {
+    keyHandlerRef.current = (e: KeyboardEvent): void => {
+      if (disabled || e.ctrlKey || e.metaKey || e.altKey) return;
+      // preventDefault ทุกคีย์ที่แป้นจัดการ (เช่น Backspace ทำให้ WebKit ย้อนหน้า)
+      if (e.key.length === 1 && e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
         pressDigit(e.key);
       } else if (e.key === 'Backspace') {
+        e.preventDefault();
         pressBackspace();
       } else if (e.key === 'Enter') {
+        e.preventDefault();
         trySubmit();
       }
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, disabled, maxDigits]);
+    };
+  });
+  useEffect(() => {
+    const listener = (e: KeyboardEvent): void => keyHandlerRef.current(e);
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, []);
 
   return (
-    <div className={styles.grid}>
+    <div className={styles.grid} data-keypad>
       {ROWS.flat().map((key) => {
         if (key === 'back') {
           return (

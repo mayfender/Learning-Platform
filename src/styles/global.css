@@ -20,6 +20,12 @@ h3 {
   font-family: var(--font-heading);
 }
 
+a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+}
+
 button {
   font: inherit;
   min-height: var(--tap-min);

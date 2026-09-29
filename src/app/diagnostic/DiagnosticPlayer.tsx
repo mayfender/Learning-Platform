@@ -15,6 +15,8 @@ import { Keypad } from '@/ui/Keypad';
 import { OptionGrid } from '@/ui/OptionGrid';
 import styles from '@/app/diagnostic/DiagnosticPlayer.module.css';
 
+const TAP_GUARD_MS = 400;
+
 export interface DiagnosticPlayerProps {
   dx: Diagnostic;
 }
@@ -28,6 +30,8 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   });
   const [stopOpen, setStopOpen] = useState(false);
   const [value, setValue] = useState('');
+  // เวลา (performance.now) ของการแตะล่าสุดที่ทำให้เปลี่ยนหน้าจอของลูก — ดู Tech Spec §3.3.1
+  const lastTransitionAt = useRef(-Infinity);
 
   const phase = state.phase;
   const itemKey = phase.kind === 'item' ? `${phase.stage}-${phase.item}` : '';
@@ -37,6 +41,49 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   useEffect(() => {
     setValue('');
   }, [itemKey]);
+
+  // กันแตะทะลุหลังเปลี่ยนหน้า (§3.3.1): input ทั้ง pointer และคีย์บอร์ดที่เข้ามาภายใน 400 ms หลังการแตะที่
+  // เปลี่ยนหน้า ถูกทิ้งไม่ว่าตำแหน่งใด ไม่ disable ปุ่ม ไม่ใช้ setTimeout (เทียบเวลาตอน input เข้ามา)
+  function withinTapGuard(): boolean {
+    const elapsed = performance.now() - lastTransitionAt.current;
+    return elapsed >= 0 && elapsed < TAP_GUARD_MS;
+  }
+
+  // ทุก action ที่เกิดจากการแตะและเปลี่ยนหน้าของลูก ต้องผ่านฟังก์ชันนี้
+  function tapDispatch(action: Parameters<typeof dispatch>[0]): void {
+    lastTransitionAt.current = performance.now();
+    dispatch(action);
+  }
+
+  function guardPointer(e: React.MouseEvent): void {
+    // ปุ่มของพ่อ (กล่องยืนยันหยุดกลางทาง) ไม่อยู่ใต้กฎนี้
+    if ((e.target as HTMLElement).closest('dialog')) return;
+    if (withinTapGuard()) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }
+
+  const withinTapGuardRef = useRef(withinTapGuard);
+  useEffect(() => {
+    withinTapGuardRef.current = withinTapGuard;
+  });
+  useEffect(() => {
+    // capture บน window ทำงานก่อนตัวฟังของแป้น (bubble) จึงตัดได้ก่อน
+    const listener = (e: KeyboardEvent): void => {
+      if (!withinTapGuardRef.current()) return;
+      if (
+        e.key === 'Backspace' ||
+        e.key === 'Enter' ||
+        (e.key.length === 1 && e.key >= '0' && e.key <= '9')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+    window.addEventListener('keydown', listener, true);
+    return () => window.removeEventListener('keydown', listener, true);
+  }, []);
 
   const registerLogo = useRegisterLogoLongPress();
   const longPressRef = useRef<() => void>(() => {});
@@ -60,7 +107,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   function onSubmit(): void {
     if (phase.kind !== 'item' || phase.step !== 'answering' || value.length === 0) return;
     const result = timer.submit();
-    dispatch({
+    tapDispatch({
       type: 'SUBMIT',
       response: Number(value),
       latencyMs: result.latencyMs,
@@ -84,7 +131,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
             </li>
           ))}
         </ul>
-        <Button onClick={() => dispatch({ type: 'PARENT_CONTINUE' })}>
+        <Button onClick={() => tapDispatch({ type: 'PARENT_CONTINUE' })}>
           {dx.texts.parentIntro.button}
         </Button>
       </div>
@@ -95,7 +142,9 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
         <h1>{dx.texts.kidIntro.title}</h1>
         <p>{dx.texts.kidIntro.lines[0]}</p>
         <p>{dx.texts.kidIntro.lines[1]}</p>
-        <Button onClick={() => dispatch({ type: 'KID_START' })}>{dx.texts.kidIntro.button}</Button>
+        <Button onClick={() => tapDispatch({ type: 'KID_START' })}>
+          {dx.texts.kidIntro.button}
+        </Button>
       </div>
     );
   } else if (phase.kind === 'stage-intro') {
@@ -108,7 +157,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
           </p>
         )}
         <p>{stage.intro}</p>
-        <Button onClick={() => dispatch({ type: 'STAGE_GO' })}>{dx.texts.stageGo}</Button>
+        <Button onClick={() => tapDispatch({ type: 'STAGE_GO' })}>{dx.texts.stageGo}</Button>
       </div>
     );
   } else if (phase.kind === 'item') {
@@ -167,7 +216,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
             onChange={setValue}
             onSubmit={onSubmit}
             submitLabel={dx.texts.submit}
-            disabled={!answering}
+            disabled={!answering || stopOpen}
           />
         </div>
       </div>
@@ -187,7 +236,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
             label: o.label,
             example: o.example?.text,
           }))}
-          onPick={(id) => dispatch({ type: 'STRATEGY_PICK', strategyId: id as never })}
+          onPick={(id) => tapDispatch({ type: 'STRATEGY_PICK', strategyId: id as never })}
         />
       </div>
     );
@@ -206,7 +255,7 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={styles.wrap} onClickCapture={guardPointer}>
       {content}
       <ConfirmDialog
         open={stopOpen}

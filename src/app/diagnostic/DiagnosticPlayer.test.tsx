@@ -53,12 +53,16 @@ async function setupLearner(): Promise<ProgressStore> {
 
 // เดินด้วยตัวจับเวลาจริงจนกว่า ProgressProvider จะพร้อม แล้วสลับเป็นตัวจับเวลาปลอมก่อนกด "ไปเลย"
 // (ซึ่งเป็นจุดที่เริ่ม schedule ตัวจับเวลาของด่าน 1) เพื่อไม่ให้ timer จริงค้างอยู่คนละคิวกับ fake timer
+const wait450 = () => new Promise<void>((r) => setTimeout(r, 450));
+
 async function startToStage1(store: ProgressStore, strict = false) {
   const user = userEvent.setup();
   await renderPlayer(store, strict);
   await user.click(screen.getByText(DX_ADD.texts.parentIntro.button));
+  await wait450(); // tap guard §3.3.1: คนจริงไม่แตะปุ่มถัดไปภายใน 400 ms
   await user.click(screen.getByText(DX_ADD.texts.kidIntro.button));
-  vi.useFakeTimers();
+  await wait450();
+  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date', 'performance'] });
   fireClick(screen.getByText(DX_ADD.texts.stageGo));
 }
 
@@ -179,5 +183,58 @@ describe('DiagnosticPlayer — effect ต้องเกิดครั้งเ
     const events = await flushEvents(store);
     const valid = events.flatMap((e) => (e.type === 'item.answered' ? [e.latencyValid] : []));
     expect(valid).toEqual([false, true]);
+  });
+});
+
+function clickAt(el: HTMLElement, x: number, y: number) {
+  act(() => {
+    el.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: x, clientY: y }));
+  });
+}
+
+function pressKey(key: string) {
+  act(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+  });
+}
+
+// §3.3.1: input ภายใน 400 ms หลังการแตะที่เปลี่ยนหน้า ถูกทิ้งไม่ว่าตำแหน่งใด
+describe('DiagnosticPlayer — tap-through guard (§3.3.1)', () => {
+  async function toStage2Item() {
+    const store = await setupLearner();
+    await startToStage1(store);
+    for (const d of ['7', '9', '6', '8']) answerFlashItem(d);
+    return store;
+  }
+
+  it.each([150, 350])(
+    'แตะที่ %i ms หลังเปลี่ยนหน้า ทั้งตำแหน่งเดิมและเยื้อง 40 px ถูกทิ้ง',
+    async (ms) => {
+      await toStage2Item();
+      clickAt(screen.getByText(DX_ADD.texts.stageGo), 100, 300);
+      tick(ms);
+      clickAt(screen.getByText('1'), 100, 300);
+      clickAt(screen.getByText('2'), 140, 300);
+      expect(screen.getByText(DX_ADD.texts.answerPlaceholder)).toBeInTheDocument();
+    },
+  );
+
+  it('คีย์บอร์ดภายใน 400 ms ถูกทิ้ง', async () => {
+    await toStage2Item();
+    clickAt(screen.getByText(DX_ADD.texts.stageGo), 100, 300);
+    tick(200);
+    pressKey('5');
+    expect(screen.getByText(DX_ADD.texts.answerPlaceholder)).toBeInTheDocument();
+    tick(250);
+    pressKey('5');
+    expect(screen.queryByText(DX_ADD.texts.answerPlaceholder)).not.toBeInTheDocument();
+  });
+
+  it('แตะที่ 450 ms รับตามปกติ', async () => {
+    await toStage2Item();
+    clickAt(screen.getByText(DX_ADD.texts.stageGo), 100, 300);
+    tick(450);
+    clickAt(screen.getByText('1'), 100, 300);
+    expect(screen.queryByText(DX_ADD.texts.answerPlaceholder)).not.toBeInTheDocument();
   });
 });

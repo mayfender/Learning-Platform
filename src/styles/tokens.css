@@ -11,6 +11,8 @@
   --color-group-a: var(--color-accent);
   --color-group-b: var(--color-success);
   --color-dot-single: var(--color-accent);
+  /* ตัวอักษรบนพื้น --color-highlight (เหลืองทั้ง light/dark) ต้องเป็นสีเข้มเสมอ */
+  --color-on-highlight: #1f2d27;
 
   --font-heading: 'Kodchasan', sans-serif;
   --font-body: 'Noto Sans Thai', sans-serif;
