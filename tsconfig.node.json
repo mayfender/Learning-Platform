@@ -16,5 +16,12 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "pwa-assets.config.ts", "tests/e2e/**/*.ts"]
+  "include": [
+    "vite.config.ts",
+    "playwright.config.ts",
+    "pwa-assets.config.ts",
+    "tests/e2e/**/*.ts",
+    "tests/acceptance/**/*.ts",
+    "playwright.acceptance.config.ts"
+  ]
 }

@@ -12,6 +12,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
+    "acceptance": "playwright test -c playwright.acceptance.config.ts --pass-with-no-tests",
     "lint": "eslint . --max-warnings=0 && prettier --check . && tsc -b",
     "format": "prettier --write .",
     "icons": "pwa-assets-generator"
