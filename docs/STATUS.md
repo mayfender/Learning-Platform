@@ -8,7 +8,7 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** M1 ภารกิจสำรวจการบวก (DX-ADD) ในบท Developer
+**กำลังทำ:** M1 (DX-ADD) ส่งกลับให้ Developer แก้บั๊กหลัง Architect ตรวจ (แฟลช ten-frame ไม่แสดงจุด)
 **รอ:** พ่อทดสอบติดตั้ง PWA บนอุปกรณ์จริง (M0 AC7)
 
 ## Milestones
@@ -16,7 +16,7 @@
 | Milestone | สถานะ | เอกสาร | หมายเหตุ |
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
-| M1 แบบทดสอบวินิจฉัย DX-ADD | 🔨 กำลังพัฒนา | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | หลัง Developer ส่งงาน: Architect ตรวจ → Designer ตรวจ → deploy → ให้ลูกทำ |
+| M1 แบบทดสอบวินิจฉัย DX-ADD | 🔨 แก้บั๊กหลังตรวจ | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | หลัง Developer ส่งงาน: Architect ตรวจ → Designer ตรวจ → deploy → ให้ลูกทำ |
 | M2 บทเรียนแรก | ⏳ ยังไม่เริ่ม | — | ขั้นบนบันไดขึ้นกับผล DX-ADD ของลูก (คาดว่าขั้น 1–4) |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
@@ -42,6 +42,7 @@
 | 2026-09-29 | Repo เป็น public และ host บน GitHub Pages ไม่ใช้ custom domain |
 | 2026-09-29 | อนุมัติ DX-ADD v2: ไม่บอกถูก/ผิดระหว่างทำ, ข้ามด่าน 5 ถ้าด่าน 4 ถูก ≤ 1 ข้อ |
 | 2026-09-29 | รับข้อเสนอ D1–D15 ของ Architect ใน Tech Spec DX-ADD ทั้งหมด |
+| 2026-09-29 | เพิ่ม role Tester (Sonnet) ทำงานอิสระจาก Developer: ออกแบบเทสต์จาก spec โดยไม่อ่านโค้ด |
 | 2026-09-29 | ชื่อแอปชั่วคราว "บทเรียนคณิตศาสตร์" (ชื่อสั้น "คณิต") และ icon ten-frame สีส้ม |
 
 ## งานค้าง / รอคำตอบ
@@ -49,6 +50,8 @@
 - [ ] พ่อทดสอบ M0 AC7: ติดตั้ง PWA บนแท็บเล็ตหรือมือถือจริง แล้วเปิด offline
 - [ ] M1: Developer ส่งงาน → Architect ตรวจตาม AC → Designer ตรวจเจตนาการสอน → commit และ deploy
 - [ ] หลัง M1 ขึ้นเว็บ: อัปเดตข้อ 7.2 ของ `math-learning-plan.md` ให้ชี้ไปที่เว็บแทน artifact เดิม
+- [ ] Architect เพิ่มคำสั่ง `npm run acceptance` และ Playwright config สำหรับ `tests/acceptance/` (ต้องมีก่อน Tester เริ่มรัน) และรวมเข้า CI
+- [ ] Tester เขียน Test Plan และ acceptance test ของ DX-ADD แล้วทดสอบ M1 ก่อน deploy
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
 
 ## ขั้นถัดไป
@@ -68,3 +71,6 @@
 | 2026-09-29 | Architect เขียน Tech Spec M0 และ DX-ADD |
 | 2026-09-29 | Developer ทำ M0 เสร็จ (lint ผ่าน, unit 53/53, e2e 32/32) CI ผ่าน และ deploy ขึ้น GitHub Pages |
 | 2026-09-29 | เริ่ม M1 (DX-ADD) ในบท Developer |
+| 2026-09-29 | Developer ส่ง M1 (unit 257/257, e2e 39 ผ่าน) Designer ตรวจเนื้อหาตรง Lesson Spec แต่ Architect ลองเล่นจริงแล้วพบว่าแฟลช ten-frame ไม่แสดงจุด จึงส่งกลับแก้ พร้อมให้เพิ่มเทสต์และปรับ outbox ให้ flush จนคิวว่าง |
+| 2026-09-29 | Architect ตรวจรอบ 2: แฟลชแก้แล้ว แต่พบ event ถูกบันทึกซ้ำ 2 เท่า (StrictMode) จึงส่งกลับแก้อีกรอบ |
+| 2026-09-29 | เพิ่ม role Tester และปรับลำดับงานใน roles/README.md และ CLAUDE.md |

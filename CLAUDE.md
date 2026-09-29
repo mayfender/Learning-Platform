@@ -10,10 +10,12 @@
    - [docs/architecture/overview.md](docs/architecture/overview.md) + `docs/architecture/adr/`: สถาปัตยกรรม
    - `docs/lessons/`: Lesson Spec (Designer)
    - `docs/specs/`: Tech Spec (Architect) พร้อมรายงานการพัฒนาท้ายไฟล์
+   - `docs/test-plans/`, `docs/test-reports/`: งานของ Tester
 
 ## วิธีทำงาน
-- ทำงานผ่าน 3 role ตามไฟล์ใน `roles/` โดยแต่ละ role มี AI model ที่กำหนดไว้ในไฟล์ของ role นั้น
-- ลำดับงาน: Lesson Spec → พ่ออนุมัติ → Tech Spec → Developer → Architect ตรวจ → Designer ตรวจ → พ่อลองกับลูก
+- ทำงานผ่าน 4 role ตามไฟล์ใน `roles/` (Designer, Architect, Developer, Tester) โดยแต่ละ role มี AI model ที่กำหนดไว้ในไฟล์ของ role นั้น
+- ลำดับงาน: Lesson Spec → พ่ออนุมัติ → Tech Spec → Developer และ Tester ทำขนานกัน → Tester ทดสอบ → Architect ตรวจ → Designer ตรวจ → พ่อลองกับลูก
+- Tester ต้องทำงานเป็นอิสระ: ออกแบบเทสต์จาก spec โดยไม่อ่านโค้ด และรายงานตรงไปที่ Architect และพ่อ
 - รหัสงาน: `ADD-04`, `DX-ADD` ฯลฯ ใช้ชื่อไฟล์เดียวกันทั้งใน `docs/lessons/` และ `docs/specs/`
 - ห้ามเปลี่ยนเนื้อหาการสอน โจทย์ หรือเฉลยที่อนุมัติแล้ว ถ้าเจอปัญหา ให้รายงานกลับไปที่ role ต้นทาง
 - **อัปเดต `docs/STATUS.md` ทุกครั้งที่งานเปลี่ยนสถานะ** (เริ่ม เสร็จ อนุมัติ หรือมีการตัดสินใจใหม่)

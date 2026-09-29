@@ -1,12 +1,13 @@
 # Roles และลำดับการทำงาน
 
-โปรเจกต์นี้แบ่งงานเป็น 3 role และมีเจ้าของโปรเจกต์ (พ่อ) เป็นผู้ตัดสินใจสุดท้าย
+โปรเจกต์นี้แบ่งงานเป็น 4 role และมีเจ้าของโปรเจกต์ (พ่อ) เป็นผู้ตัดสินใจสุดท้าย
 
 | Role | AI Model | ไฟล์ | ผลงานหลัก | เก็บไว้ที่ |
 |---|---|---|---|---|
 | ผู้เชี่ยวชาญออกแบบการเรียนรู้ (Learning Designer) | Opus | [learning-designer.md](learning-designer.md) | Lesson Spec | `docs/lessons/` |
 | Software Architect | Sonnet | [software-architect.md](software-architect.md) | Architecture Overview, ADR, Tech Spec | `docs/architecture/`, `docs/specs/` |
-| Developer | Sonnet | [developer.md](developer.md) | โค้ด, เทสต์, รายงานส่งงาน | `src/`, `tests/`, `docs/specs/` |
+| Developer | Sonnet | [developer.md](developer.md) | โค้ด, เทสต์, รายงานส่งงาน | `src/`, `tests/e2e/`, `docs/specs/` |
+| Tester | Sonnet | [tester.md](tester.md) | Test Plan, acceptance test, Test Report | `docs/test-plans/`, `tests/acceptance/`, `docs/test-reports/` |
 
 แหล่งข้อมูลหลักที่ทุก role ต้องอ่าน: [docs/math-learning-plan.md](../docs/math-learning-plan.md)
 
@@ -21,9 +22,14 @@ Learning Designer ──► Lesson Spec ──► [พ่ออนุมัต�
                                           ▼
 Software Architect ──► Tech Spec (+ ADR ถ้ามีการตัดสินใจใหม่)
                                           │
+                        ┌─────────────────┴─────────────────┐
+                        ▼                                   ▼
+Developer ──► โค้ด + เทสต์ + รายงาน          Tester ──► Test Plan + acceptance test
+                        │                        (ทำขนานกัน โดยไม่ดูโค้ด)
+                        └─────────────────┬─────────────────┘
                                           ▼
-Developer ──► โค้ด + เทสต์ + รายงานส่งงาน
-                                          │
+Tester รันและทดสอบ ──► Test Report ── มี Blocker/Major ──► กลับไป Developer
+                                          │ ไม่มี
                                           ▼
 Architect ตรวจตาม Tech Spec ──► Designer ตรวจตาม Lesson Spec ──► [พ่อทดลองกับลูก]
                                           │
@@ -37,6 +43,7 @@ Architect ตรวจตาม Tech Spec ──► Designer ตรวจตา�
    - Developer ไม่เปลี่ยนวิธีสอน
    - Designer ไม่กำหนดเทคโนโลยี
    - Architect ไม่แก้เนื้อหาบทเรียน
+   - Tester ไม่แก้โค้ด ไม่แก้เทสต์ของ Developer และไม่อ่านโค้ดตอนออกแบบเทสต์
 2. **เจอจุดที่ไม่ชัด ให้ถามกลับไปที่ต้นทาง อย่าเดาเอง**
    - Developer ถาม Architect
    - Architect ถาม Designer ในเรื่องวิธีสอน
@@ -50,6 +57,7 @@ Architect ตรวจตาม Tech Spec ──► Designer ตรวจตา�
    - Designer ตรวจเฉลยเอง
    - Architect กำหนดให้มีเทสต์ตรวจเฉลย
    - Developer เขียนเทสต์นั้น
+   - Tester คิดเฉลยใหม่เอง แล้วตรวจกับสิ่งที่แอปตัดสินจริง
 
 ## วิธีเรียกใช้ role กับ AI
 
