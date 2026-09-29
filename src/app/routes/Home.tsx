@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { strings } from '@/app/strings';
 import { UpdateBanner } from '@/app/UpdateBanner';
 import { useProgress } from '@/app/ProgressProvider';
+import { diagnostics } from '@/content/registry';
 import { Button } from '@/ui/Button';
 import styles from '@/app/routes/Home.module.css';
 
@@ -41,10 +43,24 @@ export function Home() {
     );
   }
 
+  const activities = Object.values(diagnostics);
+
   return (
     <div>
       <h1>{strings.home.greeting(currentLearner.nickname)}</h1>
-      <p>{strings.home.noActivity}</p>
+      {activities.length === 0 ? (
+        <p>{strings.home.noActivity}</p>
+      ) : (
+        <ul className={styles.activityList}>
+          {activities.map((dx) => (
+            <li key={dx.id}>
+              <Link className={styles.activityCard} to={`/play/${dx.id}`}>
+                {dx.title}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
       <UpdateBanner />
     </div>
   );

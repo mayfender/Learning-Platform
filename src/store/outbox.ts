@@ -32,20 +32,18 @@ export function createOutbox(store: ProgressStore, opts: CreateOutboxOptions = {
 
   async function flush(): Promise<void> {
     if (flushing) return;
-    if (queue.length === 0) return;
     flushing = true;
     try {
-      const toSend = [...queue];
-      await store.appendEvents(toSend);
-      // เขียนสำเร็จทั้งชุด: ลบเฉพาะที่ส่งไปตอนนี้ ลำดับส่วนที่เหลือคงเดิม
-      const sentIds = new Set(toSend.map((e) => e.id));
-      const remaining = queue.filter((e) => !sentIds.has(e.id));
-      if (remaining.length !== queue.length) {
-        queue = remaining;
+      // วนส่งต่อจนคิวว่าง (event ที่ append ระหว่างส่งจะถูกส่งในรอบถัดไปทันที)
+      while (queue.length > 0) {
+        const toSend = [...queue];
+        await store.appendEvents(toSend);
+        const sentIds = new Set(toSend.map((e) => e.id));
+        queue = queue.filter((e) => !sentIds.has(e.id));
         notify();
       }
     } catch {
-      // ยังล้มอยู่ ลองใหม่รอบถัดไป
+      // ยังล้มอยู่ ลองใหม่รอบถัดไปด้วย timer
     } finally {
       flushing = false;
     }

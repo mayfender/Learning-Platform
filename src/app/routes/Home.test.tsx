@@ -1,6 +1,7 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router';
 import { ProgressProvider } from '@/app/ProgressProvider';
 import { createMemoryStore } from '@/store/MemoryStore';
 import { Home } from '@/app/routes/Home';
@@ -9,9 +10,11 @@ afterEach(() => cleanup());
 
 async function renderHome() {
   render(
-    <ProgressProvider createStoreForTest={() => Promise.resolve(createMemoryStore())}>
-      <Home />
-    </ProgressProvider>,
+    <MemoryRouter>
+      <ProgressProvider createStoreForTest={() => Promise.resolve(createMemoryStore())}>
+        <Home />
+      </ProgressProvider>
+    </MemoryRouter>,
   );
   await screen.findByText('ยินดีต้อนรับ');
 }

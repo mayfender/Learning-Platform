@@ -21,7 +21,10 @@ export default defineConfig({
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
   ],
   webServer: {
-    command: `npm run build && npm run preview -- --port 4173 --strictPort`,
+    // E2E_DEV=1 รันกับ dev server (React StrictMode ทำงานเต็ม) ปกติรันกับ build จริง
+    command: process.env.E2E_DEV
+      ? `npm run dev -- --port 4173 --strictPort`
+      : `npm run build && npm run preview -- --port 4173 --strictPort`,
     url: `http://localhost:4173${base}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,

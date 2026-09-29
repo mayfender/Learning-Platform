@@ -43,6 +43,8 @@ export function runProgressStoreContract(name: string, create: () => Promise<Pro
         sessionId: 's1',
         activityId: 'DX-ADD',
         type: 'session.started' as const,
+        activityKind: 'diagnostic' as const,
+        activityVersion: 'DX-ADD v2',
       };
       const added1 = await store.appendEvents([event]);
       expect(added1).toBe(1);
@@ -63,6 +65,8 @@ export function runProgressStoreContract(name: string, create: () => Promise<Pro
         sessionId: 's1',
         activityId: 'DX-ADD',
         type: 'session.started' as const,
+        activityKind: 'diagnostic' as const,
+        activityVersion: 'DX-ADD v2',
       });
       await store.appendEvents([
         makeEvent('e2', '2026-01-01T00:00:02.000Z'),
@@ -79,6 +83,8 @@ export function runProgressStoreContract(name: string, create: () => Promise<Pro
         at: '2026-01-01T00:00:00.000Z',
         schemaVersion: 1 as const,
         type: 'session.started' as const,
+        activityKind: 'diagnostic' as const,
+        activityVersion: 'DX-ADD v2',
       };
       await store.appendEvents([
         { ...base, id: 'e1', learnerId: 'l1', sessionId: 's1', activityId: 'DX-ADD' },

@@ -17,6 +17,8 @@ function makeEvent(id: string, overrides: Partial<Record<string, unknown>> = {})
     sessionId: 's1',
     activityId: 'DX-ADD',
     type: 'session.started' as const,
+    activityKind: 'diagnostic' as const,
+    activityVersion: 'DX-ADD v2',
     ...overrides,
   };
 }

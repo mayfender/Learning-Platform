@@ -1,12 +1,26 @@
-import { Link } from 'react-router';
+import { Link, Navigate, useParams } from 'react-router';
+import { useProgress } from '@/app/ProgressProvider';
+import { DiagnosticPlayer } from '@/app/diagnostic/DiagnosticPlayer';
 import { strings } from '@/app/strings';
+import { diagnostics } from '@/content/registry';
 
-// M0: content/registry.ts ยังว่าง จึงไม่พบกิจกรรมเสมอ (§5.2)
 export function Play() {
-  return (
-    <div>
-      <p>{strings.play.notFound}</p>
-      <Link to="/">{strings.play.backHome}</Link>
-    </div>
-  );
+  const { activityId } = useParams();
+  const { currentLearner } = useProgress();
+
+  if (!currentLearner) {
+    return <Navigate to="/" replace />;
+  }
+
+  const dx = activityId ? diagnostics[activityId] : undefined;
+  if (!dx) {
+    return (
+      <div>
+        <p>{strings.play.notFound}</p>
+        <Link to="/">{strings.play.backHome}</Link>
+      </div>
+    );
+  }
+
+  return <DiagnosticPlayer key={dx.id} dx={dx} />;
 }

@@ -11,6 +11,8 @@ function makeEvent(id: string) {
     sessionId: 's1',
     activityId: 'DX-ADD',
     type: 'session.started' as const,
+    activityKind: 'diagnostic' as const,
+    activityVersion: 'DX-ADD v2',
   };
 }
 
@@ -69,5 +71,21 @@ describe('createOutbox', () => {
     outbox.subscribe(cb);
     outbox.append([makeEvent('e1')]);
     expect(cb).toHaveBeenCalled();
+  });
+
+  it('append ระหว่างที่กำลังเขียน จะถูกเขียนต่อทันทีโดยไม่ต้องรอ retry', async () => {
+    let release: () => void = () => {};
+    const appendEvents = vi
+      .fn()
+      .mockImplementationOnce(() => new Promise<number>((r) => (release = () => r(1))))
+      .mockResolvedValue(1);
+    const outbox = createOutbox(fakeStore(appendEvents), { retryMs: 60_000 });
+    outbox.append([makeEvent('e1')]);
+    outbox.append([makeEvent('e2')]);
+    expect(appendEvents).toHaveBeenCalledTimes(1);
+    release();
+    await vi.waitFor(() => expect(outbox.pending()).toHaveLength(0));
+    expect(appendEvents).toHaveBeenCalledTimes(2);
+    expect((appendEvents.mock.calls[1]![0] as { id: string }[]).map((e) => e.id)).toEqual(['e2']);
   });
 });

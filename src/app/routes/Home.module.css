@@ -18,3 +18,23 @@
 .hint {
   color: var(--color-text-muted);
 }
+
+.activityList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.activityCard {
+  display: block;
+  min-height: var(--tap-min);
+  padding: var(--space-4);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+}

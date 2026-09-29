@@ -16,6 +16,8 @@ function validEvent(): Record<string, unknown> {
     sessionId: 's1',
     activityId: 'DX-ADD',
     type: 'session.started',
+    activityKind: 'diagnostic',
+    activityVersion: 'DX-ADD v2',
   };
 }
 

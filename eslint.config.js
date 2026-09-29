@@ -106,6 +106,11 @@ export default tseslint.config(
     },
   },
   {
+    // เทสต์ของ engine ต้องใช้เนื้อหาจริง (เช่น DX-ADD) เพื่อตรวจกฎกับข้อมูลจริง
+    files: ['src/engine/**/*.test.{ts,tsx}'],
+    rules: { '@typescript-eslint/no-restricted-imports': 'off' },
+  },
+  {
     files: ['src/store/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-restricted-imports': [

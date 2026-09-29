@@ -58,6 +58,8 @@ describe('Parent', () => {
         sessionId: 's1',
         activityId: 'DX-ADD',
         type: 'session.started',
+        activityKind: 'diagnostic' as const,
+        activityVersion: 'DX-ADD v2',
       },
     ]);
     render(

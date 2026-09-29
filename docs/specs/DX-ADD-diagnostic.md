@@ -1,7 +1,7 @@
 # Tech Spec DX-ADD: ภารกิจสำรวจการบวก (แบบทดสอบวินิจฉัย) — Milestone M1
 
 - อ้างอิง Lesson Spec: [docs/lessons/DX-ADD-diagnostic.md](../lessons/DX-ADD-diagnostic.md) (อนุมัติ 2026-09-29, แบบทดสอบเวอร์ชัน `DX-ADD v2`)
-- สถานะ: พร้อมพัฒนา (เริ่มได้เมื่อ M0 เสร็จ)
+- สถานะ: พัฒนาเสร็จ รอ Architect ตรวจ (2026-09-29)
 - ADR ที่เกี่ยวข้อง: 0002, 0003, 0004, 0005, 0007 (0006 Leitner ยังไม่ทำ แต่ event ต้องมีข้อมูลพอ)
 - ต่อจาก: [M0-scaffold.md](M0-scaffold.md)
 - วันที่: 2026-09-29
@@ -741,7 +741,7 @@ helper: สร้างผู้เรียนผ่าน UI, `answer(page, di
 
 ## 11. คำถามที่ยังเปิดอยู่
 
-ใช้ข้อเสนอไปก่อนได้ ถ้า Designer/พ่อตอบต่างจากนี้ แก้ที่ `DX-ADD.ts` หรือจุดเดียวที่ระบุ
+**ตัดสินแล้ว:** D1–D15 ทั้งหมดใช้ตามข้อเสนอ (Learning Designer และเจ้าของโปรเจกต์รับทราบ) ถ้าต้องการเปลี่ยน แก้ที่ `DX-ADD.ts` หรือจุดเดียวที่ระบุ
 
 | # | ถึง | คำถาม | ข้อเสนอ |
 |---|---|---|---|
@@ -766,3 +766,70 @@ helper: สร้างผู้เรียนผ่าน UI, `answer(page, di
 | วันที่ | การเปลี่ยนแปลง | เหตุผล |
 |---|---|---|
 | 2026-09-29 | สร้างเอกสาร | เริ่ม M1 |
+
+## 13. รายงานการพัฒนา
+
+## รายงานการพัฒนา — 2026-09-29
+
+### สิ่งที่ทำ
+- ทำครบงานย่อย 1–11 ตาม §10: types/`isAppEvent`/`problem.ts`, content (ladders, skills, misconceptions, strategies, DX-ADD, registry), engine/diagnostic (classify, evaluate, recommend, summary, sessions, machine), `timing.ts`, `TenFrame`, `useReducedMotion`, `Keypad`, `AnswerDisplay`, `OptionGrid`, `ConfirmDialog`, `useSilentTimer`, `useDiagnosticRunner`, `DiagnosticPlayer`, หน้าผล `/parent/results/:sessionId`, `HistoryList`, การ์ดหน้าหลัก, ส่วนผลในหน้าพ่อ, หน้า dev TenFrame, e2e `tests/e2e/dx-add.spec.ts`
+- คำถามเปิด D1–D15 ตัดสินตามข้อเสนอของ Architect ทั้งหมด (ตามที่ Designer/เจ้าของโปรเจกต์รับ) และทำเครื่องหมาย "ตัดสินแล้ว" ใน §11
+
+### Acceptance Criteria
+| AC | ผล | หมายเหตุ |
+|---|---|---|
+| AC1 | ผ่าน | content.test.ts + DX-ADD.test.ts (คู่ข้อ/คำตอบผิด/วิธีคิดครบทุกคู่) |
+| AC2 | ผ่าน | machine.test + e2e ทำครบ 20 ข้อ |
+| AC3 | ผ่าน | machine.test + e2e 2 (ข้าม/ไม่ข้าม) |
+| AC4 | ผ่าน | TenFrame.test + DiagnosticPlayer.test (fake timers) รวม reduced motion ระดับ component |
+| AC5 | ผ่าน | e2e 1 ตรวจ regex ต้องห้าม/role timer/progress ทุกหน้าของลูก |
+| AC6 | ผ่าน | e2e 2 เทียบ ack 16 ข้อ รอบถูก/รอบตอบ 99 |
+| AC7 | ผ่าน (Designer ตรวจซ้ำ) | ข้อความมาจาก DX-ADD.ts ตาม LS; e2e ตรวจบางข้อความ |
+| AC8 | ผ่าน | DiagnosticPlayer.test (hidden → latencyValid false), evaluate.test (ถูก+invalid = คล่อง) |
+| AC9 | ผ่าน | DiagnosticResults.test + e2e 1 (reload, 20 แถว) |
+| AC10 | ผ่าน | e2e 3 |
+| AC11 | ผ่าน | e2e 1 ตรวจไฟล์ export |
+| AC12 | ผ่าน | ประวัติ + session open (DiagnosticResults.test, e2e 3/4) |
+| AC13 | ผ่าน | e2e ตรวจ scrollWidth ที่ 360px, dark mode (e2e 4); ยังไม่ได้ตรวจด้วยตาบนอุปกรณ์จริง |
+| AC14 | ผ่าน | ดูผลด้านล่าง |
+
+### เทสต์
+- คำสั่งที่รัน: `npm run lint`, `npm test`, `npm run build`, `npm run e2e`
+- ผล: lint ผ่าน · vitest ผ่าน 257/257 (24 ไฟล์) · build ผ่าน · e2e ผ่าน 39 ข้อ ข้าม 9 (test 2–4 กำหนดให้รันเฉพาะ desktop/phone ตาม §8.4) ทั้ง 4 project
+
+### ทดสอบบนเบราว์เซอร์
+- Playwright: Galaxy Tab S4, Pixel 7, iPad (gen 7, WebKit), Desktop Chrome; ทดสอบ 360px, dark mode; ไม่มี console error
+- ยังไม่ได้ทดสอบบนแท็บเล็ตจริง (งานย่อย 12) และยังไม่ได้ตรวจด้วยตา
+
+### สิ่งที่ต่างจาก Spec หรือยังไม่ได้ทำ
+- `useSilentTimer` ถูกเรียกที่ระดับ `DiagnosticPlayer` (ไม่ใช่ต่อข้อ) และคืน `submit()` กับ `invalidate()` เพิ่ม เพื่อให้ dialog หยุดกลางทาง invalidate เวลาได้
+- Logo long-press: `LayoutContext.tsx` (M0) ขยายเป็น `LogoLongPressProvider` + `useRegisterLogoLongPress` เพราะ Layout อยู่เหนือหน้า Play จึงรับ Provider ที่วางในหน้า Play ไม่ได้
+- `useDiagnosticRunner` ส่ง event ทั้งชุดของ transition เดียวกันเป็น `outbox.append` ครั้งเดียว: outbox (M0) flush ทีละชุดและ event ที่ค้างรอ retry 5 วินาทีหายได้ถ้า reload เร็ว พบจาก e2e (session.completed หาย) — ข้อสังเกตต่อ Architect ว่า outbox ควร flush ซ้ำจนคิวว่าง
+- แก้ไฟล์ M0 เพื่อให้ compile/ทำงานกับ type ใหม่: fixture ใน 5 เทสต์ (เพิ่ม activityKind/activityVersion), `Home.test`/`Play.test` (ห่อ Router/Provider), `eslint.config.js` (ปิดกฎ no-restricted-imports เฉพาะ `src/engine/**/*.test.*` เพราะเทสต์ engine ต้องใช้เนื้อหา DX-ADD จริง)
+- `TenFrame`: ใช้ `style.width` แทน attribute `width="min(...)"` (WebKit ฟ้อง error) และ `setTimeout(0)` แทน rAF (jsdom ไม่มี rAF)
+- ชื่อขั้นบนบันไดคัดจาก plan §5 ตามตัวอักษร; skill `add.2digit` ตั้ง `ladderStep: 6` (ขั้นต่ำของช่วง 6–8)
+- ข้อความหน้าพ่อที่ LS ไม่กำหนดใช้ตามข้อเสนอ §5.7 (D13); หัวข้อส่วนบางส่วน (เช่น "ประวัติ", "กลับหน้าสำหรับพ่อ") เขียนใน component หน้าผล ไม่ได้อยู่ใน DX-ADD.ts
+
+### คำถาม / ข้อเสนอ
+- Architect: แก้ outbox ให้ flush ต่อจนคิวว่าง
+- Designer: ตรวจข้อความในหน้าผลที่ไม่ได้มาจาก LS
+
+### ลิงก์หรือวิธีเปิดดู
+- `npm run dev` แล้วเปิด `/#/` (การ์ด "ภารกิจสำรวจการบวก"), `/#/dev/manipulatives`
+
+### แก้ไขหลังตรวจ — Architect (blocker: ten-frame ไม่แสดงจุด)
+
+- สาเหตุ (ยืนยันแล้ว): `TenFrame` เก็บ `hidden` ด้วย `useState(mode === 'hidden')` ตอน mount และไม่เคยรีเซต เมื่อ player เปลี่ยน mode จาก `hidden` (ช่วง ready) เป็น `flash` โดย key เดิม จึงค้างเป็นการ์ดเปล่า และ e2e/เทสต์เดิมไม่ได้ตรวจจำนวนจุดระหว่าง "ดู!"
+- แก้: `TenFrame` ใช้ state `ended` (เริ่ม false, รีเซตทุกครั้งที่เข้า mode `flash`) แทน `hidden`; `DiagnosticPlayer` ใช้ key แยก (`{id}-flash`) ให้ remount ตอนแฟลชเพื่อให้ fade-in ทำงาน เวลาแสดง 1500 ms และ fade 150 ms เฉพาะเมื่อไม่ใช้ reduced motion เหมือนเดิม
+- เทสต์ที่เพิ่ม: component test (hidden → flash โดยไม่เปลี่ยน key เห็น `filled` จุดถึง flashMs แล้วซ่อนและเรียก onFlashEnd ครั้งเดียว, flash มี data-visible=true และจุดครบ); e2e ทุก project ตรวจทุกข้อด่าน 1 ว่าระหว่าง "ดู!" มี data-visible=true และจุด 7/9/6/8 ก่อนและหลังแฟลชมี 0 จุด; e2e reduced motion (desktop) ตรวจเหมือนกัน
+- outbox (ตามที่ Architect อนุมัติ): `flush` วนส่งจนคิวว่าง (ยังมี retry timer เดียวเมื่อล้มเหลว) พร้อม unit test; คง batching ของ event ต่อ transition
+- ผลรันซ้ำ: lint ผ่าน · vitest 260/260 · build ผ่าน · e2e ผ่าน 44 ข้อ ข้าม 12 (ตามเงื่อนไข project) ครบ 4 project
+
+### แก้ไขหลังตรวจ รอบ 2 — Architect (blocker: event ถูกเขียนซ้ำ)
+
+- สาเหตุ: `useDiagnosticRunner.dispatch` ทำ side effect (`outbox.append`, `setTimeout`) ภายใน updater ของ `setState` ซึ่ง React StrictMode (dev) เรียกซ้ำ จึงได้ event ซ้ำ (id ต่างกัน) และ timer ซ้ำ; production ไม่ได้รับผลแต่ไม่ยอมรับเพราะ effect ต้องเกิดครั้งเดียวโดยโครงสร้าง
+- แก้: เก็บ state ของ machine ใน ref, คำนวณ `transition` และทำ effect ครั้งเดียวใน `dispatch` (นอก updater) แล้วค่อย `setState(next)`; action ที่ไม่มีผลไม่ล้าง timer เดิม
+- เทสต์ที่เพิ่ม: (a) `DiagnosticPlayer.test` ห่อ `<StrictMode>` ตอบ 2 ข้อ ต้องได้ session.started 1 และ item.answered ข้อละ 1; (b) e2e test 1 ตรวจไฟล์ export ว่ามี event ทั้งหมด 22 (1 started + 20 answered + 1 completed) ทุกตัวเป็นของ session นั้น; (c) เพิ่มตัวเลือก `E2E_DEV=1` ใน `playwright.config.ts` ให้รัน e2e กับ dev server (StrictMode เต็ม) — รัน test 1 บน desktop ผ่านแล้ว ส่วนการรันปกติ (build จริง) ครบ 4 project
+- ข้อ * (latencyValid=false) ที่ 5.3/5.4: ตรวจโค้ดแล้วไม่พบ logic bug — timer ถูก `start()` ใหม่ทุกข้อ (ล้างธง invalid) และ invalidate ได้จาก `visibilitychange` ที่ hidden ระหว่างตอบ, หน้าถูกซ่อนตอน start, หรือเปิด dialog หยุดกลางทางเท่านั้น; เพิ่ม unit test ยืนยันว่า invalid ของข้อหนึ่งไม่ค้างไปข้อถัดไป (false แล้วข้อถัดไป true) สรุปว่าน่าจะเป็น visibilitychange จริง (pane เบราว์เซอร์อยู่เบื้องหลัง) — reproduce ไม่ได้ในเครื่องนี้จึงยืนยันจากโค้ดและเทสต์เท่านั้น
+- การรวมผล: `groupSessions`/summary ไม่ตัดข้อมูลซ้ำ (การตัด id ซ้ำมีเฉพาะตอนรวม store กับ outbox ใน `loadDiagnosticSessions`) ผลถูกต้องเพราะข้อมูลถูกต้อง
+- ผลรันซ้ำ: lint ผ่าน · vitest 262/262 · build ผ่าน · e2e ผ่าน 44 ข้อ ข้าม 12 ครบ 4 project

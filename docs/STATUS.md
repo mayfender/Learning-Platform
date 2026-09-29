@@ -8,7 +8,7 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** M1 (DX-ADD) ส่งกลับให้ Developer แก้บั๊กหลัง Architect ตรวจ (แฟลช ten-frame ไม่แสดงจุด)
+**กำลังทำ:** M1 (DX-ADD) ผ่านการตรวจของ Architect และ Designer แล้ว commit ในเครื่องแต่ยังไม่ push รอพ่อตัดสินว่าจะให้ Tester ตรวจก่อน deploy หรือไม่
 **รอ:** พ่อทดสอบติดตั้ง PWA บนอุปกรณ์จริง (M0 AC7)
 
 ## Milestones
@@ -16,7 +16,7 @@
 | Milestone | สถานะ | เอกสาร | หมายเหตุ |
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
-| M1 แบบทดสอบวินิจฉัย DX-ADD | 🔨 แก้บั๊กหลังตรวจ | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | หลัง Developer ส่งงาน: Architect ตรวจ → Designer ตรวจ → deploy → ให้ลูกทำ |
+| M1 แบบทดสอบวินิจฉัย DX-ADD | 🔍 ตรวจผ่าน รอ Tester / deploy | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | หลัง Developer ส่งงาน: Architect ตรวจ → Designer ตรวจ → deploy → ให้ลูกทำ |
 | M2 บทเรียนแรก | ⏳ ยังไม่เริ่ม | — | ขั้นบนบันไดขึ้นกับผล DX-ADD ของลูก (คาดว่าขั้น 1–4) |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
@@ -74,3 +74,4 @@
 | 2026-09-29 | Developer ส่ง M1 (unit 257/257, e2e 39 ผ่าน) Designer ตรวจเนื้อหาตรง Lesson Spec แต่ Architect ลองเล่นจริงแล้วพบว่าแฟลช ten-frame ไม่แสดงจุด จึงส่งกลับแก้ พร้อมให้เพิ่มเทสต์และปรับ outbox ให้ flush จนคิวว่าง |
 | 2026-09-29 | Architect ตรวจรอบ 2: แฟลชแก้แล้ว แต่พบ event ถูกบันทึกซ้ำ 2 เท่า (StrictMode) จึงส่งกลับแก้อีกรอบ |
 | 2026-09-29 | เพิ่ม role Tester และปรับลำดับงานใน roles/README.md และ CLAUDE.md |
+| 2026-09-29 | Developer แก้บั๊ก event ซ้ำ (ย้าย side effect ออกจาก setState updater) Architect ยืนยันบน dev server ว่าได้ 20/1/1 event, unit 262/262, e2e 44 ผ่าน ตรวจผ่านทั้ง Architect และ Designer |

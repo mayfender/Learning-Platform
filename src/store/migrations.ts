@@ -41,19 +41,29 @@ export function isAppEvent(value: unknown): value is AppEvent {
   if (typeof v.type !== 'string' || !EVENT_TYPES.has(v.type)) return false;
 
   switch (v.type) {
+    case 'session.started':
+      return typeof v.activityKind === 'string' && typeof v.activityVersion === 'string';
     case 'item.answered':
       return (
         typeof v.itemId === 'string' &&
         typeof v.skillId === 'string' &&
         typeof v.problem === 'object' &&
         v.problem !== null &&
+        typeof v.expected === 'number' &&
         typeof v.response === 'number' &&
         typeof v.correct === 'boolean' &&
         typeof v.latencyMs === 'number' &&
+        typeof v.latencyValid === 'boolean' &&
+        (v.fluent === null || typeof v.fluent === 'boolean') &&
         typeof v.attemptNo === 'number'
       );
     case 'strategy.reported':
       return typeof v.itemId === 'string' && typeof v.strategyId === 'string';
+    case 'session.completed':
+    case 'session.abandoned':
+      return (
+        typeof v.activityVersion === 'string' && typeof v.summary === 'object' && v.summary !== null
+      );
     default:
       return true;
   }

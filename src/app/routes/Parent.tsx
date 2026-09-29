@@ -4,6 +4,9 @@ import { strings } from '@/app/strings';
 import { UpdateBanner } from '@/app/UpdateBanner';
 import { useProgress } from '@/app/ProgressProvider';
 import { applyTheme, readTheme, writeTheme, type ThemePref } from '@/app/theme';
+import { HistoryList } from '@/app/diagnostic/HistoryList';
+import { loadDiagnosticSessions } from '@/app/diagnostic/loadSessions';
+import type { SessionView } from '@/engine/diagnostic/sessions';
 import { Button } from '@/ui/Button';
 import {
   NewerSchemaError,
@@ -38,6 +41,7 @@ export function Parent() {
   const [hasEvents, setHasEvents] = useState(false);
   const [importMessage, setImportMessage] = useState<string | undefined>(undefined);
   const [importError, setImportError] = useState<string | undefined>(undefined);
+  const [sessions, setSessions] = useState<SessionView[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,6 +54,14 @@ export function Parent() {
     void store.getMeta('lastExportAt').then(setLastExportAt);
     void store.listEvents().then((events) => setHasEvents(events.length > 0));
   }, [store]);
+
+  useEffect(() => {
+    if (!currentLearner) {
+      setSessions([]);
+      return;
+    }
+    void loadDiagnosticSessions(store, outbox, { learnerId: currentLearner.id }).then(setSessions);
+  }, [store, outbox, currentLearner]);
 
   function onThemeChange(next: ThemePref): void {
     setTheme(next);
@@ -122,6 +134,11 @@ export function Parent() {
             </select>
           </label>
         )}
+      </section>
+
+      <section className={styles.section}>
+        <h2>ผลแบบทดสอบ</h2>
+        <HistoryList sessions={sessions} />
       </section>
 
       <section className={styles.section}>

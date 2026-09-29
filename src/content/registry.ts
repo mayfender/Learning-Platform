@@ -1,3 +1,8 @@
-// M0 ยังไม่มีเนื้อหาบทเรียน — ทะเบียนว่างไว้ให้ M1+ เพิ่ม (ADR-0004)
-export const diagnostics = {};
+import type { Diagnostic } from '@/engine/types';
+import { DX_ADD } from '@/content/diagnostics/DX-ADD';
+
+export const diagnostics: Record<string, Diagnostic> = {
+  'DX-ADD': DX_ADD,
+};
+
 export const lessons = {};
