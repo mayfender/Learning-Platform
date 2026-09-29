@@ -1,0 +1,56 @@
+:root {
+  color-scheme: light;
+  --color-bg: #f2f7f3;
+  --color-surface: #ffffff;
+  --color-text: #1f2d27;
+  --color-text-muted: #5b6b63;
+  --color-accent: #ff7a45;
+  --color-success: #2f9e8f;
+  --color-highlight: #ffc857;
+  --color-try-again: #e0694f;
+  --color-group-a: var(--color-accent);
+  --color-group-b: var(--color-success);
+
+  --font-heading: 'Kodchasan', sans-serif;
+  --font-body: 'Noto Sans Thai', sans-serif;
+  --tap-min: 48px;
+  --radius: 16px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --font-size-body: 1.125rem;
+  --line-height-body: 1.6;
+
+  --focus-ring: 3px solid var(--color-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --color-bg: #121a16;
+    --color-surface: #1c2621;
+    --color-text: #e8f0eb;
+    --color-text-muted: #9db0a6;
+    --color-accent: #ff8a5c;
+    --color-success: #3db8a6;
+    --color-highlight: #ffd479;
+    --color-try-again: #f08270;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #121a16;
+  --color-surface: #1c2621;
+  --color-text: #e8f0eb;
+  --color-text-muted: #9db0a6;
+  --color-accent: #ff8a5c;
+  --color-success: #3db8a6;
+  --color-highlight: #ffd479;
+  --color-try-again: #f08270;
+}

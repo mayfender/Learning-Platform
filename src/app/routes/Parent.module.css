@@ -1,0 +1,20 @@
+.section {
+  margin-bottom: var(--space-6);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.warning {
+  color: var(--color-try-again);
+}
+
+.select {
+  min-height: var(--tap-min);
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  font: inherit;
+}

@@ -1,0 +1,23 @@
+.button {
+  min-height: var(--tap-min);
+  min-width: var(--tap-min);
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius);
+  border: none;
+  background-color: var(--color-accent);
+  color: var(--color-surface);
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 2px solid var(--color-accent);
+}

@@ -1,7 +1,7 @@
 # Tech Spec M0: โครงโปรเจกต์ (scaffold)
 
 - อ้างอิง Lesson Spec: ไม่มี (milestone โครงสร้าง ไม่มีเนื้อหาบทเรียน)
-- สถานะ: พร้อมพัฒนา
+- สถานะ: พัฒนาเสร็จ รอ Architect ตรวจ
 - ADR ที่เกี่ยวข้อง: 0001 deploy, 0002 stack, 0003 storage, 0004 content, 0005 manipulatives, 0007 testing
 - อ้างอิง: [overview](../architecture/overview.md) §2–§8
 - วันที่: 2026-09-29
@@ -584,3 +584,74 @@ jobs:
 | วันที่ | การเปลี่ยนแปลง | เหตุผล |
 |---|---|---|
 | 2026-09-29 | สร้างเอกสาร | เริ่ม M0 |
+
+## รายงานการพัฒนา — 2026-09-29
+
+### สิ่งที่ทำ
+- สร้างโปรเจกต์ Vite (react-ts) + TypeScript strict ครบตาม §4: `package.json`, scripts, `.nvmrc`, `tsconfig.{json,app.json,node.json}`, alias `@/*`
+- ติดตั้ง package ตาม §4.1 ทั้งหมดด้วยเวอร์ชันเสถียรล่าสุด ณ วันที่ทำ (`npm install` ไม่ระบุเวอร์ชันเอง ให้ npm resolve, บันทึก `^` และ commit `package-lock.json`)
+- ESLint flat config + Prettier + กฎทิศทาง import ครบทั้ง 5 ชั้น (`app/ui/manipulatives/engine/content/store`) ด้วย `@typescript-eslint/no-restricted-imports` แบบ regex
+- `styles/tokens.css`, `global.css`, `fonts.ts` (self-host Kodchasan + Noto Sans Thai แบบ subset), `theme.ts` + เทสต์
+- `engine/types.ts`, `store/ProgressStore.ts` (interface), `MemoryStore`, `IndexedDbStore` (ผ่าน `idb`, index ครบ 3 ตัว), ชุดเทสต์ร่วม `progressStore.contract.ts`
+- `migrations.ts` (`migrateEvent`, `isAppEvent`, `InvalidEventError`, `NewerSchemaError`)
+- `exportImport.ts` (export/import JSON, รวมโดยตัด id ซ้ำ, ไม่เขียนทับ), `outbox.ts` (คิว + retry ด้วย fake timers), `persist.ts` (`requestPersistence`), `ids.ts` (`newId` พร้อม fallback ไม่มี `crypto.randomUUID`)
+- Routing: `HashRouter`, `Layout` (header + กดค้างโลโก้ 2 วินาทีผ่าน `useLongPress` แบบ Pointer Events), `ProgressProvider` (เปิด store จริง/ตกไป memory-fallback, outbox, persist, เลือกผู้เรียนปัจจุบัน), หน้า `Home`, `Parent`, `Play`, `DevManipulatives` (lazy + เฉพาะ dev)
+- `strings.ts` รวมข้อความ UI ตามข้อเสนอ Architect (Q3)
+- PWA: `public/icon.svg` (ten-frame ส้มบนพื้นเขียวอ่อน) → `npm run icons` สร้างไฟล์ PNG/ICO ครบ, `vite-plugin-pwa` (`registerType: 'prompt'`), `UpdateBanner` (แสดงเฉพาะ Home/Parent)
+- `playwright.config.ts` 4 project + `tests/e2e/smoke.spec.ts` ครบ 8 ข้อตาม §5.5
+- `.github/workflows/ci.yml` ตาม §5.6 (lint → test → e2e → build → deploy)
+- อัปเดต `.gitignore` เพิ่ม `*.tsbuildinfo`
+
+### Acceptance Criteria
+| AC | ผล | หมายเหตุ |
+|---|---|---|
+| AC1 | ผ่าน | `npm ci && npm run lint && npm test && npm run e2e && npm run build` ผ่านทั้งหมดบนเครื่องพัฒนา (Node 24.16) |
+| AC2 | ผ่าน | package ตรงกับ §4.1 ทุกตัว ไม่มีตัวอื่น มี `package-lock.json` |
+| AC3 | ผ่าน | ทดลอง import ผิดทิศทาง 1 จุดต่อชั้น (ทั้ง 5 ชั้น) แล้ว `eslint` ล้มจริงทุกจุด (ลบไฟล์ทดลองแล้ว ไม่ commit) — ดูรายละเอียดด้านล่าง |
+| AC4 | ผ่าน | `MemoryStore` และ `IndexedDbStore` (ผ่าน `fake-indexeddb`) ผ่าน `runProgressStoreContract` ชุดเดียวกันครบทุกข้อ |
+| AC5 | ผ่าน | เทสต์ `migrations`, `exportImport`, `outbox`, `ids` ผ่านทั้งหมด |
+| AC6 | ผ่าน | e2e smoke ข้อ 1–8 ผ่านครบทั้ง 4 project (32/32) |
+| AC7 | **ยังไม่ได้ตรวจ** | `dist/manifest.webmanifest` มี `lang: "th"`, icon 192/512 ครบ, `sw.js` ถูกสร้าง (ยืนยันด้วยไฟล์จริงและ e2e ข้อ 7) แต่ **ยังไม่ได้ทดสอบติดตั้ง PWA และเปิด offline บนอุปกรณ์จริง** เพราะสภาพแวดล้อมนี้ไม่มีอุปกรณ์จริงให้ทดสอบ ต้องให้เจ้าของโปรเจกต์หรือ Architect ทดสอบมือหลัง deploy |
+| AC8 | ผ่าน | ค้นหา `"ห้องเครื่องมือ"` และ `"ยังไม่มีอุปกรณ์จำลอง"` ใน `dist/assets/*.js` ไม่พบ (ตรวจหลัง build จริงทุกครั้ง) — ดูหมายเหตุการย้ายข้อความออกจาก `strings.ts` ด้านล่าง |
+| AC9 | **ยังไม่ได้ตรวจ** | ยังไม่ได้ push เข้า `main` ตามคำสั่ง (ห้าม commit/push ในงานนี้) จึงยังไม่เห็น workflow รันจริงบน GitHub Actions และยังไม่เห็น GitHub Pages ทำงาน ต้องให้ผู้ดูแล repo ตรวจหลัง merge/push |
+| AC10 | ผ่าน (บางส่วนตรวจอัตโนมัติ) | ฟอนต์ self-host ผ่าน `@fontsource` (ไม่มี Google Fonts) และ e2e ข้อ 8 ยืนยันว่าทุก request ระหว่างเทสต์เป็น `localhost:4173` เท่านั้น (ไม่มี request ภายนอกรวมฟอนต์) แต่ยังไม่ได้เปิด DevTools ตรวจ computed font-family ด้วยตาเอง |
+| AC11 | ผ่าน | e2e ข้อ 7: manifest และ icon โหลดได้ภายใต้ base `/Learning-Platform/` |
+| AC12 | ผ่าน | component test `Play.test.tsx` ยืนยันว่าไม่มี `role="status"` หรือข้อความ UpdateBanner ในหน้า Play |
+| AC13 | ผ่าน | component test `Parent.test.tsx` ใช้ store factory ที่ throw จำลอง private mode → เห็นคำเตือน memory-fallback, แอปไม่พัง |
+
+### เทสต์
+- คำสั่งที่รัน: `npm run lint`, `npm test` (`vitest run`), `npm run e2e` (`playwright test`), `npm run build`
+- ผล:
+  - `npm run lint` → ผ่าน (ESLint 0 error/0 warning, Prettier ผ่าน, `tsc -b` ผ่าน)
+  - `npm test` → **ผ่าน 53/53** (13 ไฟล์)
+  - `npm run e2e` → **ผ่าน 32/32** (8 เทสต์ × 4 project: android-tablet, phone, ipad, desktop)
+  - `npm run build` → ผ่าน, สร้าง `dist/` พร้อม `manifest.webmanifest`, `sw.js`, icon ครบ
+
+### ทดสอบบนเบราว์เซอร์
+- อุปกรณ์/ขนาดจอที่ทดสอบ: ทดสอบผ่าน Playwright บน browser engine จริง (Chromium: android-tablet/phone/desktop, WebKit: ipad) ตามเช็คลิสต์ในสเปก — **ไม่ได้เปิดด้วยเบราว์เซอร์แบบ interactive เพิ่มเติมด้วยตัวเอง** เพราะ M0 ยังไม่มีเนื้อหาบทเรียนให้ตรวจด้วยตา ครอบคลุมด้วย e2e อัตโนมัติแทน
+- ผลตามเช็คลิสต์ (ข้อที่เกี่ยวกับ M0):
+  - [x] ตั้งชื่อเล่นและเห็นคำทักทาย (ยังไม่มีบทเรียนให้ "เล่นจนจบ" ใน M0)
+  - [x] ขนาดมือถือ (360px, ~412px) และแท็บเล็ต (~768px) ไม่มี scroll แนวนอน (Home + Parent)
+  - [x] dark mode อ่านได้ชัด (ตรวจสี background ตรงกับ token ทั้ง light/dark)
+  - [x] ไม่มีเวลาแสดงให้ลูกเห็น (ไม่มี UI จับเวลาใน M0 เลย)
+  - [x] ข้อมูลผู้เรียนบันทึกและยังอยู่หลัง reload
+  - [x] ไม่มี error ใน console/page ระหว่างเทสต์ (เก็บ `pageerror`/`console.error` แล้ว assert ว่าง ทุกเทสต์)
+  - [ ] ติดตั้งเป็น PWA จริงบนอุปกรณ์จริง — **ยังไม่ได้ทดสอบ** (ต้องการอุปกรณ์จริง ดู AC7)
+
+### สิ่งที่ต่างจาก Spec หรือยังไม่ได้ทำ
+1. **`VITE_BASE` ปรับผ่าน env ได้** (ตามที่ผู้ว่าจ้างงานนี้สั่งไว้ล่วงหน้า เพราะยังไม่ยืนยัน custom domain แม้จะมี `CNAME` แล้ว): `vite.config.ts` และ `playwright.config.ts` อ่าน `process.env.VITE_BASE` ค่าเริ่มต้น `/Learning-Platform/` ตรงตาม spec ทุกประการถ้าไม่ตั้งค่า และ `.github/workflows/ci.yml` ตั้งค่าไว้จุดเดียวใน `env:` ระดับ workflow
+2. **`tsconfig.app.json` ไม่มี `baseUrl`**: TypeScript ที่ติดตั้ง (6.0.3, เวอร์ชันเสถียรล่าสุด ณ วันที่ทำตาม ADR-0002) deprecate `baseUrl` แล้ว (TS5101) และ `paths` ทำงานได้โดยไม่ต้องมี `baseUrl` เมื่อ `moduleResolution: "bundler"` จึงตัดออกแทนการเติม `ignoreDeprecations` เพื่อลดหนี้ทางเทคนิค — ทดสอบแล้ว alias `@/*` ทำงานปกติทั้ง `tsc -b`, Vitest, และ Vite build
+3. **`eslint-plugin-react-hooks` เวอร์ชันที่ติดตั้งคือ v7.1.1** (เวอร์ชันเสถียรล่าสุด) ซึ่งเปลี่ยน object key `configs['recommended-latest']` เป็น eslintrc format (ใช้ไม่ได้กับ flat config) ต้องใช้ `configs.flat['recommended-latest']` แทน และ v7 เพิ่มกฎใหม่หลายตัวที่ตรวจกฎของ **React Compiler** (`react-hooks/purity`, `react-hooks/static-components`, `react-hooks/set-state-in-effect`) ซึ่งโปรเจกต์นี้ไม่ได้ใช้ React Compiler จึงปิด 3 กฎนี้ (กฎหลักอื่น เช่น `rules-of-hooks`, `exhaustive-deps` ยังเปิดอยู่ตามเดิม)
+4. **ปิด `@typescript-eslint/require-await`**: `ProgressStore` เป็น interface async ทั้งหมดตาม ADR-0003 (เผื่อ adapter ในอนาคตต้อง await จริง) แต่ `MemoryStore` และเมธอด `close()` ของ `IndexedDbStore` ไม่มีอะไรต้องรอจริง กฎนี้จะบังคับให้ใส่ await ปลอมโดยไม่มีประโยชน์ จึงปิดแทน
+5. **ข้อความของ `DevManipulatives` (`"ห้องเครื่องมือ"`, `"ยังไม่มีอุปกรณ์จำลอง"`) ไม่ได้อยู่ใน `strings.ts`** ต่างจากหน้าอื่น เพราะ `strings.ts` เป็น object เดียวที่ import แบบเต็มโดยไฟล์ที่อยู่ใน production bundle อยู่แล้ว (`Home`, `Parent`, `App`) ทำให้ข้อความใดๆ ในไฟล์นี้ติดไปกับ bundle จริงเสมอแม้ property นั้นจะไม่ถูกใช้ (bundler ไม่ tree-shake ระดับ property ของ object literal) จึงต้องฝังข้อความ 2 บรรทัดนี้ไว้ในไฟล์ `DevManipulatives.tsx` เองโดยตรงเพื่อให้ผ่าน AC8 — เป็นทางเลือกที่ง่ายที่สุดสำหรับหน้า placeholder ที่ยังไม่มีเนื้อหาจริง ถ้าจะเพิ่มหน้า dev-only อื่นในอนาคตควรตั้งไฟล์ strings แยกต่อ route ที่ import แบบ lazy เหมือนกัน
+6. **AC7 และ AC9 ยังไม่ได้ตรวจจริง** ตามที่ระบุในตาราง AC ด้านบน (ต้องใช้อุปกรณ์จริงและการ push เข้า `main` ตามลำดับ ซึ่งอยู่นอกขอบเขตที่ได้รับอนุญาตในงานนี้)
+7. เพิ่มไฟล์ `src/app/LayoutContext.tsx` (ไม่ได้อยู่ในโครงสร้าง §4.8 ตรงตัว) เพื่อรองรับ context `onLogoLongPress` override ตามที่ §5.2 ระบุว่า "Layout รับ prop/context onLogoLongPress" — แยกเป็นไฟล์ context ต่างหากจาก `Layout.tsx` เพื่อให้ import ได้จาก M1 (หน้า Play) โดยไม่ต้อง import ทั้ง `Layout.tsx`
+
+### คำถาม / ข้อเสนอ
+- AC7 (ติดตั้ง PWA + offline บนอุปกรณ์จริง) และ AC9 (push จริงแล้ว CI/CD ทำงานครบ + Pages เปิดได้) รอให้เจ้าของโปรเจกต์หรือ Architect ตรวจหลังจาก merge งานนี้เข้า `main` และตั้งค่า Settings → Pages → Source: GitHub Actions (Q2 ในสเปก)
+- ยังไม่มีคำถามอื่นที่ต้องรบกวน Architect เพิ่มเติม — ถ้าตรวจแล้วพบปัญหาจะแจ้งกลับ
+
+### ลิงก์หรือวิธีเปิดดู
+- โค้ดอยู่ใน working tree ที่ `D:\Workspace\learning_platform` (ยังไม่ commit ตามคำสั่ง รอ lead ตรวจแล้ว commit)
+- เปิดดูในเครื่อง: `npm ci` → `npm run dev` (dev server) หรือ `npm run build && npm run preview` (build จริง)
+- รันเทสต์: `npm run lint`, `npm test`, `npm run e2e`, `npm run build`

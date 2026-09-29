@@ -1,0 +1,26 @@
+.header {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  padding: 0 var(--space-4);
+  background-color: var(--color-surface);
+}
+
+.logoButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-min);
+  min-height: var(--tap-min);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+.main {
+  padding: var(--space-4);
+}
