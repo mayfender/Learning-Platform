@@ -93,6 +93,8 @@ unit test วางคู่กับไฟล์ (`*.test.ts(x)`) ส่วน 
 
 ### 4.1 เนื้อหา (ร่าง — Tech Spec แต่ละบทจะเพิ่มรายละเอียด)
 
+> type ที่ใช้จริงของแบบทดสอบวินิจฉัย (เงื่อนไขประเมินและกฎแนะนำเป็นข้อมูล แทนฟังก์ชัน `recommend`) ดู [Tech Spec DX-ADD §4.1](../specs/DX-ADD-diagnostic.md)
+
 ```ts
 type SkillId = `${'add' | 'sub' | 'mul' | 'div'}.${string}`;   // เช่น 'add.make-10'
 
@@ -131,6 +133,8 @@ interface Lesson {
 ```
 
 ### 4.2 Event (เก็บใน IndexedDB แบบเพิ่มอย่างเดียว)
+
+> รายละเอียด field ของ `schemaVersion: 1` ที่ใช้จริง (เช่น `stageId`, `expected`, `latencyValid`, `fluent`, `strategyId`, summary ใน `session.completed`/`session.abandoned`) ดู [Tech Spec DX-ADD §6](../specs/DX-ADD-diagnostic.md)
 
 ```ts
 interface EventBase {
@@ -177,6 +181,7 @@ import ใช้วิธีรวมโดยตัด event ที่ `id` ซ
 | `/#/` | ลูก | เลือกกิจกรรมของวันนี้ |
 | `/#/play/:activityId` | ลูก | ตัวเล่นกิจกรรม (แบบทดสอบวินิจฉัยหรือบทเรียน) |
 | `/#/parent` | พ่อ | ผลรายข้อ, ความเข้าใจผิดที่พบ, ขั้นที่แนะนำ, บทพูด Number Talks, export/import, ตั้งค่า |
+| `/#/parent/results/:sessionId` | พ่อ | ผลของแบบทดสอบแต่ละครั้ง (เพิ่มใน M1) |
 | `/#/dev/manipulatives` | นักพัฒนา | ดูอุปกรณ์จำลองทุกโหมด (ไม่แสดงใน build จริง) |
 
 - **ทางเข้าหน้าสำหรับพ่อ:** กดค้างที่โลโก้ 2 วินาที ไม่ใช่ระบบความปลอดภัย แค่กันลูกกดเข้าโดยบังเอิญ
