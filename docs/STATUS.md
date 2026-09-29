@@ -8,7 +8,7 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** M1 (DX-ADD) ผ่านการตรวจของ Architect และ Designer แล้ว commit ในเครื่องแต่ยังไม่ push รอพ่อตัดสินว่าจะให้ Tester ตรวจก่อน deploy หรือไม่
+**กำลังทำ:** M1 (DX-ADD) Tester ตรวจรอบ 1 แล้ว (2026-09-29): **ปล่อยไม่ได้** มี Major 2 ข้อ (แตะซ้ำที่ตัวเลือกวิธีคิดบนอุปกรณ์แนวตั้งทำให้มีเลขค้างในข้อถัดไป, dark mode ขั้นที่ไฮไลต์ในหน้าผลอ่านไม่ออก) กับ Minor 2 ข้อ รอ Developer แก้แล้ว Tester ทดสอบซ้ำ ([รายงาน](test-reports/DX-ADD-2026-09-29.md)) ยังไม่ push
 **รอ:** พ่อทดสอบติดตั้ง PWA บนอุปกรณ์จริง (M0 AC7)
 
 ## Milestones
@@ -16,7 +16,7 @@
 | Milestone | สถานะ | เอกสาร | หมายเหตุ |
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
-| M1 แบบทดสอบวินิจฉัย DX-ADD | 🔍 ตรวจผ่าน รอ Tester / deploy | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | หลัง Developer ส่งงาน: Architect ตรวจ → Designer ตรวจ → deploy → ให้ลูกทำ |
+| M1 แบบทดสอบวินิจฉัย DX-ADD | ❌ Tester ตรวจรอบ 1 ไม่ผ่าน (Major 2, Minor 2) รอแก้แล้วทดสอบซ้ำ | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | Test Plan: [test-plans/DX-ADD.md](test-plans/DX-ADD.md) · รายงาน: [test-reports/DX-ADD-2026-09-29.md](test-reports/DX-ADD-2026-09-29.md) · หลังแก้: Tester ทดสอบซ้ำ → Architect → Designer → deploy → ให้ลูกทำ |
 | M2 บทเรียนแรก | ⏳ ยังไม่เริ่ม | — | ขั้นบนบันไดขึ้นกับผล DX-ADD ของลูก (คาดว่าขั้น 1–4) |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
@@ -51,7 +51,8 @@
 - [ ] M1: Developer ส่งงาน → Architect ตรวจตาม AC → Designer ตรวจเจตนาการสอน → commit และ deploy
 - [ ] หลัง M1 ขึ้นเว็บ: อัปเดตข้อ 7.2 ของ `math-learning-plan.md` ให้ชี้ไปที่เว็บแทน artifact เดิม
 - [ ] Architect เพิ่มคำสั่ง `npm run acceptance` และ Playwright config สำหรับ `tests/acceptance/` (ต้องมีก่อน Tester เริ่มรัน) และรวมเข้า CI
-- [ ] Tester เขียน Test Plan และ acceptance test ของ DX-ADD แล้วทดสอบ M1 ก่อน deploy
+- [x] Tester เขียน Test Plan และ acceptance test ของ DX-ADD แล้วทดสอบ M1 (2026-09-29: 97 เคส, ไม่ผ่าน 4 เคสจากบั๊ก 4 ข้อ; ลดขอบเขตอุปกรณ์ตามที่พ่ออนุมัติ)
+- [ ] Developer แก้ BUG-DX-ADD-01 (แตะซ้ำทะลุไปกดแป้น) และ BUG-DX-ADD-02 (dark mode ไฮไลต์บันได) เป็นอย่างน้อย พร้อม BUG-03, 04 แล้วให้ Tester ทดสอบซ้ำ; พ่อทำเช็คลิสต์อุปกรณ์จริงท้ายรายงาน
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
 
 ## ขั้นถัดไป
@@ -75,3 +76,4 @@
 | 2026-09-29 | Architect ตรวจรอบ 2: แฟลชแก้แล้ว แต่พบ event ถูกบันทึกซ้ำ 2 เท่า (StrictMode) จึงส่งกลับแก้อีกรอบ |
 | 2026-09-29 | เพิ่ม role Tester และปรับลำดับงานใน roles/README.md และ CLAUDE.md |
 | 2026-09-29 | Developer แก้บั๊ก event ซ้ำ (ย้าย side effect ออกจาก setState updater) Architect ยืนยันบน dev server ว่าได้ 20/1/1 event, unit 262/262, e2e 44 ผ่าน ตรวจผ่านทั้ง Architect และ Designer |
+| 2026-09-29 | Tester ตรวจ M1 รอบ 1 (acceptance 97 เคส ตามขอบเขตที่ลด: production 119 ผ่าน/12 ไม่ผ่านต่อ project, dev TC-20 ผ่าน; ชุดเต็มก่อนลดขอบเขต 196/21) เนื้อหา คณิตศาสตร์ event และแฟลชผ่านหมด แต่พบ Major 2 (แตะซ้ำที่ตัวเลือกวิธีคิดบนอุปกรณ์แนวตั้ง, dark mode ไฮไลต์บันไดอ่านไม่ออก) และ Minor 2 → ปล่อยไม่ได้ ส่งกลับ Developer |
