@@ -2,11 +2,11 @@
 
 โปรเจกต์นี้แบ่งงานเป็น 3 role และมีเจ้าของโปรเจกต์ (พ่อ) เป็นผู้ตัดสินใจสุดท้าย
 
-| Role | ไฟล์ | ผลงานหลัก | เก็บไว้ที่ |
-|---|---|---|---|
-| ผู้เชี่ยวชาญออกแบบการเรียนรู้ (Learning Designer) | [learning-designer.md](learning-designer.md) | Lesson Spec | `docs/lessons/` |
-| Software Architect | [software-architect.md](software-architect.md) | Architecture Overview, ADR, Tech Spec | `docs/architecture/`, `docs/specs/` |
-| Developer | [developer.md](developer.md) | โค้ด, เทสต์, รายงานส่งงาน | `src/`, `tests/`, `docs/specs/` |
+| Role | AI Model | ไฟล์ | ผลงานหลัก | เก็บไว้ที่ |
+|---|---|---|---|---|
+| ผู้เชี่ยวชาญออกแบบการเรียนรู้ (Learning Designer) | Opus | [learning-designer.md](learning-designer.md) | Lesson Spec | `docs/lessons/` |
+| Software Architect | Sonnet | [software-architect.md](software-architect.md) | Architecture Overview, ADR, Tech Spec | `docs/architecture/`, `docs/specs/` |
+| Developer | Sonnet | [developer.md](developer.md) | โค้ด, เทสต์, รายงานส่งงาน | `src/`, `tests/`, `docs/specs/` |
 
 แหล่งข้อมูลหลักที่ทุก role ต้องอ่าน: [docs/math-learning-plan.md](../docs/math-learning-plan.md)
 
