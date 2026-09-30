@@ -216,7 +216,7 @@ import ใช้วิธีรวมโดยตัด event ที่ `id` ซ
 - ค่าในตารางนี้คือค่าเริ่มต้น ปรับได้ใน `tokens.css` ที่เดียว ห้ามใส่สีตรงใน component
 - รองรับความกว้างตั้งแต่ 360px ไม่มี scroll แนวนอน ออกแบบให้ใช้ได้ทั้งแนวตั้งและแนวนอนบนแท็บเล็ต
 - พื้นที่แตะ ≥ `--tap-min`
-- ใช้แป้นตัวเลขของแอปเอง ไม่เรียกคีย์บอร์ดของระบบ เพื่อให้ขนาดและตำแหน่งเหมือนกันทุกอุปกรณ์ (โดยเฉพาะ iPad และ Android)
+- ใช้แป้นตัวเลขของแอปเอง ไม่เรียกคีย์บอร์ดของระบบ เพื่อให้ขนาดและตำแหน่งเหมือนกันทุกอุปกรณ์ (โดยเฉพาะแท็บเล็ต Android)
 - ปิด animation เมื่อ `prefers-reduced-motion`
 - ป้องกันการซูมด้วยการแตะสองครั้งบนปุ่ม (`touch-action: manipulation`) แต่ไม่ปิดการซูมทั้งหน้า
 
@@ -235,14 +235,17 @@ import ใช้วิธีรวมโดยตัด event ที่ `id` ซ
 |---|---|
 | `npm run dev` | dev server |
 | `npm test` | Vitest (unit + component + ตรวจเนื้อหา) |
-| `npm run e2e` | Playwright 3 project |
+| `npm run e2e` | Playwright 3 project (e2e ของ Developer) |
+| `npm run acceptance` | acceptance test ของ Tester (`tests/acceptance/`, 3 project เดียวกัน) |
 | `npm run build` | build static + PWA ลง `dist/` |
 | `npm run preview` | เปิด build จริงในเครื่อง |
-| `npm run lint` | ESLint + type check |
+| `npm run lint` | ESLint + Prettier + type check |
 
-Deploy: push เข้า branch `main` → GitHub Actions รัน lint, test และ e2e → ถ้าผ่านทั้งหมดจึง build และ deploy ไป GitHub Pages ถ้าเทสต์ไม่ผ่านจะไม่ deploy (Vite ต้องตั้ง `base: '/Learning-Platform/'`)
+Deploy: push เข้า branch `main` → GitHub Actions รัน lint, test, e2e และ acceptance (ติดตั้งเฉพาะ Chromium) → ถ้าผ่านทั้งหมดจึง build และ deploy ไป GitHub Pages ถ้าเทสต์ไม่ผ่านจะไม่ deploy (Vite ต้องตั้ง `base: '/Learning-Platform/'`)
 
 ## 9. แผนงาน
+
+ตารางนี้คือแผนเริ่มต้น สถานะจริงของแต่ละ milestone ดูที่ [docs/STATUS.md](../STATUS.md)
 
 | Milestone | งาน | หมายเหตุ |
 |---|---|---|

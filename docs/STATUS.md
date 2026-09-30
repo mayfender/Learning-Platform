@@ -1,6 +1,6 @@
 # Project Status
 
-- อัปเดตล่าสุด: 2026-09-29
+- อัปเดตล่าสุด: 2026-09-30
 - เว็บ: https://mayfender.github.io/Learning-Platform/
 - Repo: https://github.com/mayfender/Learning-Platform
 
@@ -8,7 +8,7 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** M1 (DX-ADD) ผ่าน Tester รอบ 2, Architect และ Designer แล้ว กำลัง deploy ขึ้นเว็บ
+**กำลังทำ:** ไม่มีงานที่กำลังพัฒนา M1 (DX-ADD) deploy ขึ้นเว็บแล้ว (CI ผ่านทุกขั้นรวม acceptance)
 **รอ:** พ่อทำเช็คลิสต์อุปกรณ์จริง ([รายงานรอบ 2 ข้อ 6](test-reports/DX-ADD-2026-09-30.md)) แล้วให้ลูกทำ DX-ADD และ export ผลส่งให้ Designer
 
 ## Milestones
@@ -24,27 +24,31 @@
 
 | เอกสาร | สถานะ |
 |---|---|
-| [math-learning-plan.md](math-learning-plan.md) | ใช้งาน (ข้อ 7.2 ยังอ้างถึง artifact เดิม ให้อัปเดตหลัง M1 ขึ้นเว็บ) |
-| ADR-0001 ถึง 0005, 0007 | ยอมรับ |
+| [math-learning-plan.md](math-learning-plan.md) | ใช้งาน (ข้อ 7.2 ชี้ไปที่เว็บแอปแล้ว) |
+| [architecture/overview.md](architecture/overview.md) | ใช้งาน |
+| ADR-0001 ถึง 0005, 0007 | ยอมรับ (0007 แก้ 2026-09-30: ตัด iPad) |
 | ADR-0006 ระบบทบทวน Leitner | **เสนอ** รอ Designer กำหนดช่วงเวลาและเกณฑ์คล่อง (ทำพร้อม M2) |
-| Lesson Spec DX-ADD | อนุมัติแล้ว 2026-09-29 |
+| Lesson Spec DX-ADD | อนุมัติแล้ว 2026-09-29 (ชี้แจง §4 เมื่อ 2026-09-30) |
 | Tech Spec M0 | เสร็จ |
-| Tech Spec DX-ADD | กำลังพัฒนา |
+| Tech Spec DX-ADD | เสร็จ (มี §3.3.1 กันแตะเบิ้ล 400ms เพิ่ม 2026-09-30) |
+| Test Plan / Test Report DX-ADD | รอบ 2 ผ่าน |
+| [roles/](../roles/README.md) | 4 role: Designer, Architect, Developer, Tester |
 
 ## การตัดสินใจสำคัญ (ของเจ้าของโปรเจกต์)
 
 | วันที่ | การตัดสินใจ |
 |---|---|
-| 2026-09-29 | แบ่งงาน 3 role: Designer (Opus), Architect (Sonnet), Developer (Sonnet) |
+| 2026-09-29 | แบ่งงาน 3 role: Designer (Opus), Architect (Sonnet), Developer (Sonnet) (ต่อมาเพิ่ม Tester) |
 | 2026-09-29 | Static web + เก็บข้อมูลในเครื่อง (IndexedDB) ไม่ใช้ Claude Artifact และไม่ใช้ cloud DB |
 | 2026-09-29 | AI เขียนโค้ดเป็นหลัก ใช้ React + TypeScript |
 | 2026-09-29 | รองรับแท็บเล็ต Android, มือถือ, คอมพิวเตอร์ และ iPad |
-| 2026-09-30 | ตัด iPad ออกจากชุดทดสอบ (ลูกไม่ใช้ iPad) ทดสอบเฉพาะ Chrome บนแท็บเล็ต Android, มือถือ และคอมพิวเตอร์ ส่วน iPad ใช้ได้แบบ best-effort |
 | 2026-09-29 | Repo เป็น public และ host บน GitHub Pages ไม่ใช้ custom domain |
 | 2026-09-29 | อนุมัติ DX-ADD v2: ไม่บอกถูก/ผิดระหว่างทำ, ข้ามด่าน 5 ถ้าด่าน 4 ถูก ≤ 1 ข้อ |
 | 2026-09-29 | รับข้อเสนอ D1–D15 ของ Architect ใน Tech Spec DX-ADD ทั้งหมด |
 | 2026-09-29 | เพิ่ม role Tester (Sonnet) ทำงานอิสระจาก Developer: ออกแบบเทสต์จาก spec โดยไม่อ่านโค้ด |
 | 2026-09-29 | ชื่อแอปชั่วคราว "บทเรียนคณิตศาสตร์" (ชื่อสั้น "คณิต") และ icon ten-frame สีส้ม |
+| 2026-09-29 | ให้ Tester ตรวจก่อน deploy ทุกครั้ง และลดขอบเขต acceptance: เทสต์ตรรกะที่ยาวรันเฉพาะ desktop ส่วนเรื่องที่ขึ้นกับอุปกรณ์รันครบ |
+| 2026-09-30 | ตัด iPad ออกจากชุดทดสอบ (ลูกไม่ใช้ iPad) ทดสอบเฉพาะ Chrome บนแท็บเล็ต Android, มือถือ และคอมพิวเตอร์ ส่วน iPad ใช้ได้แบบ best-effort |
 
 ## งานค้าง / รอคำตอบ
 
@@ -80,3 +84,5 @@
 | 2026-09-30 | Tester ทดสอบซ้ำ M1 รอบ 2 (commit 0b8bfe1, matrix 3 project): BUG-01–04 และ S1–S3 แก้แล้ว, acceptance 124 ผ่าน/0 ไม่ผ่าน, lint ผ่าน, vitest 270/270 → ปล่อยได้ ส่งต่อ Architect |
 | 2026-09-30 | Designer ตอบคำถามของ Tester: Q1 (เงื่อนไข "ด่าน 5 ถูกข้าม" ในแถว 5 ตั้งใจใส่กันไว้ ไม่มีผล), Q2 (ชี้แจงใน Lesson Spec §4 ว่าตารางรายข้อคือคำตัดสินสุดท้าย), Q7 (ข้อความหน้าพ่อตาม D13 ยอมรับ) |
 | 2026-09-30 | M1 ผ่าน Architect และ Designer แล้ว push เพื่อ deploy |
+| 2026-09-30 | CI ผ่านทุกขั้น (lint, test, e2e, acceptance, build) และ deploy M1 ขึ้นเว็บแล้ว |
+| 2026-09-30 | ตรวจเอกสารสำหรับส่งต่อ session: CLAUDE.md เพิ่มหน้าที่ผู้ประสานงานและบทเรียนจาก M1, overview เพิ่ม acceptance, roles/README เพิ่มผู้ประสานงาน |
