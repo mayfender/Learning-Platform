@@ -77,6 +77,52 @@ export function runProgressStoreContract(name: string, create: () => Promise<Pro
       await store.close();
     });
 
+    it('at เท่ากัน: item.answered ก่อน session.completed แม้ id สวนทางและเขียนสลับลำดับ', async () => {
+      const store = await create();
+      const envelope = {
+        at: '2026-01-01T00:00:00.000Z',
+        schemaVersion: 1 as const,
+        learnerId: 'l1',
+        sessionId: 's1',
+        activityId: 'DX-ADD',
+      };
+      await store.appendEvents([
+        {
+          ...envelope,
+          id: 'a',
+          type: 'session.completed' as const,
+          activityVersion: 'DX-ADD v2',
+          summary: {
+            kind: 'diagnostic' as const,
+            completion: 'complete' as const,
+            stages: [],
+            groups: [],
+            skippedStageIds: [],
+            misconceptions: [],
+            recommendation: { kind: 'incomplete' as const },
+          },
+        },
+        {
+          ...envelope,
+          id: 'z',
+          type: 'item.answered' as const,
+          itemId: '5.4',
+          skillId: 'add.x' as const,
+          problem: { kind: 'arith' as const, op: '+' as const, a: 49, b: 26 },
+          expected: 75,
+          response: 75,
+          correct: true,
+          latencyMs: 1,
+          latencyValid: true,
+          fluent: null,
+          attemptNo: 1,
+        },
+      ]);
+      const events = await store.listEvents();
+      expect(events.map((e) => e.type)).toEqual(['item.answered', 'session.completed']);
+      await store.close();
+    });
+
     it('กรองด้วย learnerId, activityId, sessionId และรวมกัน', async () => {
       const store = await create();
       const base = {

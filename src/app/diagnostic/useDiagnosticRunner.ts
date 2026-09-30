@@ -8,6 +8,7 @@ import {
 import type { AppEvent, Diagnostic } from '@/engine/types';
 import type { Outbox } from '@/store/outbox';
 import { newId } from '@/store/ids';
+import { createEventStamper } from '@/store/stamp';
 
 export interface UseDiagnosticRunnerOptions {
   learnerId: string;
@@ -30,6 +31,7 @@ export function useDiagnosticRunner(
     sessionIdRef.current = newId();
   }
   const sessionId = sessionIdRef.current;
+  const stamperRef = useRef(createEventStamper());
   const [state, setState] = useState<RunnerState>(() => machine.initial());
   const stateRef = useRef<RunnerState>(state);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -57,7 +59,7 @@ export function useDiagnosticRunner(
         emitted.push({
           ...effect.event,
           id: newId(),
-          at: new Date().toISOString(),
+          at: stamperRef.current.next(),
           schemaVersion: 1,
           learnerId,
           sessionId,

@@ -334,6 +334,15 @@ export const DX_ADD: Diagnostic = {
   misconceptions: addMisconceptions,
   strategySets: addStrategySets,
   timing: { ackMs: 1000 },
+  example: {
+    demo: { count: 3, acceptOnly: 3 },
+    try: { count: 2, readyMs: 900, flashMs: 1500, revealMs: 2000 },
+    texts: {
+      demo: 'ตัวอย่าง: ดูจุดทั้งหมดในกล่อง มีกี่จุด พิมพ์ตัวเลขแล้วกด ตอบ',
+      try: 'ลองดูอีกที คราวนี้ภาพจะหายไป พิมพ์ว่าเห็นกี่จุด',
+      reveal: 'มี 2 จุด ต่อไปเป็นข้อจริงแล้ว',
+    },
+  },
   stages: [
     {
       id: 's1',

@@ -18,4 +18,6 @@ export interface AnswerRecord {
   strategySetId?: string;
   strategyId?: StrategyId;
   flashInterrupted?: boolean;
+  answeredAt?: string;
+  strategyLatencyMs?: number;
 }

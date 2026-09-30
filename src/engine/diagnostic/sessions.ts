@@ -21,7 +21,9 @@ export function groupSessions(events: readonly AppEvent[]): SessionView[] {
 
   const views: SessionView[] = [];
   for (const [sessionId, sessionEvents] of bySession) {
-    const sorted = [...sessionEvents].sort((a, b) => a.at.localeCompare(b.at));
+    // เรียงตาม at แบบเสถียร: event ที่ at เท่ากันคงลำดับเดิมจาก store ซึ่งเรียงด้วย compareEvents แล้ว
+    // (engine import store ไม่ได้ ตามกฎ lint) ADR-0008 ข้อ 3
+    const sorted = [...sessionEvents].sort((a, b) => (a.at < b.at ? -1 : a.at > b.at ? 1 : 0));
     const started = sorted.find((e) => e.type === 'session.started');
     const completed = sorted.find((e) => e.type === 'session.completed');
     const abandoned = sorted.find((e) => e.type === 'session.abandoned');

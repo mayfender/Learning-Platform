@@ -186,6 +186,13 @@ export interface DiagnosticTexts {
   };
 }
 
+// หน้าตัวอย่างและข้อลองเองก่อนข้อแรก (ไม่บันทึก event ไม่นับในผล) — Lesson Spec §8.2.1
+export interface DiagnosticExample {
+  demo: { count: number; acceptOnly: number };
+  try: { count: number; readyMs: number; flashMs: number; revealMs: number };
+  texts: { demo: string; try: string; reveal: string };
+}
+
 export interface Diagnostic {
   kind: 'diagnostic';
   id: string;
@@ -195,6 +202,7 @@ export interface Diagnostic {
   misconceptions: readonly Misconception[];
   strategySets: readonly StrategySet[];
   timing: { ackMs: number };
+  example?: DiagnosticExample;
   stages: readonly DiagnosticStage[];
   recommendation: readonly RecommendationRule[];
   texts: DiagnosticTexts;
@@ -230,6 +238,10 @@ export interface ItemAnsweredEvent {
   strategySetId?: string;
   strategyId?: StrategyId;
   flashInterrupted?: boolean;
+  // เวลาที่ลูกกด "ตอบ" (ISO) — `at` คือเวลาบันทึก event (ADR-0008) ข้อที่ถามวิธีคิดจึงช้ากว่าเวลาตอบ
+  answeredAt?: string;
+  // เวลาตั้งแต่หน้าเลือกวิธีคิดแสดงจนแตะเลือก (ms) เฉพาะข้อที่ถามวิธีคิด ไม่ใส่ถ้าแท็บถูกซ่อน
+  strategyLatencyMs?: number;
   attemptNo: number;
 }
 

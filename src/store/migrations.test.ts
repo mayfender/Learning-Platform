@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CURRENT_SCHEMA_VERSION,
   InvalidEventError,
+  isAppEvent,
   NewerSchemaError,
   migrateEvent,
   type Migration,
@@ -52,5 +53,38 @@ describe('migrateEvent', () => {
 
   it('ปฏิเสธ record ที่ไม่มี schemaVersion', () => {
     expect(() => migrateEvent({ foo: 'bar' })).toThrow(InvalidEventError);
+  });
+});
+
+describe('isAppEvent: field ใหม่ของ item.answered (ADR-0008)', () => {
+  const answered = (extra: Record<string, unknown> = {}) => ({
+    ...validEvent(),
+    type: 'item.answered',
+    itemId: '4.1',
+    skillId: 'add.x',
+    problem: { kind: 'arith', op: '+', a: 8, b: 5 },
+    expected: 13,
+    response: 13,
+    correct: true,
+    latencyMs: 1000,
+    latencyValid: true,
+    fluent: null,
+    attemptNo: 1,
+    ...extra,
+  });
+
+  it('รับ event เก่าที่ไม่มี answeredAt / strategyLatencyMs', () => {
+    expect(isAppEvent(answered())).toBe(true);
+  });
+
+  it('รับ event ใหม่ที่มี 2 field', () => {
+    expect(
+      isAppEvent(answered({ answeredAt: '2026-01-01T00:00:00.000Z', strategyLatencyMs: 2300 })),
+    ).toBe(true);
+  });
+
+  it('ปฏิเสธเมื่อชนิดผิด', () => {
+    expect(isAppEvent(answered({ strategyLatencyMs: '5' }))).toBe(false);
+    expect(isAppEvent(answered({ answeredAt: 123 }))).toBe(false);
   });
 });

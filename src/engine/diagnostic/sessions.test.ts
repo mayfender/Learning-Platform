@@ -97,3 +97,43 @@ describe('groupSessions', () => {
     expect(session!.endedAt).toBeUndefined();
   });
 });
+
+describe('groupSessions: ข้อมูลเก่าที่ at ซ้ำ (บั๊กข้อ 5.4)', () => {
+  function answered(id: string, itemId: string, at: string): AppEvent {
+    return {
+      id,
+      at,
+      schemaVersion: 1,
+      learnerId: 'l1',
+      sessionId: 's1',
+      activityId: 'DX-ADD',
+      type: 'item.answered',
+      itemId,
+      skillId: 'add.x',
+      problem: { kind: 'arith', op: '+', a: 1, b: 1 },
+      expected: 2,
+      response: 2,
+      correct: true,
+      latencyMs: 1,
+      latencyValid: true,
+      fluent: null,
+      attemptNo: 1,
+    };
+  }
+
+  it('ได้ items ครบ 20 ข้อ และ endedAt ไม่ก่อนข้อสุดท้าย (ส่ง event สลับลำดับ)', () => {
+    const events: AppEvent[] = [started('s0', 's1', '2026-01-01T00:00:00.000Z')];
+    for (let i = 1; i <= 19; i += 1) {
+      const at = new Date(Date.UTC(2026, 0, 1, 0, 0, i)).toISOString();
+      events.push(answered(`i${i}`, `q${i}`, at));
+    }
+    const last = '2026-01-01T00:00:30.000Z';
+    // completed มาก่อน answered ในอาร์เรย์และ id ของ completed เรียงก่อน (เหมือนข้อมูลจริงที่พัง)
+    events.push(completed('a-done', 's1', last), answered('z-last', 'q20', last));
+    const [session] = groupSessions(events);
+    expect(session!.items).toHaveLength(20);
+    expect(session!.items.at(-1)!.itemId).toBe('q20');
+    expect(session!.endedAt).toBe(last);
+    expect(session!.status).toBe('complete');
+  });
+});

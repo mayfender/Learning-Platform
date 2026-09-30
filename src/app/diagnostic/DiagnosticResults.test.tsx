@@ -56,6 +56,14 @@ function runSession(opts: { stopAfterItems?: number } = {}): RunResult {
       dispatch({ type: 'STAGE_GO' });
       continue;
     }
+    if (phase.kind === 'example') {
+      if (phase.step === 'demo') dispatch({ type: 'EXAMPLE_SUBMIT', response: 3 });
+      else if (phase.step === 'try-ready') dispatch({ type: 'READY_DONE' });
+      else if (phase.step === 'try-show') dispatch({ type: 'FLASH_END' });
+      else if (phase.step === 'try-answering') dispatch({ type: 'EXAMPLE_SUBMIT', response: 2 });
+      else dispatch({ type: 'EXAMPLE_DONE' });
+      continue;
+    }
     if (phase.kind === 'item') {
       if (phase.step === 'ready') {
         dispatch({ type: 'READY_DONE' });
@@ -72,6 +80,7 @@ function runSession(opts: { stopAfterItems?: number } = {}): RunResult {
         latencyMs: 100,
         latencyValid: true,
         flashInterrupted: false,
+        answeredAt: new Date().toISOString(),
       });
       continue;
     }
@@ -165,6 +174,11 @@ describe('DiagnosticResults', () => {
     dispatch({ type: 'PARENT_CONTINUE' });
     dispatch({ type: 'KID_START' });
     dispatch({ type: 'STAGE_GO' });
+    dispatch({ type: 'EXAMPLE_SUBMIT', response: 3 });
+    dispatch({ type: 'READY_DONE' });
+    dispatch({ type: 'FLASH_END' });
+    dispatch({ type: 'EXAMPLE_SUBMIT', response: 2 });
+    dispatch({ type: 'EXAMPLE_DONE' });
     dispatch({ type: 'READY_DONE' });
     dispatch({ type: 'FLASH_END' });
     dispatch({
@@ -173,6 +187,7 @@ describe('DiagnosticResults', () => {
       latencyMs: 100,
       latencyValid: false,
       flashInterrupted: false,
+      answeredAt: new Date().toISOString(),
     });
     dispatch({ type: 'STOP' });
 

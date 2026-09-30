@@ -1059,3 +1059,22 @@ example?: DiagnosticExample;
 | Q-DX1 | Designer | ที่ขั้นตัวอย่าง ถ้าลูกพิมพ์เลขที่ไม่ใช่ 3 แล้วกด "ตอบ" (LS บอก "รับเฉพาะ 3") ให้ตอบสนองอย่างไร | ล้างช่องคำตอบเฉยๆ ไม่มีข้อความ ถ้าต้องการข้อความช่วย (เช่น "ลองนับอีกที") ขอเป็นข้อความใน LS | **ตัดสินแล้ว 2026-09-30: ตามข้อเสนอ**
 | Q-DX2 | Designer | ตำแหน่งข้อความ `demo`/`try` เหนือหรือใต้ภาพ และในขั้น try ข้อความ `try` แสดงตลอดขั้นหรือแค่ก่อนแฟลช | ข้อความ `try` อยู่ใต้ภาพตลอดขั้น (ผังเดียวกับคำสั่งใต้โจทย์ของข้อจริง) ข้อความเหนือภาพ = "พร้อมนะ..."/"ดู!"/"ซ่อนแล้ว! กี่จุดนะ?" ตามข้อจริง | **ตัดสินแล้ว 2026-09-30: ตามข้อเสนอ**
 | Q-DX3 | Designer | ตัดสินการแยกเกณฑ์ 2 ระดับ (§14.4) ได้หรือยัง | รอคำตอบ ไม่ทำในรอบนี้ | **เลื่อนตัดสิน (2026-09-30): ไม่ทำ DX-ADD v3 ก่อนลูกทำ DX-ADD ซ้ำหลัง ADD-04 §14.4 เก็บเป็นข้อมูลประเมิน ไม่ใช่คำถามที่รอคำตอบ**
+
+## 15. รายงานการพัฒนา — ส่วนเพิ่ม §14 (2026-09-30)
+
+### สิ่งที่ทำ
+- DX-1: `src/store/eventOrder.ts` (`compareEvents`), `src/store/stamp.ts` (`createEventStamper` ใช้ใน `useDiagnosticRunner` 1 ตัวต่อ session), `MemoryStore`/`IndexedDbStore.listEvents` ใช้ตัวเรียงกลาง
+- DX-2: `answeredAt` และ `strategyLatencyMs` (type, machine, `isAppEvent`, `DiagnosticPlayer` มีตัวจับเวลาหน้าเลือกวิธีคิด), `src/engine/answerTime.ts`
+- DX-3: `DiagnosticExample` + `DX_ADD.example`, phase `example` ใน machine (`EXAMPLE_SUBMIT`, `EXAMPLE_DONE`), หน้าตัวอย่างใน `DiagnosticPlayer`
+- DX-4: e2e `passExample()` และเช็กไฟล์ export (ลำดับ, `answeredAt`, `strategyLatencyMs`, ไม่มี event ของตัวอย่าง)
+
+### สิ่งที่ต่างจาก Spec (ต้องให้ Architect ทราบ)
+- **กฎ lint ขัดกับ §14.2 ข้อ 2:** `src/engine` import `src/store` ไม่ได้ และ `src/store` import ค่าจาก `src/engine` ไม่ได้ จึงให้ `groupSessions` (engine) ไม่ใช้ `compareEvents` แต่เรียงตาม `at` แบบเสถียร (event ที่ `at` เท่ากันคงลำดับจาก `listEvents` ซึ่งเรียงด้วย `compareEvents` แล้ว) ผลลัพธ์ไม่ต่างเพราะ `groupSessions` ใช้ลำดับแค่หา `started`/`ended` และกรอง `items`
+- Spec ใช้ `[data-dot]` นับจุด แต่ `TenFrame` ไม่มี attribute นี้ (มีแค่ `<circle>` ใน `[data-testid=ten-frame]`) เทสต์จึงนับ `circle` เหมือนเทสต์เดิม
+- ข้อความ `try` แสดงใต้ภาพเฉพาะ step try-ready/try-show/try-answering (ไม่แสดงตอน reveal เพราะ reveal มีข้อความของตัวเอง)
+- `AnswerRecord.answeredAt` เป็น optional (fixture เดิมไม่ต้องแก้) แต่ `RunnerAction.SUBMIT.answeredAt` บังคับ
+
+### เทสต์
+- unit 310/310 (เดิม 270), lint ของ `src` และ `tests/e2e` ผ่าน, e2e ครบ 3 project ผ่านทั้ง production build และ `E2E_DEV=1` (StrictMode)
+- ข้อสังเกต: ถ้าแท็บซ่อนอยู่ตอนอยู่หน้าเลือกวิธีคิด (เช่น เบราว์เซอร์ในเครื่องมือทดสอบที่ pane ถูกซ่อน) จะไม่มี `strategyLatencyMs` ตาม §14.3
+

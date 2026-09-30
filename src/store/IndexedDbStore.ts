@@ -1,5 +1,6 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { AppEvent, Learner } from '@/engine/types';
+import { compareEvents } from '@/store/eventOrder';
 import { migrateEvent } from '@/store/migrations';
 import type { EventQuery, MetaValues, ProgressStore } from '@/store/ProgressStore';
 
@@ -114,7 +115,7 @@ export async function openIndexedDbStore(
         result = result.filter((e) => e.sessionId === query.sessionId);
       }
 
-      result.sort((a, b) => a.at.localeCompare(b.at) || a.id.localeCompare(b.id));
+      result.sort(compareEvents);
       return result.map((e) => migrateEvent(structuredClone(e)));
     },
 

@@ -5,6 +5,7 @@ import { useProgress } from '@/app/ProgressProvider';
 import { formatText } from '@/app/diagnostic/formatText';
 import { useDiagnosticRunner } from '@/app/diagnostic/useDiagnosticRunner';
 import { useSilentTimer } from '@/app/diagnostic/useSilentTimer';
+import { createSilentTimer } from '@/engine/timing';
 import { formatProblem } from '@/engine/problem';
 import type { Diagnostic } from '@/engine/types';
 import { TenFrame } from '@/manipulatives/TenFrame';
@@ -38,9 +39,25 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   const step = phase.kind === 'item' ? phase.step : 'ready';
   const timer = useSilentTimer(itemKey, step);
 
+  const exampleStep = phase.kind === 'example' ? phase.step : '';
   useEffect(() => {
     setValue('');
-  }, [itemKey]);
+  }, [itemKey, exampleStep]);
+
+  // ตัวจับเวลาเงียบของหน้าเลือกวิธีคิด (Tech Spec §14.3) เริ่มเมื่อเข้า phase strategy
+  // ถ้าแท็บถูกซ่อนระหว่างนั้น ไม่ใส่ strategyLatencyMs (ค่าใช้ไม่ได้)
+  const strategyTimerRef = useRef(createSilentTimer());
+  const strategyKey = phase.kind === 'strategy' ? `${phase.stage}-${phase.item}` : '';
+  useEffect(() => {
+    if (strategyKey === '') return;
+    strategyTimerRef.current.start();
+    if (document.visibilityState === 'hidden') strategyTimerRef.current.invalidate();
+    const onVisibility = (): void => {
+      if (document.visibilityState === 'hidden') strategyTimerRef.current.invalidate();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [strategyKey]);
 
   // กันแตะทะลุหลังเปลี่ยนหน้า (§3.3.1): input ทั้ง pointer และคีย์บอร์ดที่เข้ามาภายใน 400 ms หลังการแตะที่
   // เปลี่ยนหน้า ถูกทิ้งไม่ว่าตำแหน่งใด ไม่ disable ปุ่ม ไม่ใช้ setTimeout (เทียบเวลาตอน input เข้ามา)
@@ -105,10 +122,25 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   }, [registerLogo]);
 
   function onSubmit(): void {
+    if (phase.kind === 'example') {
+      if (value.length === 0) return;
+      const response = Number(value);
+      if (phase.step === 'demo' && response !== dx.example?.demo.acceptOnly) {
+        // ตัวอย่าง: เลขอื่นที่ไม่ใช่คำตอบที่รับ ล้างช่องเฉยๆ ไม่มีข้อความ สี หรือเสียง (Q-DX1)
+        setValue('');
+        return;
+      }
+      if (phase.step === 'demo' || phase.step === 'try-answering') {
+        tapDispatch({ type: 'EXAMPLE_SUBMIT', response });
+      }
+      return;
+    }
     if (phase.kind !== 'item' || phase.step !== 'answering' || value.length === 0) return;
+    const answeredAt = new Date().toISOString();
     const result = timer.submit();
     tapDispatch({
       type: 'SUBMIT',
+      answeredAt,
       response: Number(value),
       latencyMs: result.latencyMs,
       latencyValid: result.latencyValid,
@@ -158,6 +190,62 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
         )}
         <p>{stage.intro}</p>
         <Button onClick={() => tapDispatch({ type: 'STAGE_GO' })}>{dx.texts.stageGo}</Button>
+      </div>
+    );
+  } else if (phase.kind === 'example' && dx.example) {
+    const example = dx.example;
+    const exStep = phase.step;
+    let topText: string;
+    let visual: React.ReactNode;
+    if (exStep === 'demo') {
+      topText = example.texts.demo;
+      visual = (
+        <TenFrame key="example-demo" mode="show" colorMode="single" filled={example.demo.count} />
+      );
+    } else if (exStep === 'try-ready') {
+      topText = dx.texts.flash.ready;
+      visual = <TenFrame key="example-try" mode="hidden" filled={example.try.count} />;
+    } else if (exStep === 'try-show') {
+      topText = dx.texts.flash.show;
+      visual = (
+        <TenFrame
+          key="example-try-flash"
+          mode="flash"
+          flashMs={example.try.flashMs}
+          colorMode="single"
+          filled={example.try.count}
+          onFlashEnd={() => dispatch({ type: 'FLASH_END' })}
+        />
+      );
+    } else if (exStep === 'try-answering') {
+      topText = dx.texts.flash.hidden;
+      visual = <TenFrame key="example-try" mode="hidden" filled={example.try.count} />;
+    } else {
+      topText = example.texts.reveal;
+      visual = (
+        <TenFrame key="example-reveal" mode="show" colorMode="single" filled={example.try.count} />
+      );
+    }
+    const isTry = exStep === 'try-ready' || exStep === 'try-show' || exStep === 'try-answering';
+    const canAnswer = exStep === 'demo' || exStep === 'try-answering';
+
+    content = (
+      <div className={styles.itemLayout}>
+        <div>
+          <p className={styles.centerText}>{topText}</p>
+          <div className={styles.visualWrap}>{visual}</div>
+          {isTry && <p className={styles.instruction}>{example.texts.try}</p>}
+        </div>
+        <div>
+          <AnswerDisplay value={value} placeholder={dx.texts.answerPlaceholder} />
+          <Keypad
+            value={value}
+            onChange={setValue}
+            onSubmit={onSubmit}
+            submitLabel={dx.texts.submit}
+            disabled={!canAnswer || stopOpen}
+          />
+        </div>
       </div>
     );
   } else if (phase.kind === 'item') {
@@ -236,7 +324,14 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
             label: o.label,
             example: o.example?.text,
           }))}
-          onPick={(id) => tapDispatch({ type: 'STRATEGY_PICK', strategyId: id as never })}
+          onPick={(id) => {
+            const { latencyMs, latencyValid } = strategyTimerRef.current.stop();
+            tapDispatch({
+              type: 'STRATEGY_PICK',
+              strategyId: id as never,
+              ...(latencyValid ? { strategyLatencyMs: latencyMs } : {}),
+            });
+          }}
         />
       </div>
     );

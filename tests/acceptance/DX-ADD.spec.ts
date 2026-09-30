@@ -2,9 +2,15 @@
 // ห้ามอ่านหรือ import จาก src/ (roles/tester.md §2) ดูแผนที่ docs/test-plans/DX-ADD.md
 // ชื่อเทสต์ขึ้นต้นด้วยรหัส TC ตรงกับ Test Plan
 import { expect, test, type Page } from '@playwright/test';
+import { writeFile } from 'node:fs/promises';
 import {
   ACKS,
   DEFAULT_MS,
+  EXAMPLE,
+  GUARD_MS,
+  goStage1,
+  passExample,
+  seenDots,
   guardWait,
   ITEMS,
   ITEM_BY_ID,
@@ -18,6 +24,9 @@ import {
   beginSession,
   byType,
   doExport,
+  expectSessionOrder,
+  ISO_MS,
+  bySession as sessionsOf,
   expectNoFeedback,
   expectedCode,
   firstLine,
@@ -166,6 +175,8 @@ test('TC-03 ลำดับหน้าจอ 20 ข้อ ข้อความ
   const acks: string[] = [];
   const strategyItems: string[] = [];
   const instructionsSeen: Record<string, string> = {};
+  const stageSeq: string[] = [];
+  const exampleTexts: Record<string, string> = {};
   await fullRun(
     page,
     {},
@@ -173,6 +184,9 @@ test('TC-03 ลำดับหน้าจอ 20 ข้อ ข้อความ
       intros,
       acks,
       observe: async (label, pg) => {
+        if (label.startsWith('stage-intro-') || label.startsWith('example-') || label === 'kid-end')
+          stageSeq.push(label);
+        if (label.startsWith('example-')) exampleTexts[label] = await mainText(pg);
         if (label.startsWith('strategy-')) strategyItems.push(label.slice(9));
         if (label.startsWith('item-')) {
           const id = label.slice(5);
@@ -193,6 +207,26 @@ test('TC-03 ลำดับหน้าจอ 20 ข้อ ข้อความ
     // ข้อความจบด่านอยู่ก่อนข้อความเปิดด่านถัดไป
     if (i > 0) expect(t.indexOf('ผ่านด่าน')).toBeLessThan(t.indexOf('ด่าน ' + (i + 1) + ' ·'));
   });
+  // ลำดับหน้า: เปิดด่าน 1 -> ตัวอย่าง -> ลองเอง (พร้อมนะ, ดู, ซ่อน) -> เฉลยภาพ -> ข้อ 1.1 ... (LS §8.2.1)
+  expect(stageSeq.slice(0, 6)).toEqual([
+    'stage-intro-1',
+    'example-demo',
+    'example-try-ready',
+    'example-try-show',
+    'example-try-hidden',
+    'example-reveal',
+  ]);
+  expect(stageSeq.slice(6)).toEqual([
+    'stage-intro-2',
+    'stage-intro-3',
+    'stage-intro-4',
+    'stage-intro-5',
+    'kid-end',
+  ]);
+  expect(exampleTexts['example-demo']).toContain(EXAMPLE.demoText);
+  expect(exampleTexts['example-try-ready']).toContain(EXAMPLE.tryText);
+  expect(exampleTexts['example-try-hidden']).toContain(EXAMPLE.tryText);
+  expect(exampleTexts['example-reveal']).toContain(EXAMPLE.revealText);
   // คำสั่งใต้โจทย์และข้อความช่องว่าง
   for (const it of ITEMS) {
     const t = instructionsSeen[it.id] ?? '';
@@ -302,7 +336,7 @@ test('TC-05 ข้อความหลังกดตอบ: หมุนเว
   await installClock(page);
   await beginSession(page);
   await pauseClock(page);
-  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await goStage1(page); // ผ่านหน้าตัวอย่างก่อนข้อ 1.1 (LS §8.2.1)
   await tick(page, 900);
   await tick(page, 1650);
   await typeAnswer(page, '7', 'tap');
@@ -505,7 +539,7 @@ for (const reduce of [false, true]) {
     await installClock(page);
     await beginSession(page);
     await pauseClock(page);
-    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await goStage1(page); // ผ่านหน้าตัวอย่างก่อนข้อ 1.1 (LS §8.2.1) แล้ววัดจังหวะของข้อจริง
     const hideAt = reduce ? 2400 : 2550; // ภาพหาย + เปิดแป้น (Tech Spec §3.1)
     for (const it of ITEMS.slice(0, 4)) {
       const n = it.dots ?? 0;
@@ -607,11 +641,17 @@ test('TC-08 แฟลชในเวลาจริง (วัดจาก DOM):
     });
     rec();
   });
-  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await goStage1(page); // เวลาจริง: ผ่านตัวอย่างก่อน แล้ววัดเฉพาะข้อ 1.1 (หลังข้อความเฉลยภาพ)
   await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible({ timeout: 6000 });
-  const marks = await page.evaluate(
+  const allMarks = await page.evaluate(
     () => (window as unknown as { __m: Array<{ t: number; s: string }> }).__m,
   );
+  // ตัดส่วนของหน้าตัวอย่างออก: วัดเฉพาะหลังข้อความเฉลยภาพ (ข้อ 1.1 เริ่ม "พร้อมนะ..." ใหม่หลังจากนั้น)
+  const revealIdx = allMarks
+    .map((x) => x.s)
+    .lastIndexOf(allMarks.find((x) => x.s.includes('ต่อไปเป็นข้อจริงแล้ว'))?.s ?? '\u0000');
+  expect(revealIdx, 'ต้องเห็นหน้าเฉลยภาพของตัวอย่างก่อนข้อ 1.1').toBeGreaterThanOrEqual(0);
+  const marks = allMarks.slice(revealIdx + 1);
   const first = (prefix: string): { t: number; s: string } => {
     const m = marks.find((x) => x.s.startsWith(prefix));
     if (!m) throw new Error(`no mark ${prefix}: ${JSON.stringify(marks)}`);
@@ -726,7 +766,8 @@ for (const width of [null, 360] as const) {
         },
       },
     );
-    expect(labels).toBe(58); // 5 เปิดด่าน + 4 แฟลช + 20 ข้อ + 20 ack + 8 วิธีคิด + 1 หน้าจบ
+    // 5 เปิดด่าน + 5 หน้าตัวอย่าง (ตัวอย่าง, ลองเอง 3 ช่วง, เฉลยภาพ) + 4 แฟลช + 20 ข้อ + 20 ack + 8 วิธีคิด + 1 หน้าจบ
+    expect(labels).toBe(63);
     expect(scrollFails, 'หน้าที่มี scroll แนวนอน').toEqual([]);
     // ปุ่มโลโก้ (ทางเข้าของพ่อ) ไม่ใช่ปุ่มของลูก วัดแยกและรายงานเป็นข้อสังเกต
     const logo = await logoSize(page);
@@ -787,7 +828,7 @@ test('TC-12 dark mode: ความเปรียบต่างของข้
     {
       observe: async (label, pg) => {
         if (
-          /^(stage-intro-[1-5]|item-1\.1|item-2\.1|ack-2\.1|strategy-3\.3|strategy-5\.3|kid-end|flash-show-1\.1)$/.test(
+          /^(stage-intro-[1-5]|example-demo|example-try-show|example-try-hidden|example-reveal|item-1\.1|item-2\.1|ack-2\.1|strategy-3\.3|strategy-5\.3|kid-end|flash-show-1\.1)$/.test(
             label,
           )
         ) {
@@ -809,7 +850,7 @@ test('TC-12b dark mode: จุดใน ten-frame เห็นชัดบนพ
   await installClock(page);
   await beginSession(page);
   await pauseClock(page);
-  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await goStage1(page);
   await tick(page, 900);
   const ratio = await page.getByTestId('ten-frame').evaluate((svg) => {
     const parse = (c: string): number[] =>
@@ -851,6 +892,19 @@ test('TC-13 หมุนจอ แนวตั้ง/แนวนอน: ภา�
   const problems: string[] = [];
   // ภาพแฟลชต้องอยู่ในจอทั้งภาพโดยไม่ต้อง scroll ทั้ง 2 ทิศทาง
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
+  // หน้าตัวอย่าง (3 จุดค้างไว้): หมุนจอแล้วภาพยังอยู่ในจอครบ และค่าที่พิมพ์ค้างอยู่
+  await keyButton(page, '2').click();
+  for (const o of [...orient, orient[0] as { width: number; height: number }]) {
+    await page.setViewportSize(o);
+    await page.waitForTimeout(150);
+    if ((await seenDots(page)) !== EXAMPLE.demoDots)
+      problems.push(`example ${o.width}x${o.height} เห็นจุดไม่ครบ ${await seenDots(page)}`);
+    if (!(await noHorizontalScroll(page))) problems.push(`example ${o.width}x${o.height} h-scroll`);
+    if ((await typed(page)) !== '2') problems.push(`example ${o.width}x${o.height} ค่าที่พิมพ์หาย`);
+  }
+  await page.getByRole('button', { name: 'ลบตัวเลข' }).click();
+  await passExample(page); // ผ่านตัวอย่าง + ลองเอง แล้วหมุนจอระหว่างแฟลชของข้อ 1.1
   await tick(page, 900);
   for (const o of orient) {
     await page.setViewportSize(o);
@@ -1175,7 +1229,7 @@ test('TC-25 ซ่อนแท็บระหว่างแฟลช: flashInte
   await installClock(page);
   await beginSession(page);
   await pauseClock(page);
-  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await goStage1(page);
   await tick(page, 900);
   await tick(page, 100); // อยู่ในช่วงแสดงภาพ
   await setVisibility(page, 'hidden');
@@ -1674,6 +1728,10 @@ for (const sc of STOPS) {
     const summary = ab[0]?.summary as Record<string, unknown>;
     expect(summary.completion).toBe('partial');
     expect(db.events).toHaveLength(sc.answered.length + 2);
+    // ลำดับใน export: started ... answered ... abandoned (ตัวสุดท้าย), at เพิ่มขึ้นเคร่งครัด (Tech §14.2)
+    const exp = await doExport(page);
+    expectSessionOrder(exp.json.events, `TC-50.${sc.code} export`);
+    expect(exp.json.events.at(-1)?.type).toBe('session.abandoned');
     // ประวัติ
     await expect(page.getByRole('heading', { name: 'ประวัติ' })).toBeVisible();
     const hist = page
@@ -1880,6 +1938,14 @@ test('TC-70 แตะสองครั้งติด: "เริ่มภา�
   await expect(page.getByRole('button', { name: 'ไปเลย' })).toBeVisible();
   await pauseClock(page);
   await page.getByRole('button', { name: 'ไปเลย' }).dblclick();
+  // แตะ "ไปเลย" ซ้ำตอนนี้ตกที่หน้าตัวอย่าง: ต้องยังอยู่หน้าตัวอย่าง (3 จุดค้างไว้) ไม่ทะลุไปกด "ตอบ"
+  await tick(page, 100);
+  await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+  expect(await seenDots(page), 'แตะเบิ้ล "ไปเลย" ต้องยังอยู่ที่หน้าตัวอย่าง').toBe(3);
+  expect(await typed(page)).toBe('');
+  // ตัวอย่างและลองเองก็แตะ "ตอบ" เบิ้ลได้ (ไม่เกิดข้ามขั้น ไม่มี event)
+  await passExample(page, { dbl: true });
+  expect((await readDbWhen(page, 1)).events, 'ขั้นตัวอย่างไม่บันทึก event').toHaveLength(1);
   await tick(page, 900);
   expect((await flashSnap(page)).circles, 'ข้อแรกต้องเป็น 7 จุด').toBe(7);
   await tick(page, 1650);
@@ -2086,7 +2152,7 @@ test('TC-73 reload กลางกิจกรรม: ข้อมูลที�
 }) => {
   test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
   await beginSession(page); // เวลาจริง
-  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await goStage1(page);
   await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible({ timeout: 6000 });
   await page.keyboard.type('7');
   await page.keyboard.press('Enter');
@@ -2190,6 +2256,7 @@ test('TC-80 ทำครบ 20 ข้อด้วยเวลาจริง (�
     if (it.stage !== lastStage) {
       await page.getByRole('button', { name: 'ไปเลย' }).click();
       lastStage = it.stage;
+      if (it.stage === 1) await passExample(page); // หน้าตัวอย่างก่อนข้อ 1.1 ด้วยเวลาจริง
       if (it.stage > 1) await guardWait(page);
     }
     if (it.stage === 1) {
@@ -2306,4 +2373,660 @@ test('TC-83 S2: ขณะกล่อง "หยุดภารกิจนี�
   await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
   const db = await readDb(page);
   expect(byType(db.events, 'item.answered').filter((e) => e.itemId === '2.1')).toHaveLength(0);
+});
+
+// =============================================================== I. ส่วนเพิ่ม 2026-09-30 (DX-5)
+// หน้าตัวอย่าง + ลองเองก่อนข้อ 1.1 (LS §8.2.1, Tech §14.1, AC15–AC18)
+// ลำดับ event / answeredAt / strategyLatencyMs / ข้อมูลเก่า (Tech §14.2–§14.3, ADR-0008, AC19–AC20)
+
+/** จุดในแถวบนแถวเดียว เรียงจากซ้ายไปขวา ห่างเท่ากัน (ตัวอย่างมี 3 จุด, ลองเองมี 2 จุด) */
+function expectTopRow(s: FlashSnap, n: number, ctx: string): void {
+  expect(s.circles, `${ctx}: จำนวนจุด`).toBe(n);
+  expect(new Set(s.ys).size, `${ctx}: จุดอยู่แถวบนแถวเดียว`).toBe(1);
+  const xs = s.xs;
+  expect(xs, `${ctx}: เรียงซ้ายไปขวา`).toEqual([...xs].sort((a, b) => a - b));
+  for (let i = 2; i < xs.length; i++)
+    expect((xs[i] ?? 0) - (xs[i - 1] ?? 0), `${ctx}: ห่างเท่ากัน`).toBe(
+      (xs[1] ?? 0) - (xs[0] ?? 0),
+    );
+  expect(new Set(s.fills).size, `${ctx}: จุดทุกจุดสีเดียว`).toBe(1);
+}
+
+test('TC-14 หน้าตัวอย่าง: ข้อความตรง LS §8.2.1, 3 จุดค้างไว้ไม่ซ่อน, รับเฉพาะ 3 เลขอื่นล้างช่องเฉยๆ ไม่มีข้อความ (AC15)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+  const main0 = await mainText(page);
+  expect(main0).not.toContain('พร้อมนะ...');
+  expect(main0).not.toContain(EXAMPLE.tryText);
+  expect(main0).not.toContain('ซ่อนแล้ว');
+  await expectNoFeedback(page, 'example-demo');
+  await guardWait(page);
+  // ค้างไว้ ≥ 10 วินาที (นาฬิกาปลอมเดินจริง) ต้องเห็น 3 จุดตลอด ไม่ซ่อนเอง ไม่ข้ามเอง
+  let elapsed = GUARD_MS;
+  for (const step of [0, 1000, 3000, 6500]) {
+    await tick(page, step);
+    elapsed += step;
+    const s = await flashSnap(page);
+    expect(s.text, `t=${elapsed}`).toContain('ตัวอย่าง');
+    expect(s.visible, `t=${elapsed}`).toBe('true');
+    expect(await seenDots(page), `จุดที่เห็นจริง t=${elapsed}`).toBe(EXAMPLE.demoDots);
+    expectTopRow(s, EXAMPLE.demoDots, `ตัวอย่าง t=${elapsed}`);
+    expect(s.keysEnabled, 'แป้นใช้ได้ทันที').toBe(10);
+  }
+  expect(elapsed).toBeGreaterThanOrEqual(10_000);
+  // เลขอื่น -> ไม่ไปต่อ ช่องถูกล้าง ไม่มีข้อความ ไม่มี ack ลองใหม่ได้ไม่จำกัด
+  for (const wrong of ['5', '2', '7', '33', '0', '30', '999']) {
+    await typeAnswer(page, wrong, 'tap');
+    expect(await typed(page), `พิมพ์ ${wrong}`).toBe(wrong);
+    await submitAnswer(page, 'tap');
+    await tick(page, 50);
+    expect(await typed(page), `ตอบ ${wrong} ต้องล้างช่อง`).toBe('');
+    await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+    expect(await seenDots(page)).toBe(EXAMPLE.demoDots);
+    const t = await mainText(page);
+    expect(t, `ตอบ ${wrong} ต้องไม่มีข้อความใหม่`).not.toContain('พร้อมนะ...');
+    for (const a of ACKS) expect(t).not.toContain(a);
+    await expectNoFeedback(page, `example-demo หลังตอบ ${wrong}`);
+  }
+  // คีย์บอร์ดจริง: 4 + Enter ก็ไม่ไปต่อ
+  await page.keyboard.type('4');
+  await page.keyboard.press('Enter');
+  await tick(page, 50);
+  expect(await typed(page)).toBe('');
+  await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+  // ไม่มี event ใดนอกจาก session.started
+  const db = await readDbWhen(page, 1);
+  expect(db.events.map((e) => e.type)).toEqual(['session.started']);
+  // ตอบ 3 -> ไปขั้นลองเอง
+  await page.keyboard.type('3');
+  await page.keyboard.press('Enter');
+  await tick(page, 0);
+  await expect(page.getByText('พร้อมนะ...')).toBeVisible();
+  expect((await readDb(page)).events).toHaveLength(1);
+});
+
+for (const reduce of [false, true]) {
+  test(`TC-15${reduce ? 'b' : 'a'} ลองเอง${reduce ? ' (reduced motion)' : ''}: "พร้อมนะ..." 900 ms -> แฟลช 2 จุด 1500 ms แล้วซ่อน -> ตอบเลขใดก็ได้ -> เฉลยภาพ 2 จุด 2000 ms พร้อมข้อความ -> ข้อ 1.1 เอง (AC16, จำนวนจุดที่เห็นจริง)`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: reduce ? 'reduce' : 'no-preference' });
+    await installClock(page);
+    await beginSession(page);
+    await pauseClock(page);
+    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await guardWait(page);
+    await keyButton(page, '3').click();
+    await submitAnswer(page, 'tap');
+    // t=0: "พร้อมนะ..." การ์ดเปล่า
+    let s = await flashSnap(page);
+    const blankBox = s.box;
+    expect(s.text).toBe('พร้อมนะ...');
+    expect([s.visible, s.circles, s.lines]).toEqual(['false', 0, 0]);
+    expect(await seenDots(page)).toBe(0);
+    expect(s.keysEnabled, 'แป้นล็อกระหว่างพร้อมนะ').toBe(0);
+    expect(await mainText(page)).toContain(EXAMPLE.tryText);
+    await expectNoFeedback(page, 'example-try-ready');
+    await tick(page, 899);
+    s = await flashSnap(page);
+    expect(s.text, 't=899').toBe('พร้อมนะ...');
+    expect(await seenDots(page)).toBe(0);
+    await tick(page, 1);
+    // t=900: แฟลช 2 จุด
+    await page.waitForTimeout(250); // fade-in ของ CSS วิ่งตามเวลาจริง
+    s = await flashSnap(page);
+    expect(s.text, 't=900').toBe('ดู!');
+    expect(s.visible).toBe('true');
+    expectTopRow(s, EXAMPLE.tryDots, 'ลองเอง แฟลช');
+    expect(s.lines).toBeGreaterThan(0);
+    expect(s.box.w).toBeCloseTo(blankBox.w, 0);
+    expect(s.box.h).toBeCloseTo(blankBox.h, 0);
+    expect(s.label, 'aria-label ห้ามบอกจำนวนจุด').toBe('ตาราง 10 ช่อง');
+    expect(s.keysEnabled).toBe(0);
+    expect(await mainText(page)).toContain(EXAMPLE.tryText);
+    await expectNoFeedback(page, 'example-try-show');
+    await page.keyboard.type('5'); // พิมพ์ระหว่างแฟลชไม่ได้
+    expect(await typed(page)).toBe('');
+    const flashXs = s.xs;
+    const flashYs = s.ys;
+    // (นาฬิกาปลอมทำให้ fade-in ของภาพเริ่มช้ากว่าเวลาจริง จึงวัดจำนวนจุดที่เห็นจริงหลังผ่านไปกลางช่วงแสดง)
+    await tick(page, 600); // t=1500
+    await page.waitForTimeout(250);
+    expect(await seenDots(page), 'จุดที่เห็นจริงตอนแฟลช (t=1500)').toBe(EXAMPLE.tryDots);
+    await tick(page, 899); // t=2399
+    await page.waitForTimeout(250);
+    s = await flashSnap(page);
+    expect(s.text, 't=2399').toBe('ดู!');
+    expect(s.opacity).toBe(1);
+    expect(await seenDots(page), 'ยังเห็น 2 จุดที่ 1499 ms').toBe(EXAMPLE.tryDots);
+    await tick(page, 1); // t=2400
+    s = await flashSnap(page);
+    if (reduce) {
+      expect(s.text, 't=2400').toBe('ซ่อนแล้ว! กี่จุดนะ?');
+      expect([s.visible, s.circles, s.lines]).toEqual(['false', 0, 0]);
+      expect(s.keysEnabled).toBe(10);
+    } else {
+      expect(s.text, 't=2400 (fade-out)').toBe('ดู!');
+      await tick(page, 148); // 2548
+      await page.waitForTimeout(250);
+      s = await flashSnap(page);
+      expect(s.text, 't=2548').toBe('ดู!');
+      expect(s.opacity).toBeLessThan(0.05);
+      expect(await seenDots(page), 'fade-out จบแล้ว ไม่เห็นจุด').toBe(0);
+      expect(s.keysEnabled).toBe(0);
+      await tick(page, 2); // 2550
+      s = await flashSnap(page);
+      expect(s.text, 't=2550').toBe('ซ่อนแล้ว! กี่จุดนะ?');
+      expect([s.visible, s.circles, s.lines]).toEqual(['false', 0, 0]);
+      expect(s.keysEnabled).toBe(10);
+    }
+    expect(await seenDots(page)).toBe(0);
+    expect(s.box.w).toBeCloseTo(blankBox.w, 0);
+    expect(await mainText(page)).toContain(EXAMPLE.tryText);
+    await expectNoFeedback(page, 'example-try-hidden');
+    await tick(page, 3000); // ไม่แฟลชซ้ำ
+    s = await flashSnap(page);
+    expect(s.circles, 'ไม่แฟลชซ้ำ').toBe(0);
+    expect(s.text).toBe('ซ่อนแล้ว! กี่จุดนะ?');
+    // ตอบเลขใดก็ได้ (ตอบผิด 5) -> เฉลยภาพ
+    await typeAnswer(page, '5', 'tap');
+    await submitAnswer(page, 'tap');
+    await page.waitForTimeout(250);
+    s = await flashSnap(page);
+    expect(await mainText(page), 'ข้อความเฉลยภาพ').toContain(EXAMPLE.revealText);
+    expect(s.visible).toBe('true');
+    expect(s.xs, 'เฉลยภาพจัดเรียงเหมือนตอนแฟลช').toEqual(flashXs);
+    expect(s.ys).toEqual(flashYs);
+    expect(s.keysEnabled, 'ไม่มีปุ่มให้กดระหว่างเฉลยภาพ').toBe(0);
+    await expectNoFeedback(page, 'example-reveal');
+    await tick(page, 1000);
+    await page.waitForTimeout(250);
+    expect(await seenDots(page), 'เฉลยภาพเห็น 2 จุด (t=1000)').toBe(EXAMPLE.tryDots);
+    await page.keyboard.type('7');
+    await page.keyboard.press('Enter'); // ไม่มีผล ไม่ข้ามไปข้อ 1.1
+    await tick(page, 999); // t=1999 ยังต้องอยู่ที่เฉลยภาพ
+    await page.waitForTimeout(250);
+    expect(await mainText(page), 'ที่ 1999 ms ยังไม่ไปข้อ 1.1').toContain(EXAMPLE.revealText);
+    expect(await seenDots(page)).toBe(EXAMPLE.tryDots);
+    await tick(page, 1); // t=2000 -> ข้อ 1.1
+    s = await flashSnap(page);
+    expect(s.text, 'ข้อ 1.1').toBe('พร้อมนะ...');
+    expect(s.circles).toBe(0);
+    expect(await typed(page), 'ค่าที่พิมพ์ระหว่างเฉลยภาพต้องไม่ค้างไปข้อ 1.1').toBe('');
+    expect(await mainText(page)).not.toContain(EXAMPLE.tryText);
+    // ข้อ 1.1 แฟลช 7 จุดตามปกติ
+    await tick(page, 900);
+    await page.waitForTimeout(250);
+    expect((await flashSnap(page)).circles, 'ข้อ 1.1 ต้องเป็น 7 จุด').toBe(7);
+    expect((await readDb(page)).events.map((e) => e.type)).toEqual(['session.started']);
+  });
+}
+
+test('TC-15c เฉลยภาพไม่บอกว่าตอบถูกหรือผิด: ตอบ 2 (ตรง), 5 (ผิด), 0 หน้าตาและข้อความเหมือนกันทุกตัวอักษร (LS §8.2.1)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  const reach = async (resp: string): Promise<{ text: string; sig: string }> => {
+    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await guardWait(page);
+    await keyButton(page, '3').click();
+    await submitAnswer(page, 'tap');
+    await tick(page, 900);
+    await tick(page, 1650);
+    await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible();
+    await typeAnswer(page, resp, 'tap');
+    await submitAnswer(page, 'tap');
+    await expect(page.getByText(EXAMPLE.revealText, { exact: true })).toBeVisible();
+    await page.waitForTimeout(250);
+    return { text: await mainText(page), sig: await visualSignature(page) };
+  };
+  const out: Array<{ text: string; sig: string }> = [];
+  for (const resp of ['2', '5', '0']) {
+    out.push(await reach(resp));
+    await page.goto('./');
+    await openDx(page);
+    await passParentIntro(page);
+    await startMission(page);
+    await expect(page.getByRole('button', { name: 'ไปเลย' })).toBeVisible();
+  }
+  expect(out[1]?.text).toBe(out[0]?.text);
+  expect(out[2]?.text).toBe(out[0]?.text);
+  expect(out[1]?.sig, 'สี/คลาสต้องเหมือนกัน').toBe(out[0]?.sig);
+  expect(out[2]?.sig).toBe(out[0]?.sig);
+  expect(out[0]?.text).not.toMatch(/ถูก|ผิด|เก่ง|เยี่ยม|ใช่/);
+});
+
+test('TC-16 ตัวอย่างและลองเองไม่ถูกบันทึก ไม่นับในผลและเวลา: event 22 ตัวเท่าเดิม, ack แรก = "รับแล้ว!", latencyMs ข้อ 1.1 นับหลังภาพซ่อนของข้อ 1.1 เท่านั้น (AC17)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  // อยู่ที่หน้าตัวอย่างนาน 30 วินาที ต้องไม่กระทบเวลาข้อ 1.1
+  await tick(page, 30_000);
+  const counts: Record<string, number> = {};
+  await passExample(page, {
+    observe: async (label) => {
+      counts[label] = (await readDb(page)).events.length;
+      const t = await mainText(page);
+      for (const a of ACKS) expect(t, `${label}: ต้องไม่มีข้อความ ack`).not.toContain(a);
+    },
+  });
+  expect(counts, 'ขั้นตัวอย่างไม่มี event นอกจาก session.started').toEqual({
+    'example-demo': 1,
+    'example-try-ready': 1,
+    'example-try-show': 1,
+    'example-try-hidden': 1,
+    'example-reveal': 1,
+  });
+  // ข้อ 1.1 (ทำมือ) ตอบหลังภาพซ่อน 777 ms
+  await tick(page, 900);
+  await tick(page, 1650);
+  await tick(page, 777);
+  await typeAnswer(page, '7', 'tap');
+  await submitAnswer(page, 'tap');
+  await expect(page.getByText('รับแล้ว!', { exact: true })).toBeVisible(); // ack ตัวแรกเหมือนเดิม
+  await tick(page, 1000);
+  const acks: string[] = [];
+  await runSession(page, {}, { startAt: '1.2', acks });
+  expect(acks[0], 'ack ของข้อ 1.2 ต้องเป็นตัวที่ 2 ในลำดับ').toBe(ACKS[1]);
+  await openResults(page);
+  const db = await readDbWhen(page, 22);
+  expect(db.events).toHaveLength(22);
+  expect(
+    byType(db.events, 'item.answered')
+      .map((e) => e.itemId)
+      .sort(),
+  ).toEqual(ITEMS.map((i) => i.id).sort());
+  const e11 = byType(db.events, 'item.answered').find((e) => e.itemId === '1.1') as Ev;
+  expect(
+    Math.abs((e11.latencyMs as number) - 777),
+    'latency ข้อ 1.1 ไม่รวมเวลาที่หน้าตัวอย่าง',
+  ).toBeLessThanOrEqual(2);
+  expect(e11.latencyValid).toBe(true);
+  expect(e11.attemptNo).toBe(1);
+  const { json } = await doExport(page);
+  expect(json.events).toHaveLength(22);
+  expect(new Set(json.events.map((e) => e.type))).toEqual(
+    new Set(['session.started', 'item.answered', 'session.completed']),
+  );
+  expect((await itemRows(page)).map((r) => r.id)).toEqual(ITEMS.map((i) => i.id));
+  const s1 = (await stageRows(page))[0];
+  expect(s1?.cells[0], 'ผลด่าน 1 นับเฉพาะ 4 ข้อจริง').toBe('4/4');
+});
+
+test('TC-17 หน้าตัวอย่างแสดงทุกครั้งที่เริ่มทำ (ไม่ข้ามได้): ทำใหม่หลังจบ, เริ่มใหม่หลังทิ้งกลางทาง, หลัง reload (LS §8.2.1)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  const expectDemo = async (why: string): Promise<void> => {
+    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await expect(page.getByText(EXAMPLE.demoText, { exact: true }), why).toBeVisible();
+    expect(await seenDots(page), why).toBe(EXAMPLE.demoDots);
+    // ไม่มีปุ่มข้ามตัวอย่าง: ปุ่มที่เห็นมีแต่แป้นตัวเลข 12 ปุ่ม
+    expect(await page.locator('main button:visible').count(), `${why}: ไม่มีปุ่มข้าม`).toBe(12);
+  };
+  // 1) รอบแรก (ผ่านตัวอย่างใน runSession) แล้วทำจนจบ
+  await runSession(page, {});
+  await openResults(page);
+  // 2) ทำใหม่อีกครั้งหลังจบ
+  await page.getByRole('button', { name: 'ทำใหม่อีกครั้ง' }).click();
+  await passParentIntro(page);
+  await startMission(page);
+  await expectDemo('ทำใหม่หลังจบ');
+  await passExample(page); // ถึงข้อ 1.1 แล้วทิ้งไว้กลางทาง
+  // 3) เริ่มใหม่จากหน้าแรกหลังทิ้งกลางทาง
+  await page.goto('./');
+  await openDx(page);
+  await passParentIntro(page);
+  await startMission(page);
+  await expectDemo('เริ่มใหม่หลังทิ้งกลางทาง');
+  // 4) reload ที่หน้าตัวอย่าง แล้วเริ่มใหม่
+  await page.reload();
+  await expect(page.locator('main')).toBeVisible();
+  await page.goto('./');
+  await openDx(page);
+  await passParentIntro(page);
+  await startMission(page);
+  await expectDemo('หลัง reload');
+});
+
+test('TC-18 หน้าตัวอย่าง ลองเอง เฉลยภาพ ที่ 360px: ไม่มีคำต้องห้าม/เวลา/progress ไม่มี scroll แนวนอน ปุ่ม ≥ 48px ภาพอยู่ในจอครบ (AC18)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  const w = watch(page);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  const sizes: Array<{ label: string; name: string; w: number; h: number }> = [];
+  const scrollFails: string[] = [];
+  const labels: string[] = [];
+  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await passExample(page, {
+    observe: async (label) => {
+      labels.push(label);
+      await kidObserve(label, page, sizes, scrollFails);
+      if (label === 'example-demo' || label === 'example-reveal') {
+        const box = await page.getByTestId('ten-frame').boundingBox();
+        expect(box, `${label}: ภาพอยู่ในจอ`).toBeTruthy();
+        expect((box?.x ?? -1) >= 0 && (box?.x ?? 0) + (box?.width ?? 0) <= 360, label).toBe(true);
+        expect((box?.y ?? -1) >= 0 && (box?.y ?? 0) + (box?.height ?? 0) <= 740, label).toBe(true);
+      }
+    },
+  });
+  expect(labels).toEqual([
+    'example-demo',
+    'example-try-ready',
+    'example-try-show',
+    'example-try-hidden',
+    'example-reveal',
+  ]);
+  expect(scrollFails, 'หน้าที่มี scroll แนวนอน').toEqual([]);
+  expect(sizes.filter((s) => s.h < 48 || s.w < 48)).toEqual([]);
+  expect(w.errors).toEqual([]);
+  expect(w.external).toEqual([]);
+});
+
+test('TC-19 พ่อหยุดกลางทางระหว่างตัวอย่าง: ได้ session.abandoned ไม่มีข้อ ผลเป็น "ยังทำไม่ครบ"; "ทำต่อ" กลับมาที่เดิม (Tech §14.1.3)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  for (const at of ['demo', 'try-hidden'] as const) {
+    await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await guardWait(page);
+    if (at === 'try-hidden') {
+      await keyButton(page, '3').click();
+      await submitAnswer(page, 'tap');
+      await tick(page, 900);
+      await tick(page, 1650);
+      await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible();
+    }
+    // เปิดกล่องแล้วเลือก "ทำต่อ" ต้องกลับมาที่เดิม
+    await longPressLogo(page, 2000, true);
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.getByRole('dialog').getByRole('button', { name: 'ทำต่อ' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    if (at === 'demo') {
+      await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+      expect(await seenDots(page)).toBe(EXAMPLE.demoDots);
+    } else {
+      await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible();
+    }
+    await longPressLogo(page, 2000, true);
+    await page.getByRole('dialog').getByRole('button', { name: 'หยุดและดูผล' }).click();
+    await expect(page.getByRole('heading', { name: 'ขั้นที่แนะนำ' })).toBeVisible();
+    await expect(page.locator('main')).toContainText('หยุดกลางทาง');
+    expect(await recommendedStep(page)).toBe('incomplete');
+    expect(await itemRows(page), `หยุดที่ ${at}: ต้องไม่มีข้อ`).toHaveLength(0);
+    if (at === 'demo') {
+      await page.getByRole('button', { name: 'ทำใหม่อีกครั้ง' }).click();
+      await passParentIntro(page);
+      await startMission(page);
+    }
+  }
+  const db = await readDbWhen(page, 4);
+  expect(db.events).toHaveLength(4);
+  expect(byType(db.events, 'session.started')).toHaveLength(2);
+  expect(byType(db.events, 'item.answered')).toHaveLength(0);
+  const ab = byType(db.events, 'session.abandoned');
+  expect(ab).toHaveLength(2);
+  for (const a of ab) expect((a.summary as Record<string, unknown>).completion).toBe('partial');
+  const { json } = await doExport(page);
+  for (const [sid, evs] of sessionsOf(json.events)) {
+    expectSessionOrder(evs, `TC-19 ${sid}`);
+    expect(evs.map((e) => e.type)).toEqual(['session.started', 'session.abandoned']);
+  }
+});
+
+// ---- ลำดับ event (Tech §14.2, ADR-0008, AC19)
+
+test('TC-20b ลำดับ event: item.answered ของข้อ 5.4 อยู่ก่อน session.completed เสมอ ทั้งใน export และหน้าประวัติ, at เพิ่มขึ้นเคร่งครัดต่อ session, รูปแบบ ISO (AC19)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  // นาฬิกาปลอมที่หยุด: event ใน transition เดียวกัน (เลือกวิธีคิดข้อ 5.4 -> answered + completed) ประทับเวลา ms เดียวกันแน่นอน
+  // จึงบังคับให้เกิดกรณี at ซ้ำเหมือนที่พบจริง และรัน 3 session ให้ครอบคลุมลำดับ id สุ่ม
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  const ROUNDS = 3;
+  for (let r = 1; r <= ROUNDS; r++) {
+    await runSession(page, {});
+    await openResults(page);
+    expect(
+      (await itemRows(page)).map((x) => x.id),
+      `หน้าผลรอบ ${r}`,
+    ).toEqual(ITEMS.map((i) => i.id));
+    if (r < ROUNDS) {
+      await tick(page, 30_000);
+      await page.getByRole('button', { name: 'ทำใหม่อีกครั้ง' }).click();
+      await passParentIntro(page);
+      await startMission(page);
+    }
+  }
+  const total = ROUNDS * 22;
+  await readDbWhen(page, total);
+  const { json } = await doExport(page);
+  expect(json.events).toHaveLength(total);
+  const groups = sessionsOf(json.events);
+  expect(groups.size).toBe(ROUNDS);
+  for (const [sid, evs] of groups) {
+    expect(evs, sid).toHaveLength(22);
+    expectSessionOrder(evs, `export ${sid}`);
+    expect(
+      evs.slice(1, 21).map((e) => e.itemId),
+      `ลำดับข้อใน export ${sid}`,
+    ).toEqual(ITEMS.map((i) => i.id));
+    expect(evs[20]?.type).toBe('item.answered');
+    expect(evs[20]?.itemId, 'ข้อสุดท้าย 5.4 ต้องอยู่ก่อน session.completed').toBe('5.4');
+    expect(evs[21]?.type).toBe('session.completed');
+    expect(new Set(evs.map((e) => e.at)).size, 'at ห้ามซ้ำใน session').toBe(22);
+  }
+  // ทั้งไฟล์เรียงตามเวลาที่บันทึก
+  for (let i = 1; i < json.events.length; i++)
+    expect(Date.parse((json.events[i] as Ev).at)).toBeGreaterThanOrEqual(
+      Date.parse((json.events[i - 1] as Ev).at),
+    );
+  // หน้าประวัติ: ทุกรอบเป็นครบ (complete) ไม่ใช่ "ยังทำไม่ครบ" และเปิดผลย้อนหลังได้ครบ 20 ข้อตามลำดับ
+  const hist = page
+    .locator('main section')
+    .filter({ has: page.getByRole('heading', { name: 'ประวัติ' }) });
+  await expect(hist.getByRole('link')).toHaveCount(ROUNDS);
+  for (const t of await hist.getByRole('link').allInnerTexts()) {
+    expect(t).toContain('ขั้นที่ 9');
+    expect(t).not.toContain('ยังทำไม่ครบ');
+  }
+  await hist.getByRole('link').last().click();
+  await expect.poll(async () => (await itemRows(page)).length).toBe(20);
+  expect((await itemRows(page)).map((x) => x.id)).toEqual(ITEMS.map((i) => i.id));
+  expect(await recommendedStep(page)).toBe(9);
+});
+
+// ---- answeredAt / strategyLatencyMs (Tech §14.3, ADR-0008, AC19)
+
+const ASKED = ['3.3', '3.4', '4.1', '4.2', '4.3', '4.4', '5.3', '5.4'];
+
+test('TC-27 answeredAt = เวลากด "ตอบ" ทุกข้อ, strategyLatencyMs เฉพาะข้อที่ถามวิธีคิด = เวลาที่หน้าเลือกวิธีคิด, latencyMs ไม่รวมสองอย่างนี้ (AC19, ADR-0008)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  const plan: Plan = {};
+  ITEMS.forEach((it, i) => {
+    plan[it.id] = { ms: 500 + 137 * i, ...(it.set ? { sm: 1200 + 111 * i } : {}) };
+  });
+  const submitAt: Record<string, number> = {};
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await runSession(page, plan, { submitAt });
+  await openResults(page);
+  const db = await readDbWhen(page, 22);
+  const { json } = await doExport(page);
+  for (const source of [db.events, json.events]) {
+    const answered = byType(source, 'item.answered');
+    expect(answered).toHaveLength(20);
+    for (const it of ITEMS) {
+      const e = answered.find((x) => x.itemId === it.id) as Ev;
+      const ctx = `ข้อ ${it.id}`;
+      const p = plan[it.id] ?? {};
+      expect(typeof e.answeredAt, `${ctx} ต้องมี answeredAt`).toBe('string');
+      expect(e.answeredAt as string, `${ctx} รูปแบบ answeredAt`).toMatch(ISO_MS);
+      const answeredMs = Date.parse(e.answeredAt as string);
+      expect(
+        Math.abs(answeredMs - (submitAt[it.id] ?? 0)),
+        `${ctx} answeredAt = เวลากด ตอบ`,
+      ).toBeLessThanOrEqual(3);
+      const diff = Date.parse(e.at) - answeredMs;
+      expect(diff, `${ctx} answeredAt ต้องไม่หลัง at`).toBeGreaterThanOrEqual(0);
+      // latencyMs ไม่รวมเวลาเลือกวิธีคิด
+      expect(Math.abs((e.latencyMs as number) - (p.ms ?? 0)), `${ctx} latency`).toBeLessThanOrEqual(
+        2,
+      );
+      if (it.set) {
+        expect(ASKED).toContain(it.id);
+        expect(typeof e.strategyLatencyMs, `${ctx} ต้องมี strategyLatencyMs`).toBe('number');
+        expect(Number.isInteger(e.strategyLatencyMs), `${ctx} ปัดเป็นจำนวนเต็ม`).toBe(true);
+        expect(
+          Math.abs((e.strategyLatencyMs as number) - (p.sm ?? 0)),
+          `${ctx} strategyLatencyMs`,
+        ).toBeLessThanOrEqual(3);
+        // at = เวลาเลือกวิธีคิดเสร็จ = ตอบ + ack 1000 ms + เวลาที่หน้าเลือกวิธีคิด
+        expect(Math.abs(diff - (1000 + (p.sm ?? 0))), `${ctx} at - answeredAt`).toBeLessThanOrEqual(
+          5,
+        );
+      } else {
+        expect(
+          e.strategyLatencyMs ?? null,
+          `${ctx} ข้อที่ไม่ถามต้องไม่มี strategyLatencyMs`,
+        ).toBeNull();
+        // ข้อที่ไม่ถามวิธีคิด at = เวลากด "ตอบ"
+        expect(diff, `${ctx} at ≈ answeredAt`).toBeLessThanOrEqual(5);
+      }
+    }
+  }
+  expect(
+    byType(json.events, 'item.answered').filter((e) => e.strategyLatencyMs != null),
+  ).toHaveLength(ASKED.length);
+  // เก็บใน log/export เท่านั้น ห้ามแสดงในหน้าผลของพ่อ (Tech §14.3)
+  const t = await mainText(page);
+  expect(t).not.toMatch(/strategyLatency|answeredAt/);
+  expectSessionOrder(json.events, 'TC-27 export');
+});
+
+test('TC-27b ซ่อนแท็บระหว่างหน้าเลือกวิธีคิด: ข้อนั้นไม่มี strategyLatencyMs (ไม่เดา) ข้อถัดไปยังมีตามปกติ (Tech §14.3)', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await runSession(page, {}, { stopAtStrategyOf: '3.3' });
+  await setVisibility(page, 'hidden');
+  await tick(page, 2000);
+  await setVisibility(page, 'visible');
+  await pickStrategy(page, 'known');
+  await expect(page.getByText('7 + 8 = ?', { exact: true })).toBeVisible();
+  await guardWait(page);
+  const stop = await runSession(page, {}, { startAt: '3.4', stopAtStrategyOf: '3.4' });
+  expect(stop).toBe('3.4');
+  await tick(page, 1500);
+  await pickStrategy(page, 'known');
+  await guardWait(page);
+  const db = await readDbWhen(page, 1 + 12);
+  const ev = (id: string): Ev =>
+    byType(db.events, 'item.answered').find((e) => e.itemId === id) as Ev;
+  expect(ev('3.3').strategyId).toBe('known');
+  expect(ev('3.3').strategyLatencyMs ?? null, 'ซ่อนแท็บระหว่างเลือก = ไม่ใส่ field').toBeNull();
+  expect(typeof ev('3.3').answeredAt).toBe('string');
+  expect(ev('3.3').latencyValid, 'ซ่อนที่หน้าเลือกวิธีคิด ไม่ใช่ตอนตอบ').toBe(true);
+  expect(Math.abs((ev('3.4').strategyLatencyMs as number) - 1500)).toBeLessThanOrEqual(3);
+});
+
+// ---- ข้อมูลเก่า (AC20)
+
+test('TC-28 ข้อมูลเก่า (ไม่มี answeredAt/strategyLatencyMs และ at ซ้ำ ลำดับ id สวนกับที่ถูก) นำเข้าแล้วเปิดผล/ประวัติ/export ได้ ลำดับถูก (AC20, ADR-0008 ข้อ 3, 6)', async ({
+  page,
+  browser,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await fullRun(page);
+  const { json } = await doExport(page);
+  const sid = (byType(json.events, 'session.started')[0] as Ev).sessionId;
+  // สร้างไฟล์แบบข้อมูลเก่า: ตัด field ใหม่ทิ้ง, at ของข้อ 5.4 เท่ากับ session.completed,
+  // id ทำให้ตัวเรียงแบบเก่า (at แล้ว id) เรียงสลับ, สลับลำดับในไฟล์
+  const legacy = json.events.map((e) => {
+    const c: Ev = { ...e };
+    delete c.answeredAt;
+    delete c.strategyLatencyMs;
+    return c;
+  });
+  const last = legacy.find((e) => e.type === 'item.answered' && e.itemId === '5.4') as Ev;
+  const done = legacy.find((e) => e.type === 'session.completed') as Ev;
+  last.id = 'ffffffff-ffff-4fff-8fff-ffffffffffff';
+  done.id = '00000000-0000-4000-8000-000000000000';
+  done.at = last.at;
+  const shuffled = [done, ...legacy.filter((e) => e !== done).reverse()];
+  const file = test.info().outputPath('legacy-DX-ADD.export.json');
+  await writeFile(file, JSON.stringify({ ...json, events: shuffled }));
+  const ctx2 = await browser.newContext({
+    baseURL: 'http://localhost:4173/Learning-Platform/',
+    locale: 'th-TH',
+    serviceWorkers: 'block',
+  });
+  const p2 = await ctx2.newPage();
+  const w = watch(p2);
+  // เครื่องใหม่ที่ยังไม่มีผู้เรียน: ผู้เรียนมาจากไฟล์ที่นำเข้าเท่านั้น (ประวัติของผู้เรียนคนนี้จึงเป็นข้อมูลเก่าล้วน)
+  await p2.goto('./#/parent');
+  await expect(p2.getByRole('heading', { name: 'หน้าสำหรับพ่อ' })).toBeVisible();
+  await p2.locator('input[type="file"]').setInputFiles(file);
+  await expect(
+    p2.getByText(/นำเข้าแล้ว: ผู้เรียนใหม่ 1 คน, รายการใหม่ 22 รายการ, ซ้ำ 0, เสีย 0/),
+  ).toBeVisible();
+  // ประวัติ: ครบ (ไม่ใช่ open) ขั้น 9 (โหลดหน้าใหม่ก่อน เพราะเรื่องการรีเฟรชรายการหลังนำเข้าไม่ใช่จุดประสงค์ของเคสนี้)
+  await p2.reload();
+  const hist = p2
+    .locator('main section')
+    .filter({ has: p2.getByRole('heading', { name: 'ผลแบบทดสอบ' }) });
+  await expect(hist.getByRole('link')).toHaveCount(1);
+  await expect(hist.getByRole('link').first()).toContainText('ขั้นที่ 9');
+  await expect(hist.getByRole('link').first()).not.toContainText('ยังทำไม่ครบ');
+  // หน้าผล: 20 ข้อ ตามลำดับ ข้อ 5.4 ครบ
+  await p2.goto(`./#/parent/results/${sid}`);
+  await expect(p2.getByRole('heading', { name: 'ขั้นที่แนะนำ' })).toBeVisible();
+  expect(await recommendedStep(p2)).toBe(9);
+  expect((await itemRows(p2)).map((r) => r.id)).toEqual(ITEMS.map((i) => i.id));
+  await expect(p2.locator('main')).not.toContainText('หยุดกลางทาง');
+  // export ใหม่: ลำดับถูกแม้ at ซ้ำ (item.answered ก่อน session.completed) และไม่เติม field ใหม่ให้ข้อมูลเก่า
+  const out = await doExport(p2);
+  const evs = out.json.events;
+  expect(evs).toHaveLength(22);
+  expect(evs[0]?.type).toBe('session.started');
+  expect(evs[20]?.itemId).toBe('5.4');
+  expect(evs[20]?.type).toBe('item.answered');
+  expect(evs[21]?.type).toBe('session.completed');
+  expect(evs[20]?.at, 'ข้อมูลเก่าที่ at ซ้ำยังคงซ้ำ (ไม่แก้ log)').toBe(evs[21]?.at);
+  expect(evs.slice(1, 21).map((e) => e.itemId)).toEqual(ITEMS.map((i) => i.id));
+  for (const e of evs) {
+    expect(e.answeredAt ?? null).toBeNull();
+    expect(e.strategyLatencyMs ?? null).toBeNull();
+  }
+  expect(w.errors).toEqual([]);
+  await ctx2.close();
 });

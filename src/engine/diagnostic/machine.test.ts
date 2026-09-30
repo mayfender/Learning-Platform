@@ -19,7 +19,21 @@ function submit(
     latencyMs: opts.latencyMs ?? 100,
     latencyValid: opts.latencyValid ?? true,
     flashInterrupted: opts.flashInterrupted ?? false,
+    answeredAt: '2026-01-01T00:00:00.000Z',
   });
+}
+
+// STAGE_GO และข้ามหน้าตัวอย่าง (ถ้ามี) จนถึงข้อแรกของด่าน 1
+function stageGo(state: RunnerState): RunnerState {
+  let next = machine.transition(state, { type: 'STAGE_GO' }).state;
+  if (next.phase.kind === 'example') {
+    next = machine.transition(next, { type: 'EXAMPLE_SUBMIT', response: 3 }).state;
+    next = machine.transition(next, { type: 'READY_DONE' }).state;
+    next = machine.transition(next, { type: 'FLASH_END' }).state;
+    next = machine.transition(next, { type: 'EXAMPLE_SUBMIT', response: 5 }).state;
+    next = machine.transition(next, { type: 'EXAMPLE_DONE' }).state;
+  }
+  return next;
 }
 
 function driveThroughItem(
@@ -88,15 +102,13 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
   });
 
   it('ข้อแฟลชได้ schedule(900, READY_DONE)', () => {
-    const state = start();
-    const r = machine.transition(state, { type: 'STAGE_GO' });
-    expect(r.state.phase).toEqual({ kind: 'item', stage: 0, item: 0, step: 'ready' });
-    expect(r.effects).toEqual([{ type: 'schedule', afterMs: 900, action: 'READY_DONE' }]);
+    const state = stageGo(start());
+    expect(state.phase).toEqual({ kind: 'item', stage: 0, item: 0, step: 'ready' });
   });
 
   it('ตอบครบ 20 ข้อ จบที่ kid-end พร้อม emit session.completed', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
 
     const allEffects: Effect[] = [];
     let itemCount = 0;
@@ -127,18 +139,18 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
 
   it('ข้อที่ถามวิธีคิด emit หลัง STRATEGY_PICK เท่านั้น', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     // ไปจนถึงด่าน 3 ข้อ 3.3 (index stage 2, item 2) ซึ่งถามวิธีคิด
     for (let i = 0; i < 4; i += 1) {
       const item = DX_ADD.stages[0]!.items[i]!;
       state = driveThroughItem(state, item.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state; // s2 intro -> item
+    state = stageGo(state); // s2 intro -> item
     for (let i = 0; i < 4; i += 1) {
       const item = DX_ADD.stages[1]!.items[i]!;
       state = driveThroughItem(state, item.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state; // s3 intro -> item
+    state = stageGo(state); // s3 intro -> item
     // 3.1, 3.2 ไม่ถาม
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[0]!.expected).state;
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[1]!.expected).state;
@@ -160,15 +172,15 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
 
   it('STRATEGY_PICK id นอกชุดไม่มีผล', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[0]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[1]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[0]!.expected).state;
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[1]!.expected).state;
     const item33 = DX_ADD.stages[2]!.items[2]!;
@@ -185,7 +197,7 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
 
   it('SUBMIT ตอน ready/show ไม่มีผล', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     expect(state.phase).toEqual({ kind: 'item', stage: 0, item: 0, step: 'ready' });
     const r = submit(state, 7);
     expect(r.state).toBe(state);
@@ -194,7 +206,7 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
 
   it('ข้อความ ack หมุนตามลำดับโดยไม่ขึ้นกับถูก/ผิด', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     // ตอบผิดข้อแรก
     state = machine.transition(state, { type: 'READY_DONE' }).state;
     state = machine.transition(state, { type: 'FLASH_END' }).state;
@@ -205,15 +217,15 @@ describe('createDiagnosticMachine — ลำดับ phase', () => {
 
 describe('createDiagnosticMachine — กฎข้ามด่าน 5', () => {
   function completeStagesUpTo3(state: RunnerState): RunnerState {
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[0]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[1]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[2]!.items[i]!.expected, 'known').state;
     }
@@ -222,7 +234,7 @@ describe('createDiagnosticMachine — กฎข้ามด่าน 5', () => {
 
   it('ด่าน 4 ถูก 0 ข้อ → ข้ามด่าน 5 ไป kid-end ทันที', () => {
     let state = completeStagesUpTo3(state0());
-    state = machine.transition(state, { type: 'STAGE_GO' }).state; // s4 intro
+    state = stageGo(state); // s4 intro
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, -1, 'known').state; // ตอบผิดทุกข้อ
     }
@@ -232,7 +244,7 @@ describe('createDiagnosticMachine — กฎข้ามด่าน 5', () => {
 
   it('ด่าน 4 ถูก 1 ข้อ → ข้ามด่าน 5', () => {
     let state = completeStagesUpTo3(state0());
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     const items = DX_ADD.stages[3]!.items;
     state = driveThroughItem(state, items[0]!.expected, 'known').state;
     for (let i = 1; i < 4; i += 1) {
@@ -244,7 +256,7 @@ describe('createDiagnosticMachine — กฎข้ามด่าน 5', () => {
 
   it('ด่าน 4 ถูก 2 ข้อ → ไม่ข้าม เห็น stage-intro s5 พร้อม completed ถูกต้อง', () => {
     let state = completeStagesUpTo3(state0());
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     const items = DX_ADD.stages[3]!.items;
     state = driveThroughItem(state, items[0]!.expected, 'known').state;
     state = driveThroughItem(state, items[1]!.expected, 'known').state;
@@ -269,15 +281,15 @@ describe('createDiagnosticMachine — STOP', () => {
 
   it('STOP ระหว่าง strategy ทิ้ง pending และ emit abandoned', () => {
     let state = start();
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[0]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     for (let i = 0; i < 4; i += 1) {
       state = driveThroughItem(state, DX_ADD.stages[1]!.items[i]!.expected).state;
     }
-    state = machine.transition(state, { type: 'STAGE_GO' }).state;
+    state = stageGo(state);
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[0]!.expected).state;
     state = driveThroughItem(state, DX_ADD.stages[2]!.items[1]!.expected).state;
     const item33 = DX_ADD.stages[2]!.items[2]!;
@@ -298,3 +310,150 @@ describe('createDiagnosticMachine — STOP', () => {
 function state0(): RunnerState {
   return start();
 }
+
+describe('createDiagnosticMachine — หน้าตัวอย่าง (Tech Spec §14.1.3)', () => {
+  function atDemo(): RunnerState {
+    return machine.transition(start(), { type: 'STAGE_GO' }).state;
+  }
+
+  it('STAGE_GO ของด่าน 1 -> example/demo โดยไม่มี effect', () => {
+    const r = machine.transition(start(), { type: 'STAGE_GO' });
+    expect(r.state.phase).toEqual({ kind: 'example', step: 'demo' });
+    expect(r.effects).toEqual([]);
+  });
+
+  it('demo: ตอบ 3 -> try-ready พร้อม schedule(900, READY_DONE)', () => {
+    const r = machine.transition(atDemo(), { type: 'EXAMPLE_SUBMIT', response: 3 });
+    expect(r.state.phase).toEqual({ kind: 'example', step: 'try-ready' });
+    expect(r.effects).toEqual([{ type: 'schedule', afterMs: 900, action: 'READY_DONE' }]);
+  });
+
+  it('demo: ตอบเลขอื่นไม่เปลี่ยน phase และไม่มี effect', () => {
+    const state = atDemo();
+    for (const response of [0, 2, 4, 7, 33]) {
+      const r = machine.transition(state, { type: 'EXAMPLE_SUBMIT', response });
+      expect(r.state).toBe(state);
+      expect(r.effects).toEqual([]);
+    }
+  });
+
+  it('เดินครบทุก step ไม่มี effect emit และ answers/submitted/pending ไม่เปลี่ยน', () => {
+    const base = atDemo();
+    const all: Effect[] = [];
+    let state = base;
+    const steps = [
+      { type: 'EXAMPLE_SUBMIT', response: 3 },
+      { type: 'READY_DONE' },
+      { type: 'FLASH_END' },
+      { type: 'EXAMPLE_SUBMIT', response: 99 },
+    ] as const;
+    const kinds: string[] = [];
+    for (const action of steps) {
+      const r = machine.transition(state, action);
+      state = r.state;
+      all.push(...r.effects);
+      kinds.push(state.phase.kind === 'example' ? state.phase.step : state.phase.kind);
+      expect(state.answers).toEqual(base.answers);
+      expect(state.submitted).toBe(0);
+      expect(state.pending).toBeNull();
+    }
+    expect(kinds).toEqual(['try-ready', 'try-show', 'try-answering', 'try-reveal']);
+    expect(all).toEqual([
+      { type: 'schedule', afterMs: 900, action: 'READY_DONE' },
+      { type: 'schedule', afterMs: 2000, action: 'EXAMPLE_DONE' },
+    ]);
+    const done = machine.transition(state, { type: 'EXAMPLE_DONE' });
+    expect(done.state.phase).toEqual({ kind: 'item', stage: 0, item: 0, step: 'ready' });
+    expect(done.effects).toEqual([{ type: 'schedule', afterMs: 900, action: 'READY_DONE' }]);
+    expect(done.state.answers).toEqual([]);
+    expect(done.state.submitted).toBe(0);
+  });
+
+  it('action ที่ไม่ตรง step ไม่มีผล (ตอบตอน try-ready/try-show/try-reveal)', () => {
+    let state = machine.transition(atDemo(), { type: 'EXAMPLE_SUBMIT', response: 3 }).state;
+    const ready = state;
+    expect(machine.transition(ready, { type: 'EXAMPLE_SUBMIT', response: 2 }).state).toBe(ready);
+    state = machine.transition(state, { type: 'READY_DONE' }).state;
+    const show = state;
+    expect(machine.transition(show, { type: 'EXAMPLE_SUBMIT', response: 2 }).state).toBe(show);
+    expect(machine.transition(show, { type: 'EXAMPLE_DONE' }).state).toBe(show);
+  });
+
+  it('ข้อ 1.1 ยังได้ ack ตัวแรกหลังผ่านตัวอย่าง', () => {
+    const state = stageGo(start());
+    const { state: after } = driveThroughItem(state, 7);
+    expect(after.submitted).toBe(1);
+  });
+
+  it('dx.example ไม่มี -> ข้ามตัวอย่าง', () => {
+    const noExample = createDiagnosticMachine({ ...DX_ADD, example: undefined });
+    let state = noExample.initial();
+    state = noExample.transition(state, { type: 'PARENT_CONTINUE' }).state;
+    state = noExample.transition(state, { type: 'KID_START' }).state;
+    state = noExample.transition(state, { type: 'STAGE_GO' }).state;
+    expect(state.phase).toEqual({ kind: 'item', stage: 0, item: 0, step: 'ready' });
+  });
+
+  it('STOP ระหว่างตัวอย่าง -> session.abandoned (partial ไม่มีข้อ)', () => {
+    const r = machine.transition(atDemo(), { type: 'STOP' });
+    expect(r.state.phase.kind).toBe('stopped');
+    expect(r.effects).toHaveLength(1);
+    expect(r.effects[0]).toMatchObject({ type: 'emit', event: { type: 'session.abandoned' } });
+  });
+});
+
+describe('createDiagnosticMachine — answeredAt และ strategyLatencyMs (Tech Spec §14.3)', () => {
+  function emitted(effects: Effect[]) {
+    return effects.flatMap((e) => (e.type === 'emit' ? [e.event] : []));
+  }
+
+  it('ข้อที่ไม่ถามวิธีคิด: event มี answeredAt และไม่มี strategyLatencyMs', () => {
+    const state = stageGo(start());
+    const s1 = machine.transition(state, { type: 'READY_DONE' }).state;
+    const s2 = machine.transition(s1, { type: 'FLASH_END' }).state;
+    const r = submit(s2, 7);
+    const events = emitted(r.effects);
+    expect(events[0]).toMatchObject({
+      type: 'item.answered',
+      answeredAt: '2026-01-01T00:00:00.000Z',
+    });
+    expect(events[0]).toHaveProperty('strategyLatencyMs', undefined);
+  });
+
+  function toStrategy(): RunnerState {
+    let state = stageGo(start());
+    for (let i = 0; i < 4; i += 1) {
+      state = driveThroughItem(state, DX_ADD.stages[0]!.items[i]!.expected).state;
+    }
+    state = stageGo(state);
+    for (let i = 0; i < 4; i += 1) {
+      state = driveThroughItem(state, DX_ADD.stages[1]!.items[i]!.expected).state;
+    }
+    state = stageGo(state);
+    state = driveThroughItem(state, DX_ADD.stages[2]!.items[0]!.expected).state;
+    state = driveThroughItem(state, DX_ADD.stages[2]!.items[1]!.expected).state;
+    state = submit(state, DX_ADD.stages[2]!.items[2]!.expected).state;
+    return machine.transition(state, { type: 'ACK_DONE' }).state;
+  }
+
+  it('ข้อที่ถามวิธีคิด: STRATEGY_PICK ที่มี strategyLatencyMs -> event มีค่านั้นและ answeredAt จาก SUBMIT', () => {
+    const r = machine.transition(toStrategy(), {
+      type: 'STRATEGY_PICK',
+      strategyId: 'doubles' as never,
+      strategyLatencyMs: 2300,
+    });
+    expect(emitted(r.effects)[0]).toMatchObject({
+      type: 'item.answered',
+      strategyLatencyMs: 2300,
+      answeredAt: '2026-01-01T00:00:00.000Z',
+    });
+  });
+
+  it('STRATEGY_PICK ที่ไม่ส่ง strategyLatencyMs -> ไม่มีค่า', () => {
+    const r = machine.transition(toStrategy(), {
+      type: 'STRATEGY_PICK',
+      strategyId: 'doubles' as never,
+    });
+    expect(emitted(r.effects)[0]).toHaveProperty('strategyLatencyMs', undefined);
+  });
+});

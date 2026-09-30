@@ -266,6 +266,8 @@ export interface Answer {
   ms?: number;
   /** วิธีคิดที่เลือก (ไม่ระบุ = known / column / round ตามชุด) */
   s?: StrategyId;
+  /** เวลา (ms) ที่ลูกใช้อยู่ที่หน้าเลือกวิธีคิดก่อนแตะเลือก (ไม่ระบุ = แตะทันที) */
+  sm?: number;
 }
 export type Plan = Record<string, Answer>;
 
@@ -288,6 +290,112 @@ export async function typeAnswer(page: Page, digits: string, mode: InputMode): P
 export async function submitAnswer(page: Page, mode: InputMode): Promise<void> {
   if (mode === 'keyboard') await page.keyboard.press('Enter');
   else await page.getByRole('button', { name: 'ตอบ', exact: true }).click();
+}
+
+// ---------------------------------------------------------------- หน้าตัวอย่างก่อนข้อ 1.1 (LS §8.2.1, Tech §14.1)
+
+/** ค่าจาก LS §8.2.1 (พิมพ์เอง ไม่ import จาก src/) */
+export const EXAMPLE = {
+  demoText: 'ตัวอย่าง: ดูจุดทั้งหมดในกล่อง มีกี่จุด พิมพ์ตัวเลขแล้วกด ตอบ',
+  tryText: 'ลองดูอีกที คราวนี้ภาพจะหายไป พิมพ์ว่าเห็นกี่จุด',
+  revealText: 'มี 2 จุด ต่อไปเป็นข้อจริงแล้ว',
+  demoDots: 3,
+  /** รับเฉพาะเลขนี้ในขั้นตัวอย่าง */
+  demoAccept: 3,
+  tryDots: 2,
+  readyMs: 900,
+  flashMs: 1500,
+  revealMs: 2000,
+} as const;
+
+/** จำนวน circle ใน ten-frame (จุดใน DOM) */
+export async function dotCount(page: Page): Promise<number> {
+  return page.locator('[data-testid="ten-frame"] circle').count();
+}
+
+/**
+ * จำนวนจุดที่ลูกเห็นจริง: circle ที่มีขนาด ไม่ถูกซ่อนด้วย visibility/display, การ์ดไม่โปร่งใส
+ * (opacity > 0.5) และอยู่ในหน้าจอ (ไม่ใช่แค่มีใน DOM)
+ */
+export async function seenDots(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const svg = document.querySelector('[data-testid="ten-frame"]');
+    if (!svg) return 0;
+    let opacity = 1;
+    for (let el: Element | null = svg; el; el = el.parentElement) {
+      const cs = getComputedStyle(el);
+      opacity *= parseFloat(cs.opacity);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return 0;
+    }
+    if (opacity <= 0.5) return 0;
+    return Array.from(svg.querySelectorAll('circle')).filter((c) => {
+      const r = c.getBoundingClientRect();
+      const cs = getComputedStyle(c);
+      return (
+        r.width > 0 &&
+        r.height > 0 &&
+        cs.visibility !== 'hidden' &&
+        cs.display !== 'none' &&
+        r.left >= 0 &&
+        r.top >= 0 &&
+        r.right <= window.innerWidth &&
+        r.bottom <= window.innerHeight
+      );
+    }).length;
+  });
+}
+
+export interface ExampleOptions {
+  /** ตัวเลขที่พิมพ์ตอบในขั้น "ลองเอง" (ค่าเริ่มต้น 5 = ผิด เพื่อให้เห็นว่าไม่บอกถูกผิด) */
+  tryResponse?: string;
+  /** เรียกที่แต่ละขั้น: example-demo, example-try-ready, example-try-show, example-try-hidden, example-reveal */
+  observe?: (label: string) => Promise<void>;
+  /** กด "ตอบ" ด้วยการแตะสองครั้ง (เด็กแตะเบิ้ล) */
+  dbl?: boolean;
+}
+
+async function submitExample(page: Page, dbl: boolean): Promise<void> {
+  const btn = page.getByRole('button', { name: 'ตอบ', exact: true });
+  if (dbl) await btn.dblclick();
+  else await btn.click();
+}
+
+/**
+ * เดินผ่านหน้าตัวอย่าง + ลองเอง + เฉลยภาพ (LS §8.2.1) เริ่มจากหน้าตัวอย่างที่เพิ่งแสดง
+ * จบเมื่อเข้าข้อ 1.1 ("พร้อมนะ..."); ใช้ได้ทั้งนาฬิกาปลอมที่หยุดอยู่ (เดินเวลาด้วย tick) และเวลาจริง
+ */
+export async function passExample(page: Page, o: ExampleOptions = {}): Promise<void> {
+  const obs = async (l: string): Promise<void> => {
+    if (o.observe) await o.observe(l);
+  };
+  const paused = pausedPages.has(page);
+  await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
+  await obs('example-demo');
+  await guardWait(page);
+  await keyButton(page, String(EXAMPLE.demoAccept)).click();
+  await submitExample(page, o.dbl ?? false);
+  await expect(page.getByText('พร้อมนะ...')).toBeVisible();
+  await page.waitForTimeout(60); // ให้ React ล้างค่าที่พิมพ์ (นาฬิกาปลอมที่หยุดทำให้ effect ช้ากว่าเวลาจริงเล็กน้อย)
+  await obs('example-try-ready');
+  if (paused) await tick(page, EXAMPLE.readyMs);
+  else await expect(page.getByText('ดู!', { exact: true })).toBeVisible({ timeout: 4000 });
+  await obs('example-try-show');
+  if (paused) await tick(page, EXAMPLE.flashMs + 150);
+  await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible({ timeout: 6000 });
+  await obs('example-try-hidden');
+  for (const d of o.tryResponse ?? '5') await keyButton(page, d).click();
+  await submitExample(page, o.dbl ?? false);
+  await expect(page.getByText(EXAMPLE.revealText, { exact: true })).toBeVisible();
+  await obs('example-reveal');
+  if (paused) await tick(page, EXAMPLE.revealMs);
+  else await expect(page.getByText(EXAMPLE.revealText)).toBeHidden({ timeout: 5000 });
+  await expect(page.getByText('พร้อมนะ...')).toBeVisible();
+}
+
+/** กด "ไปเลย" ของด่าน 1 แล้วผ่านหน้าตัวอย่างจนถึงข้อ 1.1 (ช่วยกันซ้ำ) */
+export async function goStage1(page: Page, o: ExampleOptions = {}): Promise<void> {
+  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await passExample(page, o);
 }
 
 export async function pickStrategy(page: Page, id: StrategyId): Promise<void> {
@@ -313,6 +421,8 @@ export interface RunOptions {
   startAt?: string;
   /** เหลือให้ค้างที่หน้า strategy ของข้อนี้ (ตอบแล้ว ผ่าน ack แล้ว แต่ยังไม่เลือกวิธีคิด) */
   stopAtStrategyOf?: string;
+  /** เก็บเวลาของนาฬิกาในหน้า (Date.now ms) ตอนกด "ตอบ" ของแต่ละข้อ */
+  submitAt?: Record<string, number>;
 }
 
 /**
@@ -353,6 +463,14 @@ export async function runSession(
       await page.getByRole('button', { name: 'ไปเลย' }).click();
       lastStage = item.stage;
       carry = 0;
+      // ด่าน 1: ผ่านหน้าตัวอย่าง + ลองเอง ก่อนถึงข้อ 1.1 (LS §8.2.1)
+      if (item.stage === 1) {
+        await passExample(page, {
+          observe: async (l) => {
+            await obs(l);
+          },
+        });
+      }
       if (item.stage > 1) {
         await guardWait(page);
         carry = GUARD_MS;
@@ -373,6 +491,7 @@ export async function runSession(
     await tick(page, Math.max(0, (a.ms ?? DEFAULT_MS) - carry));
     carry = 0;
     await typeAnswer(page, String(response), mode);
+    if (opts.submitAt) opts.submitAt[item.id] = await page.evaluate(() => Date.now());
     await submitAnswer(page, mode);
     await expect(page.getByText(/^(รับแล้ว!|โอเค ไปต่อ!|เยี่ยม ขอบคุณ!)$/)).toBeVisible();
     opts.acks?.push((await mainText(page)).trim());
@@ -382,6 +501,7 @@ export async function runSession(
       await expect(page.getByText('หนูคิดข้อนี้ยังไง?')).toBeVisible();
       await obs(`strategy-${item.id}`);
       if (opts.stopAtStrategyOf === item.id) return item.id;
+      if (a.sm) await tick(page, a.sm);
       await pickStrategy(page, a.s ?? defaultStrategy(item) ?? 'unsure');
       await guardWait(page);
       carry = GUARD_MS;
@@ -512,6 +632,37 @@ export async function readDbWhen(page: Page, minEvents: number): Promise<DbDump>
 }
 export function byType(events: Ev[], type: string): Ev[] {
   return events.filter((e) => e.type === type);
+}
+
+export const ISO_MS = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+
+/**
+ * ตรวจลำดับ event ของ session เดียว "ตามลำดับในอาร์เรย์" (ไม่เรียงใหม่) ตาม Tech §14.2 / ADR-0008:
+ * session.started เป็นตัวแรก, session.completed/abandoned เป็นตัวสุดท้าย, at เป็น ISO (toISOString) และเพิ่มขึ้นเคร่งครัด
+ */
+const label = (e: Ev): string => `${e.type}${typeof e.itemId === 'string' ? ' ' + e.itemId : ''}`;
+export function expectSessionOrder(events: Ev[], ctx: string): void {
+  expect(events.length, `${ctx}: ต้องมี event`).toBeGreaterThan(1);
+  expect(events[0]?.type, `${ctx}: ตัวแรก`).toBe('session.started');
+  expect(['session.completed', 'session.abandoned'], `${ctx}: ตัวสุดท้าย`).toContain(
+    events[events.length - 1]?.type,
+  );
+  for (const e of events) expect(e.at, `${ctx}: รูปแบบ at`).toMatch(ISO_MS);
+  for (let i = 1; i < events.length; i++) {
+    const a = events[i - 1] as Ev;
+    const b = events[i] as Ev;
+    expect(
+      Date.parse(b.at),
+      `${ctx}: at ต้องเพิ่มขึ้นเคร่งครัด (${label(a)} -> ${label(b)})`,
+    ).toBeGreaterThan(Date.parse(a.at));
+  }
+}
+
+/** แยก event ตาม sessionId โดยคงลำดับในอาร์เรย์ */
+export function bySession(events: Ev[]): Map<string, Ev[]> {
+  const m = new Map<string, Ev[]>();
+  for (const e of events) m.set(e.sessionId, [...(m.get(e.sessionId) ?? []), e]);
+  return m;
 }
 
 export interface ExportJson {

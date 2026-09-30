@@ -74,6 +74,46 @@ async function pick(page: Page, label: string): Promise<void> {
   await settle(page);
 }
 
+const EXAMPLE_DEMO = 'ตัวอย่าง: ดูจุดทั้งหมดในกล่อง มีกี่จุด พิมพ์ตัวเลขแล้วกด ตอบ';
+const EXAMPLE_TRY = 'ลองดูอีกที คราวนี้ภาพจะหายไป พิมพ์ว่าเห็นกี่จุด';
+const EXAMPLE_REVEAL = 'มี 2 จุด ต่อไปเป็นข้อจริงแล้ว';
+
+// หน้าตัวอย่างและข้อลองเอง (Lesson Spec §8.2.1) หลังกด "ไปเลย" ของด่าน 1 จนถึงข้อ 1.1 (ไม่บันทึก event)
+async function passExample(page: Page): Promise<void> {
+  const frame = page.locator('[data-testid=ten-frame]');
+  await settle(page);
+  // ตัวอย่าง: 3 จุดค้างไว้ พิมพ์ผิดแล้วช่องถูกล้าง ไม่ไปต่อ ไม่มีข้อความบอกผล
+  await expect(page.getByText(EXAMPLE_DEMO)).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(3);
+  await assertKidSafe(page);
+  await assertNoHScroll(page);
+  await answer(page, '2');
+  await expect(page.getByText('แตะตัวเลขด้านล่าง')).toBeVisible();
+  await expect(page.getByText(EXAMPLE_DEMO)).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(3);
+  await assertKidSafe(page);
+  await answer(page, '3');
+  // ลองเอง: พร้อมนะ -> ดู (2 จุด) -> ซ่อน
+  await expect(page.getByText('พร้อมนะ...')).toBeVisible();
+  await expect(page.getByText(EXAMPLE_TRY)).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(0);
+  await expect(page.getByText('ดู!', { exact: true })).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(2);
+  await expect(page.getByText(EXAMPLE_TRY)).toBeVisible();
+  await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
+  await assertKidSafe(page);
+  await answer(page, '5');
+  // เฉลยภาพ 2 จุด แล้วเข้าข้อ 1.1 เอง
+  await expect(page.getByText(EXAMPLE_REVEAL)).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(2);
+  await assertKidSafe(page);
+  await expect(page.getByText(EXAMPLE_REVEAL)).toBeHidden();
+  await expect(page.getByText('พร้อมนะ...')).toBeVisible();
+  await expect(frame.locator('circle')).toHaveCount(0);
+}
+
 interface PlayOptions {
   wrong?: boolean; // ตอบ 99 ทุกข้อ (ถามวิธีคิดเลือก "นับนิ้ว" / ชุด B "นับทีละ 1")
   throughStage?: number; // หยุดหลังจบด่านนี้ (1-5) ก่อนกด "ไปเลย" ของด่านถัดไป
@@ -100,6 +140,7 @@ async function play(page: Page, opts: PlayOptions = {}): Promise<{ acks: string[
     await expect(goButton).toBeVisible();
     await assertKidSafe(page);
     await goButton.click();
+    if (s === 0) await passExample(page);
     await settle(page);
     for (let i = 0; i < 4; i += 1) {
       await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
@@ -152,7 +193,15 @@ test.describe('DX-ADD', () => {
     ]);
     const path = await download.path();
     const json = JSON.parse(readFileSync(path, 'utf8')) as {
-      events: { type: string; sessionId: string; activityVersion?: string }[];
+      events: {
+        type: string;
+        at: string;
+        sessionId: string;
+        itemId?: string;
+        answeredAt?: string;
+        strategyLatencyMs?: number;
+        activityVersion?: string;
+      }[];
     };
     const started = json.events.filter((e) => e.type === 'session.started');
     expect(started).toHaveLength(1);
@@ -165,6 +214,26 @@ test.describe('DX-ADD', () => {
     expect(
       json.events.filter((e) => e.type === 'session.completed' && e.sessionId === sessionId),
     ).toHaveLength(1);
+    // หน้าตัวอย่างไม่ทิ้ง event: ตัวแรกคือ session.started ตัวถัดไปคือข้อ 1.1
+    expect(json.events[0]!.type).toBe('session.started');
+    expect(json.events[1]).toMatchObject({ type: 'item.answered', itemId: '1.1' });
+    // ลำดับ (§14.2): at เพิ่มขึ้นเคร่งครัด และ session.completed เป็นตัวสุดท้าย (5.4 อยู่ก่อน)
+    for (let i = 1; i < json.events.length; i += 1) {
+      expect(json.events[i]!.at > json.events[i - 1]!.at).toBe(true);
+    }
+    expect(json.events.at(-1)!.type).toBe('session.completed');
+    expect(json.events.at(-2)).toMatchObject({ type: 'item.answered', itemId: '5.4' });
+    // เวลา (§14.3): ทุกข้อมี answeredAt ≤ at, ข้อที่ถามวิธีคิดเท่านั้นที่มี strategyLatencyMs
+    const askIds = new Set(['3.3', '3.4', '4.1', '4.2', '4.3', '4.4', '5.3', '5.4']);
+    for (const e of json.events.filter((x) => x.type === 'item.answered')) {
+      expect(typeof e.answeredAt).toBe('string');
+      expect(e.answeredAt! <= e.at).toBe(true);
+      if (askIds.has(e.itemId!)) {
+        expect(e.strategyLatencyMs, e.itemId).toBeGreaterThanOrEqual(0);
+      } else {
+        expect(e.strategyLatencyMs, e.itemId).toBeUndefined();
+      }
+    }
     assertNoErrors(tracked);
   });
 
@@ -224,6 +293,7 @@ test.describe('DX-ADD', () => {
     await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
     await settle(page);
     await page.getByRole('button', { name: 'ไปเลย' }).click();
+    await passExample(page);
     await settle(page);
     await expect(page.getByRole('button', { name: '1', exact: true })).toBeEnabled();
     await answer(page, '7');
@@ -245,7 +315,7 @@ test.describe('DX-ADD', () => {
     await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
     await settle(page);
     await page.getByRole('button', { name: 'ไปเลย' }).click();
-    await settle(page);
+    await passExample(page);
     const frame = page.locator('[data-testid=ten-frame]');
     for (const n of STAGES[0]!.answers) {
       await expect(page.getByText('พร้อมนะ...')).toBeVisible();

@@ -120,3 +120,41 @@ describe('export → import', () => {
     expect(await store.getMeta('currentLearnerId')).toBe('existing');
   });
 });
+
+describe('export: ลำดับ event ที่ at เท่ากัน', () => {
+  it('item.answered ก่อน session.completed แม้ id ของ completed เรียงก่อน', async () => {
+    const store = createMemoryStore();
+    const at = '2026-01-01T00:00:00.000Z';
+    await store.appendEvents([
+      makeEvent('a', {
+        at,
+        type: 'session.completed',
+        summary: {
+          kind: 'diagnostic',
+          completion: 'complete',
+          stages: [],
+          groups: [],
+          skippedStageIds: [],
+          misconceptions: [],
+          recommendation: { kind: 'incomplete' },
+        },
+      }),
+      makeEvent('z', {
+        at,
+        type: 'item.answered',
+        itemId: '5.4',
+        skillId: 'add.x',
+        problem: { kind: 'arith', op: '+', a: 49, b: 26 },
+        expected: 75,
+        response: 75,
+        correct: true,
+        latencyMs: 1,
+        latencyValid: true,
+        fluent: null,
+        attemptNo: 1,
+      }),
+    ]);
+    const file = await exportData(store);
+    expect(file.events.map((e) => e.type)).toEqual(['item.answered', 'session.completed']);
+  });
+});

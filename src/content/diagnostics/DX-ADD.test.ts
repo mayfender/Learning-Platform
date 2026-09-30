@@ -270,3 +270,38 @@ describe('DX-ADD: classify ตรงกับ Lesson Spec §4', () => {
     }
   });
 });
+
+describe('DX-ADD: หน้าตัวอย่าง (Lesson Spec §8.2.1)', () => {
+  const example = DX_ADD.example!;
+  const realCounts = DX_ADD.stages[0]!.items.map((it) =>
+    it.problem.kind === 'subitize' ? it.problem.count : -1,
+  );
+
+  it('ค่าตรง Lesson Spec: ตัวอย่าง 3 จุดรับเฉพาะ 3, ลองเอง 2 จุด 900/1500/2000 ms', () => {
+    expect(example.demo).toEqual({ count: 3, acceptOnly: 3 });
+    expect(example.try).toEqual({ count: 2, readyMs: 900, flashMs: 1500, revealMs: 2000 });
+  });
+
+  it('จำนวนจุดของตัวอย่างไม่ตรงกับข้อ 1.1-1.4', () => {
+    expect(realCounts).toEqual([7, 9, 6, 8]);
+    expect(realCounts).not.toContain(example.demo.count);
+    expect(realCounts).not.toContain(example.try.count);
+  });
+
+  it('readyMs/flashMs ตรงกับข้อจริง', () => {
+    const visual = DX_ADD.stages[0]!.items[0]!.visual!;
+    expect(example.try.readyMs).toBe(visual.readyMs);
+    expect(example.try.flashMs).toBe(visual.flashMs);
+  });
+
+  it('ข้อความตรงตัวอักษร และประโยคเฉลยมีเลขเท่ากับจำนวนจุดของข้อลองเอง', () => {
+    expect(example.texts.demo).toBe('ตัวอย่าง: ดูจุดทั้งหมดในกล่อง มีกี่จุด พิมพ์ตัวเลขแล้วกด ตอบ');
+    expect(example.texts.try).toBe('ลองดูอีกที คราวนี้ภาพจะหายไป พิมพ์ว่าเห็นกี่จุด');
+    expect(example.texts.reveal).toBe('มี 2 จุด ต่อไปเป็นข้อจริงแล้ว');
+    expect(example.texts.reveal).toContain(String(example.try.count));
+  });
+
+  it('version ยังเป็น DX-ADD v2', () => {
+    expect(DX_ADD.version).toBe('DX-ADD v2');
+  });
+});

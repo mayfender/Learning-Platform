@@ -55,7 +55,9 @@ export function isAppEvent(value: unknown): value is AppEvent {
         typeof v.latencyMs === 'number' &&
         typeof v.latencyValid === 'boolean' &&
         (v.fluent === null || typeof v.fluent === 'boolean') &&
-        typeof v.attemptNo === 'number'
+        typeof v.attemptNo === 'number' &&
+        (v.answeredAt === undefined || typeof v.answeredAt === 'string') &&
+        (v.strategyLatencyMs === undefined || typeof v.strategyLatencyMs === 'number')
       );
     case 'strategy.reported':
       return typeof v.itemId === 'string' && typeof v.strategyId === 'string';

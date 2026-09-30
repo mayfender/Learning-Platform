@@ -8,6 +8,7 @@ export type Phase =
   | { kind: 'parent-intro' }
   | { kind: 'kid-intro' }
   | { kind: 'stage-intro'; stage: number; completed: { n: number; m: number } | null }
+  | { kind: 'example'; step: 'demo' | 'try-ready' | 'try-show' | 'try-answering' | 'try-reveal' }
   | { kind: 'item'; stage: number; item: number; step: 'ready' | 'show' | 'answering' }
   | { kind: 'ack'; stage: number; item: number; text: string }
   | { kind: 'strategy'; stage: number; item: number }
@@ -23,6 +24,7 @@ interface PendingAnswer {
   latencyValid: boolean;
   fluent: boolean | null;
   flashInterrupted: boolean;
+  answeredAt: string;
 }
 
 export interface RunnerState {
@@ -46,9 +48,12 @@ export type RunnerAction =
       latencyMs: number;
       latencyValid: boolean;
       flashInterrupted: boolean;
+      answeredAt: string;
     }
   | { type: 'ACK_DONE' }
-  | { type: 'STRATEGY_PICK'; strategyId: StrategyId }
+  | { type: 'STRATEGY_PICK'; strategyId: StrategyId; strategyLatencyMs?: number }
+  | { type: 'EXAMPLE_SUBMIT'; response: number }
+  | { type: 'EXAMPLE_DONE' }
   | { type: 'STOP' };
 
 type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
@@ -59,7 +64,7 @@ export type EventPayload = DistributiveOmit<
 
 export type Effect =
   | { type: 'emit'; event: EventPayload }
-  | { type: 'schedule'; afterMs: number; action: 'READY_DONE' | 'ACK_DONE' };
+  | { type: 'schedule'; afterMs: number; action: 'READY_DONE' | 'ACK_DONE' | 'EXAMPLE_DONE' };
 
 export interface DiagnosticMachine {
   initial(): RunnerState;
@@ -198,8 +203,43 @@ export function createDiagnosticMachine(dx: Diagnostic): DiagnosticMachine {
     }
 
     if (phase.kind === 'stage-intro' && action.type === 'STAGE_GO') {
+      if (phase.stage === 0 && dx.example) {
+        return { state: { ...state, phase: { kind: 'example', step: 'demo' } }, effects: [] };
+      }
       const { phase: itemPhase, effects } = enterItem(phase.stage, 0);
       return { state: { ...state, phase: itemPhase }, effects };
+    }
+
+    // หน้าตัวอย่าง (Tech Spec §14.1.3): ไม่ emit event และไม่แตะ answers/submitted/pending
+    if (phase.kind === 'example' && dx.example) {
+      const example = dx.example;
+      if (phase.step === 'demo' && action.type === 'EXAMPLE_SUBMIT') {
+        if (action.response !== example.demo.acceptOnly) return noop(state);
+        return {
+          state: { ...state, phase: { kind: 'example', step: 'try-ready' } },
+          effects: [{ type: 'schedule', afterMs: example.try.readyMs, action: 'READY_DONE' }],
+        };
+      }
+      if (phase.step === 'try-ready' && action.type === 'READY_DONE') {
+        return { state: { ...state, phase: { kind: 'example', step: 'try-show' } }, effects: [] };
+      }
+      if (phase.step === 'try-show' && action.type === 'FLASH_END') {
+        return {
+          state: { ...state, phase: { kind: 'example', step: 'try-answering' } },
+          effects: [],
+        };
+      }
+      if (phase.step === 'try-answering' && action.type === 'EXAMPLE_SUBMIT') {
+        return {
+          state: { ...state, phase: { kind: 'example', step: 'try-reveal' } },
+          effects: [{ type: 'schedule', afterMs: example.try.revealMs, action: 'EXAMPLE_DONE' }],
+        };
+      }
+      if (phase.step === 'try-reveal' && action.type === 'EXAMPLE_DONE') {
+        const { phase: itemPhase, effects } = enterItem(0, 0);
+        return { state: { ...state, phase: itemPhase }, effects };
+      }
+      return noop(state);
     }
 
     if (phase.kind === 'item' && phase.step === 'ready' && action.type === 'READY_DONE') {
@@ -239,6 +279,7 @@ export function createDiagnosticMachine(dx: Diagnostic): DiagnosticMachine {
           fluentMs: item.fluentMs,
           fluent,
           flashInterrupted: action.flashInterrupted || undefined,
+          answeredAt: action.answeredAt,
         };
         return {
           state: {
@@ -265,6 +306,7 @@ export function createDiagnosticMachine(dx: Diagnostic): DiagnosticMachine {
             latencyValid: action.latencyValid,
             fluent,
             flashInterrupted: action.flashInterrupted,
+            answeredAt: action.answeredAt,
           },
         },
         effects,
@@ -312,6 +354,8 @@ export function createDiagnosticMachine(dx: Diagnostic): DiagnosticMachine {
         strategySetId: item.strategySetId,
         strategyId: action.strategyId,
         flashInterrupted: pending.flashInterrupted || undefined,
+        answeredAt: pending.answeredAt,
+        strategyLatencyMs: action.strategyLatencyMs,
       };
       const {
         phase: nextPhase,
@@ -359,6 +403,8 @@ function toItemAnsweredEvent(record: AnswerRecord): EventPayload {
     strategySetId: record.strategySetId,
     strategyId: record.strategyId,
     flashInterrupted: record.flashInterrupted,
+    answeredAt: record.answeredAt,
+    strategyLatencyMs: record.strategyLatencyMs,
     attemptNo: 1,
   };
 }
