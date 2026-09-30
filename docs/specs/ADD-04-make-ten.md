@@ -900,3 +900,11 @@ Tester ออกแบบ acceptance เองจาก LS และเอกส
 | 10 | Tester Q-T1 จุดทดสอบวงแหวนไฮไลต์ | เพิ่ม `data-cell-highlight` (index ช่อง) ที่วงแหวนของ `TenFrame` ในงาน T6 |
 | 11 | Tester Q-T5 / Q-T9 | เช็คก่อนที่แท็บซ่อนและถูก = เร็ว (ข้ามได้) · หน้าพ่อรอบ 1 ยังไม่แสดงกล่อง Leitner (รอ T9) |
 
+
+## รายงานการพัฒนา รอบที่ 1 คลื่นที่ 2 (T6 + T7)
+
+- **ทำแล้ว:** `LessonPlayer` (เช็คก่อน + ส่วน A + กฎ A + ส่งเครื่อง + บันทึกของพ่อ + กล่องหยุด/ข้ามส่วน), `ParentNoteForm`, หน้าพ่อ `/parent/lesson/ADD-04` (`ParentLesson`), การ์ดหน้าหลัก, ลิงก์จาก `/parent`, `data-cell-highlight`, e2e `tests/e2e/add-04.spec.ts` (เทสต์ 1/12, 5, 7, 8, 9, 13)
+- **ผล:** lint ผ่าน, unit 614/614, e2e 46 ผ่าน/17 ข้าม (3 project), acceptance DX-ADD 141+ผ่านทั้งหมด, acceptance ADD-04 ผ่านทั้งหมดยกเว้น 2 ข้อที่เทสต์ขัดกับ LS/ตัวเลขผิด (ดูล่าง), dev StrictMode (`E2E_DEV=1`) ผ่าน
+- **ส่วนที่แก้นอกขอบเขตที่ระบุ (ต้องให้ Architect รับทราบ):** (1) engine `machine.ts`: เพิ่ม action `PARENT_CONTINUE` (ไปต่อโดยไม่ปิดธง) และหน้าเปิด "ไปเลย" ก่อน A2 ซ้ำ/A3 ชุดใหม่; `plan.ts`: A3 ชุดใหม่ต่อท้ายด้วยข้อสรุปกฎ A (2) content: `sittingIntro.button` "ไปเลย"→"เริ่ม" (ซ้ำกับปุ่มหน้าเปิดส่วน), เพิ่ม `numberTalks.openingNote` (LS §5 วงเล็บ "ถามด้วยความอยากรู้ ไม่ใช่จับผิด" ที่หายไป) (3) `useActivityRunner` option `syncRender` (flushSync) (4) `TenFrame`/`useFlash` prop `cssFadeIn` (opt-in, DX-ADD ไม่เปลี่ยน) (5) `global.css` reduced motion ใช้ `transition: none` (6) `TenFrameGrid` ช่องว่างมี rect โปร่งใสเสมอ (7) `ConfirmDialog` ปุ่มเพิ่ม
+- **ข้อขัดกับ acceptance (ห้ามแก้ tests/acceptance):** TC-A3-01 ใช้ข้อความนับนิ้วเก่า (LS ปัจจุบันเปลี่ยนแล้ว); TC-A2-02 คาด 20 event แต่ตามสเปกคือ 19
+- **ข้อจำกัดรอบ 1:** ครั้งที่ 2 เล่นได้เฉพาะ A3 ซ้ำ (ส่วน B ยังไม่มี) ถ้าจบครั้งที่ 2 ก็นับเป็น 1 ครั้ง อาจกระทบแผนรอบ 2
