@@ -34,6 +34,13 @@ describe('formatProblem', () => {
   });
   it('missing-part', () => {
     expect(formatProblem({ kind: 'missing-part', whole: 10, part: 7 })).toBe('7 + ? = 10');
+    expect(formatProblem({ kind: 'missing-part', whole: 10, part: 7, missing: 'second' })).toBe(
+      '7 + ? = 10',
+    );
+    // ADD-04: ด้านที่หายอยู่หน้า `? + part = whole`; เฉลยเท่ากันทั้งสองด้าน
+    const first = { kind: 'missing-part', whole: 10, part: 4, missing: 'first' } as const;
+    expect(formatProblem(first)).toBe('? + 4 = 10');
+    expect(solve(first)).toBe(6);
   });
   it('subitize', () => {
     expect(formatProblem({ kind: 'subitize', count: 7, visual: 'ten-frame' })).toBe('แฟลช 7 จุด');

@@ -158,3 +158,123 @@ describe('export: ลำดับ event ที่ at เท่ากัน', () 
     expect(file.events.map((e) => e.type)).toEqual(['item.answered', 'session.completed']);
   });
 });
+
+describe('export/import: event ชนิดใหม่ของ ADD-04 (ADR-0008)', () => {
+  const at = '2026-01-01T00:00:00.000Z';
+  const lessonEvent = (id: string, overrides: Record<string, unknown>) =>
+    makeEvent(id, { at, activityId: 'ADD-04', ...overrides });
+
+  // id ของ event ที่ควรมาทีหลังเรียงก่อน เพื่อพิสูจน์ว่าลำดับมาจากชนิดไม่ใช่ id
+  const events = [
+    lessonEvent('a-completed', {
+      type: 'session.completed',
+      activityKind: undefined,
+      activityVersion: 'ADD-04 v1',
+      summary: {
+        kind: 'lesson',
+        sitting: 1,
+        blocks: [{ kind: 'A', outcome: 'passed' }],
+        flags: [],
+      },
+    }),
+    lessonEvent('z-noted', {
+      type: 'parent.noted',
+      activityKind: undefined,
+      activityVersion: undefined,
+      blockKind: 'A',
+      fingers: 'some',
+      mouth: 'none',
+      note: 'ใช้นิ้วช่วย',
+    }),
+    lessonEvent('c-block-done', {
+      type: 'block.completed',
+      activityKind: undefined,
+      activityVersion: undefined,
+      blockId: 'blk1',
+      blockKind: 'A',
+      outcome: 'passed',
+      metrics: { total: 6, correct: 6, fastCount: 5, meanLatencyMs: 2500, misconceptions: [] },
+      flags: ['talk-A'],
+    }),
+    lessonEvent('d-answered', {
+      type: 'item.answered',
+      activityKind: undefined,
+      activityVersion: undefined,
+      itemId: 'B3.1',
+      skillId: 'add.make-10',
+      problem: { kind: 'arith', op: '+', a: 8, b: 6 },
+      expected: 14,
+      response: 14,
+      correct: true,
+      latencyMs: 4000,
+      latencyValid: true,
+      fluent: true,
+      attemptNo: 1,
+      blockId: 'blk1',
+      section: 'B3',
+      mode: 'fade',
+      stepId: 'total',
+      subAnswers: [{ stepId: 'gap', response: 2, expected: 2, correct: true }],
+      revealed: false,
+      manip: { taps: 0, drops: 2, rejected: 1 },
+    }),
+    lessonEvent('e-block-start', {
+      type: 'block.started',
+      activityKind: undefined,
+      activityVersion: undefined,
+      blockId: 'blk1',
+      blockKind: 'A',
+      round: 0,
+      skipped: { itemIds: ['A1.1'], reason: 'check' },
+    }),
+    lessonEvent('f-started', { sitting: 1, activityVersion: 'ADD-04 v1', activityKind: 'lesson' }),
+  ];
+
+  it('export → import ได้ event ชนิดใหม่ครบและเรียงตามชนิดเมื่อ at เท่ากัน', async () => {
+    const store = createMemoryStore();
+    await store.appendEvents(events);
+    const file = await exportData(store);
+    expect(file.events.map((e) => e.type)).toEqual([
+      'session.started',
+      'block.started',
+      'item.answered',
+      'block.completed',
+      'parent.noted',
+      'session.completed',
+    ]);
+
+    const store2 = createMemoryStore();
+    const result = await importData(store2, file);
+    expect(result).toEqual({ learnersAdded: 0, eventsAdded: 6, eventsSkipped: 0, invalid: 0 });
+    const back = await store2.listEvents();
+    expect(back).toEqual(file.events);
+    const answered = back.find((e) => e.type === 'item.answered');
+    expect(answered).toMatchObject({
+      blockId: 'blk1',
+      section: 'B3',
+      mode: 'fade',
+      stepId: 'total',
+      manip: { taps: 0, drops: 2, rejected: 1 },
+    });
+  });
+
+  it('import event ชนิดใหม่ที่ field ผิดชนิดถูกนับเป็น invalid', async () => {
+    const store = createMemoryStore();
+    const bad = lessonEvent('bad', {
+      type: 'block.completed',
+      blockId: 'b',
+      blockKind: 'A',
+      outcome: 'winner',
+    });
+    const file = {
+      app: 'math-learning' as const,
+      schemaVersion: 1,
+      exportedAt: at,
+      learners: [],
+      events: [bad],
+    };
+    const result = await importData(store, file);
+    expect(result.invalid).toBe(1);
+    expect(result.eventsAdded).toBe(0);
+  });
+});

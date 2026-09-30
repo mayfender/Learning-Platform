@@ -5,8 +5,27 @@ export type SkillId = `${'add' | 'sub' | 'mul' | 'div'}.${string}`;
 // เฉลยต้องคำนวณได้จากโจทย์ (ADR-0004)
 export type Problem =
   | { kind: 'arith'; op: '+' | '-' | '×' | '÷'; a: number; b: number }
-  | { kind: 'missing-part'; whole: number; part: number } // part + ? = whole
+  // part + ? = whole; missing: ด้านที่หาย (ค่าเดิม = 'second' คือ `part + ? = whole`, 'first' คือ `? + part = whole`)
+  | { kind: 'missing-part'; whole: number; part: number; missing?: 'first' | 'second' }
   | { kind: 'subitize'; count: number; visual: 'ten-frame' | 'abacus' };
+
+// ระบบทบทวน Leitner (ADR-0006) — ค่าอยู่ใน content/skills.ts
+export interface ReviewConfig {
+  intervalsDays: readonly number[]; // [1, 2, 4, 7, 14] กล่อง 1..5
+  boxLevels: readonly ('noCount' | 'automatic')[];
+  round: { count: number; minFluent: number };
+  resetOn: readonly string[];
+}
+
+export interface Skill {
+  id: SkillId;
+  ladderStep: number;
+  title: string;
+  fluency?: { noCountMs: number; automaticMs: number }; // LS ADD-04 §6.1
+  review?: ReviewConfig;
+}
+
+export type BlockKind = 'check' | 'A' | 'B' | 'practice' | 'review' | 'drill' | 'challenge';
 
 export interface Learner {
   id: string;
@@ -36,6 +55,9 @@ export type StrategyId =
   | 'split-place'
   | 'jump-tens'
   | 'round'
+  | 'see-box'
+  | 'see-number'
+  | 'count-in-head'
   | 'unsure';
 
 export interface StrategyOption {
@@ -243,6 +265,22 @@ export interface ItemAnsweredEvent {
   // เวลาตั้งแต่หน้าเลือกวิธีคิดแสดงจนแตะเลือก (ms) เฉพาะข้อที่ถามวิธีคิด ไม่ใส่ถ้าแท็บถูกซ่อน
   strategyLatencyMs?: number;
   attemptNo: number;
+  // --- เพิ่มโดย ADD-04 (ADR-0008: field เสริม ไม่ bump schemaVersion) ---
+  blockId?: string;
+  section?: string; // 'c' 'A1' 'A2' 'A3' 'B1' 'B2' 'B3' 'B4' 'practice' 'review' 'drill'
+  mode?: 'see' | 'fade' | 'mind';
+  stepId?: 'gap' | 'rest' | 'total' | 'q1' | 'q2';
+  subAnswers?: SubAnswer[];
+  revealed?: boolean;
+  manip?: { taps?: number; drops?: number; rejected?: number };
+}
+
+export interface SubAnswer {
+  stepId: 'gap' | 'rest';
+  response: number;
+  expected: number;
+  correct: boolean;
+  misconceptionId?: string;
 }
 
 export interface StageSummary {
@@ -277,13 +315,75 @@ export interface DiagnosticSummary {
   recommendation: Recommendation;
 }
 
-export type SessionSummary = DiagnosticSummary;
+export interface LessonSummary {
+  kind: 'lesson';
+  sitting: number;
+  blocks: { kind: BlockKind; outcome: string; round?: number }[];
+  flags: string[];
+}
+
+export type SessionSummary = DiagnosticSummary | LessonSummary;
+
+export type BlockOutcome = 'passed' | 'passed-trend' | 'not-passed' | 'skipped' | 'done';
+export type BlockSkipReason = 'check' | 'manual';
+export type LessonFlag = 'talk-A' | 'tray-B1' | 'stalled-A' | 'stalled-B';
+export type NoteFrequency = 'none' | 'some' | 'most';
+
+export interface BlockMetrics {
+  total: number;
+  correct: number;
+  fastCount: number;
+  meanLatencyMs: number | null;
+  misconceptions: { id: string; itemIds: string[] }[];
+}
 
 export type AppEvent = EventBase &
   (
-    | { type: 'session.started'; activityKind: 'diagnostic' | 'lesson'; activityVersion: string }
+    | {
+        type: 'session.started';
+        activityKind: 'diagnostic' | 'lesson';
+        activityVersion: string;
+        sitting?: number;
+      }
     | ItemAnsweredEvent
+    | {
+        type: 'block.started';
+        blockId: string;
+        blockKind: BlockKind;
+        round?: number;
+        seed?: number;
+        skipped?: { itemIds: string[]; reason: BlockSkipReason };
+        skillId?: SkillId;
+      }
+    | {
+        type: 'block.completed';
+        blockId: string;
+        blockKind: BlockKind;
+        round?: number;
+        outcome: BlockOutcome;
+        skipReason?: BlockSkipReason;
+        metrics?: BlockMetrics;
+        level?: 'noCount' | 'automatic' | 'none';
+        flags?: LessonFlag[];
+        detail?: Record<string, number | string | boolean>;
+        skillId?: SkillId;
+      }
+    | {
+        type: 'parent.noted';
+        blockKind?: 'A' | 'B';
+        fingers?: NoteFrequency;
+        mouth?: NoteFrequency;
+        note?: string;
+        resolvedFlag?: string;
+      }
     | { type: 'strategy.reported'; itemId: string; strategyId: StrategyId }
     | { type: 'session.completed'; activityVersion: string; summary: SessionSummary }
     | { type: 'session.abandoned'; activityVersion: string; summary: SessionSummary }
   );
+
+// event ที่ยังไม่มี envelope (id/at/schemaVersion/learnerId/sessionId/activityId) — machine ส่งออกเป็น effect
+type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
+export type EventPayload = DistributiveOmit<
+  AppEvent,
+  'id' | 'at' | 'schemaVersion' | 'learnerId' | 'sessionId' | 'activityId'
+>;

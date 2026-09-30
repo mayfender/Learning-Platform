@@ -99,3 +99,15 @@ export const addStrategySets: StrategySet[] = [
     ],
   },
 ];
+
+// LS ADD-04 §4 A3 — "ในหัวเห็นอะไร" (ตัวเลือกและลำดับตามตัวอักษร) บันทึกอย่างเดียว ไม่ตัดสิน
+export const addMindView: StrategySet = {
+  id: 'add.mind-view',
+  options: [
+    { id: 'see-box', label: 'เห็นกล่อง 10 ช่อง', counting: 'no' },
+    { id: 'see-number', label: 'นึกเป็นตัวเลข', counting: 'no' },
+    { id: 'count-fingers', label: 'นับนิ้ว', counting: 'yes' },
+    { id: 'count-in-head', label: 'นับในใจ', counting: 'yes' },
+    { id: 'unsure', label: 'บอกไม่ถูก', counting: 'ignore' },
+  ],
+};

@@ -11,6 +11,8 @@
   --color-group-a: var(--color-accent);
   --color-group-b: var(--color-success);
   --color-dot-single: var(--color-accent);
+  /* จุดที่ "เติมเพิ่ม" (ADD-04) ตามธีมผ่าน --color-highlight; วาดคู่กับเส้นขอบ --color-on-highlight */
+  --color-dot-added: var(--color-highlight);
   /* ตัวอักษรบนพื้น --color-highlight (เหลืองทั้ง light/dark) ต้องเป็นสีเข้มเสมอ */
   --color-on-highlight: #1f2d27;
 

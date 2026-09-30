@@ -25,9 +25,63 @@ const EVENT_TYPES = new Set([
   'session.started',
   'item.answered',
   'strategy.reported',
+  'block.started',
+  'block.completed',
+  'parent.noted',
   'session.completed',
   'session.abandoned',
 ]);
+
+const BLOCK_KINDS = new Set(['check', 'A', 'B', 'practice', 'review', 'drill', 'challenge']);
+const BLOCK_OUTCOMES = new Set(['passed', 'passed-trend', 'not-passed', 'skipped', 'done']);
+const NOTE_FREQUENCIES = new Set(['none', 'some', 'most']);
+const STEP_IDS = new Set(['gap', 'rest', 'total', 'q1', 'q2']);
+const MODES = new Set(['see', 'fade', 'mind']);
+
+function optional(value: unknown, check: (v: unknown) => boolean): boolean {
+  return value === undefined || check(value);
+}
+const isNumber = (v: unknown): boolean => typeof v === 'number';
+const isString = (v: unknown): boolean => typeof v === 'string';
+const isBoolean = (v: unknown): boolean => typeof v === 'boolean';
+const isRecord = (v: unknown): boolean => typeof v === 'object' && v !== null && !Array.isArray(v);
+
+function isSubAnswers(v: unknown): boolean {
+  return (
+    Array.isArray(v) &&
+    v.every((x) => {
+      if (!isRecord(x)) return false;
+      const r = x as Record<string, unknown>;
+      return (
+        (r.stepId === 'gap' || r.stepId === 'rest') &&
+        typeof r.response === 'number' &&
+        typeof r.expected === 'number' &&
+        typeof r.correct === 'boolean' &&
+        optional(r.misconceptionId, isString)
+      );
+    })
+  );
+}
+
+function isManip(v: unknown): boolean {
+  if (!isRecord(v)) return false;
+  const r = v as Record<string, unknown>;
+  return (
+    optional(r.taps, isNumber) && optional(r.drops, isNumber) && optional(r.rejected, isNumber)
+  );
+}
+
+function isMetrics(v: unknown): boolean {
+  if (!isRecord(v)) return false;
+  const r = v as Record<string, unknown>;
+  return (
+    typeof r.total === 'number' &&
+    typeof r.correct === 'number' &&
+    typeof r.fastCount === 'number' &&
+    (r.meanLatencyMs === null || typeof r.meanLatencyMs === 'number') &&
+    Array.isArray(r.misconceptions)
+  );
+}
 
 export function isAppEvent(value: unknown): value is AppEvent {
   if (typeof value !== 'object' || value === null) return false;
@@ -42,7 +96,11 @@ export function isAppEvent(value: unknown): value is AppEvent {
 
   switch (v.type) {
     case 'session.started':
-      return typeof v.activityKind === 'string' && typeof v.activityVersion === 'string';
+      return (
+        typeof v.activityKind === 'string' &&
+        typeof v.activityVersion === 'string' &&
+        optional(v.sitting, isNumber)
+      );
     case 'item.answered':
       return (
         typeof v.itemId === 'string' &&
@@ -57,7 +115,54 @@ export function isAppEvent(value: unknown): value is AppEvent {
         (v.fluent === null || typeof v.fluent === 'boolean') &&
         typeof v.attemptNo === 'number' &&
         (v.answeredAt === undefined || typeof v.answeredAt === 'string') &&
-        (v.strategyLatencyMs === undefined || typeof v.strategyLatencyMs === 'number')
+        (v.strategyLatencyMs === undefined || typeof v.strategyLatencyMs === 'number') &&
+        optional(v.blockId, isString) &&
+        optional(v.section, isString) &&
+        optional(v.mode, (m) => typeof m === 'string' && MODES.has(m)) &&
+        optional(v.stepId, (m) => typeof m === 'string' && STEP_IDS.has(m)) &&
+        optional(v.subAnswers, isSubAnswers) &&
+        optional(v.revealed, isBoolean) &&
+        optional(v.manip, isManip)
+      );
+    case 'block.started':
+      return (
+        typeof v.blockId === 'string' &&
+        typeof v.blockKind === 'string' &&
+        BLOCK_KINDS.has(v.blockKind) &&
+        optional(v.round, isNumber) &&
+        optional(v.seed, isNumber) &&
+        optional(v.skillId, isString) &&
+        optional(
+          v.skipped,
+          (x) =>
+            isRecord(x) &&
+            Array.isArray((x as Record<string, unknown>).itemIds) &&
+            ((x as Record<string, unknown>).reason === 'check' ||
+              (x as Record<string, unknown>).reason === 'manual'),
+        )
+      );
+    case 'block.completed':
+      return (
+        typeof v.blockId === 'string' &&
+        typeof v.blockKind === 'string' &&
+        BLOCK_KINDS.has(v.blockKind) &&
+        typeof v.outcome === 'string' &&
+        BLOCK_OUTCOMES.has(v.outcome) &&
+        optional(v.round, isNumber) &&
+        optional(v.skillId, isString) &&
+        optional(v.skipReason, (x) => x === 'check' || x === 'manual') &&
+        optional(v.metrics, isMetrics) &&
+        optional(v.level, (x) => x === 'noCount' || x === 'automatic' || x === 'none') &&
+        optional(v.flags, (x) => Array.isArray(x) && x.every(isString)) &&
+        optional(v.detail, isRecord)
+      );
+    case 'parent.noted':
+      return (
+        optional(v.blockKind, (x) => x === 'A' || x === 'B') &&
+        optional(v.fingers, (x) => typeof x === 'string' && NOTE_FREQUENCIES.has(x)) &&
+        optional(v.mouth, (x) => typeof x === 'string' && NOTE_FREQUENCIES.has(x)) &&
+        optional(v.note, isString) &&
+        optional(v.resolvedFlag, isString)
       );
     case 'strategy.reported':
       return typeof v.itemId === 'string' && typeof v.strategyId === 'string';

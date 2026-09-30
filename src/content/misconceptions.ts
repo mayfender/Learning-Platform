@@ -1,6 +1,6 @@
 import type { Misconception } from '@/engine/types';
 
-// LS §3 ตามตัวอักษร (M1–M12, MX)
+// LS §3 ตามตัวอักษร (M1–M12, MX) และ L1 ของ ADD-04 (LS ADD-04 §2)
 export const addMisconceptions: Misconception[] = [
   {
     id: 'M1',
@@ -61,6 +61,11 @@ export const addMisconceptions: Misconception[] = [
     id: 'M12',
     description: 'ปัดให้กลมแล้วชดเชยผิด',
     observedBy: '49+26 ตอบ 74 หรือ 76 และบอกว่าปัดเลข',
+  },
+  {
+    id: 'L1',
+    description: 'ตอบจำนวนจุดแทนจำนวนช่องว่าง',
+    observedBy: 'ส่วน A: กล่องมี 7 จุด ตอบ 7',
   },
   {
     id: 'MX',

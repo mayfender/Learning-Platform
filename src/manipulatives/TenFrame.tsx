@@ -1,10 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
 import type { ManipulativeBaseProps } from '@/manipulatives/types';
-import { useReducedMotion } from '@/ui/useReducedMotion';
+import { useFlash } from '@/manipulatives/useFlash';
+import { TenFrameGrid } from '@/manipulatives/parts/TenFrameGrid';
+import { VB_HEIGHT, VB_WIDTH, type CellState } from '@/manipulatives/parts/gridGeometry';
+
+export type { CellState };
 
 export interface TenFrameProps extends ManipulativeBaseProps {
+  /** จุดตั้งต้น เติมตาม index 0..filled-1 (แถวบนซ้าย→ขวา แล้วแถวล่าง) */
   filled: number;
+  /** สีของจุดตั้งต้น */
   colorMode?: 'single' | 'split-5';
+  /** index ช่องที่ "เติมเพิ่ม" (สีใหม่) ต้องอยู่ในช่วง filled..9 และไม่ซ้ำ */
+  added?: readonly number[];
+  /** วงแหวนรอบช่อง (feedback); pulse = กะพริบ */
+  highlight?: { indices: readonly number[]; pulse?: boolean };
+  /** เรียกเมื่อ interactive และแตะช่องใดก็ได้ (component ไม่เปลี่ยนค่าเอง ผู้เรียกตัดสิน) */
+  onCellTap?: (index: number, state: CellState) => void;
 }
 
 const SIZE_WIDTH: Record<NonNullable<TenFrameProps['size']>, string> = {
@@ -13,76 +24,47 @@ const SIZE_WIDTH: Record<NonNullable<TenFrameProps['size']>, string> = {
   lg: 'min(100%, 440px)',
 };
 
-const COLS = 5;
-const ROWS = 2;
-const CELL = 40;
-const PAD = 10;
-const VB_WIDTH = COLS * CELL + PAD * 2;
-const VB_HEIGHT = ROWS * CELL + PAD * 2;
-const DOT_R = 12;
-
-type FadeClass = 'in' | 'idle' | 'out';
-
-export function TenFrame({
-  mode,
-  flashMs,
-  onFlashEnd,
-  interactive = false,
-  size = 'md',
-  label,
-  filled,
-  colorMode = 'split-5',
-}: TenFrameProps) {
-  if (import.meta.env.DEV && (!Number.isInteger(filled) || filled < 0 || filled > 10)) {
+function validate(props: TenFrameProps): void {
+  const { filled, added = [], interactive, size = 'md', highlight } = props;
+  if (!Number.isInteger(filled) || filled < 0 || filled > 10) {
     throw new Error(`TenFrame: filled ต้องเป็นจำนวนเต็ม 0-10, ได้รับ ${String(filled)}`);
   }
-  void interactive; // frames/onCellTap ยังไม่ทำใน M1 (ADR-0005) — interactive ใช้ค่า false เท่านั้น
-
-  const reducedMotion = useReducedMotion();
-  // ended = แฟลชรอบนี้จบแล้ว (ไม่ผูกกับ mode ตอน mount เพื่อให้เปลี่ยน hidden -> flash ได้)
-  const [ended, setEnded] = useState(false);
-  const [fadeClass, setFadeClass] = useState<FadeClass>(
-    mode === 'flash' && !reducedMotion ? 'in' : 'idle',
-  );
-  const onFlashEndRef = useRef(onFlashEnd);
-  useEffect(() => {
-    onFlashEndRef.current = onFlashEnd;
-  }, [onFlashEnd]);
-
-  useEffect(() => {
-    if (mode !== 'flash') return;
-    setEnded(false);
-    setFadeClass(reducedMotion ? 'idle' : 'in');
-    const ms = flashMs ?? 0;
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    if (reducedMotion) {
-      setFadeClass('idle');
-      timers.push(
-        setTimeout(() => {
-          setEnded(true);
-          onFlashEndRef.current?.();
-        }, ms),
-      );
-    } else {
-      // setTimeout(0) แทน requestAnimationFrame: ให้เบราว์เซอร์ paint สถานะ opacity:0 ก่อน แล้วค่อย
-      // เปลี่ยนเป็น idle เพื่อให้ transition ไล่สีเกิดขึ้นจริง (jsdom ไม่มี rAF)
-      timers.push(setTimeout(() => setFadeClass('idle'), 0));
-      timers.push(setTimeout(() => setFadeClass('out'), ms));
-      timers.push(
-        setTimeout(() => {
-          setEnded(true);
-          onFlashEndRef.current?.();
-        }, ms + 150),
-      );
+  const seen = new Set<number>();
+  for (const i of added) {
+    if (!Number.isInteger(i) || i < filled || i > 9) {
+      throw new Error(`TenFrame: added ต้องอยู่ในช่วง filled..9, ได้รับ ${String(i)}`);
     }
+    if (seen.has(i)) throw new Error(`TenFrame: added ซ้ำที่ index ${String(i)}`);
+    seen.add(i);
+  }
+  for (const i of highlight?.indices ?? []) {
+    if (!Number.isInteger(i) || i < 0 || i > 9) {
+      throw new Error(`TenFrame: highlight ต้องอยู่ในช่วง 0..9, ได้รับ ${String(i)}`);
+    }
+  }
+  if (interactive && size === 'sm') {
+    // ช่อง 40 หน่วยใน viewBox 220 ต้องเรนเดอร์ ≥ 264px จึงแตะได้ ≥ 48px
+    throw new Error('TenFrame: interactive ใช้ size="sm" ไม่ได้ (พื้นที่แตะเล็กกว่า 48px)');
+  }
+}
 
-    return () => {
-      timers.forEach(clearTimeout);
-    };
-    // เริ่มแฟลชใหม่ด้วยการเปลี่ยน key จากผู้เรียก ไม่ใช่ effect นี้
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+export function TenFrame(props: TenFrameProps) {
+  const {
+    mode,
+    flashMs,
+    onFlashEnd,
+    interactive = false,
+    size = 'md',
+    label,
+    filled,
+    colorMode = 'split-5',
+    added,
+    highlight,
+    onCellTap,
+  } = props;
+  if (import.meta.env.DEV) validate(props);
+
+  const { ended, fadeClass, reducedMotion } = useFlash(mode, flashMs, onFlashEnd);
 
   const ariaLabel = label ?? 'ตาราง 10 ช่อง';
   const width = SIZE_WIDTH[size];
@@ -115,60 +97,27 @@ export function TenFrame({
   const style: React.CSSProperties = reducedMotion
     ? { ...baseStyle, opacity }
     : { ...baseStyle, opacity, transition: 'opacity 150ms ease' };
-
-  const cells = Array.from({ length: ROWS * COLS }, (_, i) => i);
+  // interactive: ลูกของ role="img" ถูกอ่านเป็นภาพเดียว ปุ่มช่องจึงต้องอยู่ใต้ role="group"
+  const isInteractive = interactive && mode === 'show';
 
   return (
     <svg
       viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}
-      role="img"
+      role={isInteractive ? 'group' : 'img'}
       aria-label={ariaLabel}
       data-testid="ten-frame"
       data-visible="true"
       style={style}
     >
-      <rect
-        x={PAD}
-        y={PAD}
-        width={COLS * CELL}
-        height={ROWS * CELL}
-        fill="none"
-        stroke="var(--color-text-muted)"
-        strokeWidth={2}
+      <TenFrameGrid
+        filled={filled}
+        colorMode={colorMode}
+        added={added}
+        highlight={highlight}
+        interactive={isInteractive}
+        onCellTap={onCellTap}
+        reducedMotion={reducedMotion}
       />
-      {Array.from({ length: COLS - 1 }, (_, i) => (
-        <line
-          key={`v${i}`}
-          x1={PAD + (i + 1) * CELL}
-          y1={PAD}
-          x2={PAD + (i + 1) * CELL}
-          y2={PAD + ROWS * CELL}
-          stroke="var(--color-text-muted)"
-          strokeWidth={1}
-        />
-      ))}
-      <line
-        x1={PAD}
-        y1={PAD + CELL}
-        x2={PAD + COLS * CELL}
-        y2={PAD + CELL}
-        stroke="var(--color-text-muted)"
-        strokeWidth={1}
-      />
-      {cells.map((i) => {
-        if (i >= filled) return null;
-        const row = Math.floor(i / COLS);
-        const col = i % COLS;
-        const cx = PAD + col * CELL + CELL / 2;
-        const cy = PAD + row * CELL + CELL / 2;
-        const fill =
-          colorMode === 'single'
-            ? 'var(--color-dot-single)'
-            : i < 5
-              ? 'var(--color-group-a)'
-              : 'var(--color-group-b)';
-        return <circle key={i} cx={cx} cy={cy} r={DOT_R} fill={fill} />;
-      })}
     </svg>
   );
 }

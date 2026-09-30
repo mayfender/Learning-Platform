@@ -475,7 +475,7 @@ challenge: {
 1. หน้าเปิด: โจทย์ `4 + 9` และตัวเลือกวิธีตั้งต้น 2 แบบเคียงกัน (แบบ ก: `MakeTenBoard` กล่อง 4 + กอง 9 · แบบ ข: กล่อง 9 + กอง 4) ที่ 360px เรียงบนลงล่างและเลื่อนได้ในหน้า (ไม่ scroll แนวนอน)
 2. ลูกย้ายจุดในทั้ง 2 แบบจนเต็ม ทางเดียวกับ B1 (ลาก/แตะ) ระบบขึ้น "ย้ายไป {k} จุด" ต่อแบบ (6 กับ 1) และผลเมื่อเต็ม (`เหลือ {r} 10 กับ {r} ได้ {t}`) ทั้งคู่ 13
 3. เมื่อทั้ง 2 แบบเต็ม ขึ้นคำถาม LS 2 ข้อทีละข้อ (`OptionGrid`, P9): "ทั้งสองแบบได้เท่ากันไหม" (เฉลย ได้เท่ากัน) → "แบบไหนย้ายน้อยกว่า" (เฉลย เริ่มจาก 9) ตอบผิดแก้ได้ ≤ 3 ครั้งแล้วเฉลย
-4. ข้อสรุปกฎ B: `เริ่มจากตัวที่ใกล้ 10 กว่า จะย้ายน้อย ทำง่ายกว่า` (LS) → "ต่อไป"
+4. ข้อสรุปกฎ B: `เริ่มจากตัวที่ใกล้ 10 กว่า จะย้ายน้อยกว่า` (LS) → "ต่อไป"
 - บันทึก `item.answered` ของ `B2.q1` และ `B2.q2` (โจทย์ `4+9`, ตัวเลือกเป็น `Choice.value`: q1 เท่ากัน=1 ไม่เท่ากัน=2; q2 เริ่มจาก 4=4 เริ่มจาก 9=9) พร้อม `manip` (จำนวนย้าย/ลาก/ถูกปฏิเสธ)
 
 #### 5.2.4 ข้อสรุปกฎและหน้าอื่น
@@ -845,3 +845,58 @@ Tester ออกแบบ acceptance เองจาก LS และเอกส
 | วันที่ | การเปลี่ยนแปลง | เหตุผล |
 |---|---|---|
 | 2026-09-30 | สร้างเอกสาร (ร่าง) | เริ่ม M2 |
+
+## รายงานการพัฒนา รอบที่ 1 กลุ่ม B (T2)
+
+- **ทำแล้ว:** `TenFrame` v2 (`added`, `highlight`, `onCellTap`, `data-dot`, `data-cell-index/state`), `useFlash`, `parts/TenFrameGrid` + `parts/gridGeometry`, token `--color-dot-added`, `NumberBond`, `FieldGroup` (+ `fieldGroupUtils.allFieldsFilled`), เทสต์ และหน้า dev
+- **ตัดสินใจเอง:** (1) ช่องกล่องใช้ `onClick` (มาจาก Pointer Events ของทุกอุปกรณ์) + Enter/Space แทน `onPointerUp` ตรงๆ (2) `interactive` มีผลเฉพาะ `mode="show"` (ระหว่างแฟลชแตะไม่ได้) และ svg เป็น `role="group"` เมื่อ interactive (3) `--color-dot-added` ประกาศที่ `:root` ครั้งเดียว dark สืบทอดผ่าน `--color-highlight` (4) `FieldGroup` เป็น controlled ล้วน ไม่เลื่อนโฟกัสเอง ผู้เรียกใช้ `allFieldsFilled` เปิดปุ่มตอบ
+- **คำถาม:** §3.5 ประโยค "โฟกัสเลื่อนไปช่องถัดไปอัตโนมัติเมื่อกด ตอบ ไม่ได้ ต้องกรอกครบก่อน" ตีความไม่ชัด (ให้ LessonPlayer ตัดสินว่าจะเลื่อนโฟกัสไปช่องว่างช่องถัดไปหลังกรอกหรือไม่)
+
+## รายงานการพัฒนา รอบที่ 1 กลุ่ม A (T1, T4, T5)
+
+**ทำแล้ว (pure logic + เนื้อหา + เทสต์ ยังไม่มีหน้าจอ)**
+- T1: type ใหม่ใน `engine/types.ts` (`missing`, `StrategyId` ใหม่, `Skill`/`ReviewConfig`, event ใหม่, `EventPayload`), `misconceptions` (L1), `strategies` (`add.mind-view`), `skills.ts` (fluency + review ตาม ADR-0006), `engine/rng.ts`, `engine/generators/{bonds10,makeTen}.ts` (+ชุดทำซ้ำ A2/A3/B3/B4), `engine/lesson/{makeTenPlan,classify,feedback}.ts`
+- T4: `content/lessons/ADD-04.ts` ทั้งบท + ลงทะเบียนใน `registry.ts` (`lessons`, `activities`) + `content/lessons/ADD-04.test.ts`
+- T5: `engine/lesson/{evaluate,progress,plan,machine,roundSummary,types}.ts`, `app/useTapGuard.ts`, `app/useActivityRunner.ts` (DiagnosticPlayer/`useDiagnosticRunner` ใช้ต่อ พฤติกรรมเดิม เทสต์ DX-ADD เดิมผ่านโดยไม่แก้), `isAppEvent`/`compareEvents` รองรับ `block.started`, `block.completed`, `parent.noted` และ field ใหม่ของ `item.answered`/`session.started`, `groupSessions` แยก `LessonSummary`
+- `useFlash`/`TenFrameGrid` เป็นงานกลุ่ม B (T2) ทำแล้ว ไม่ได้แตะ
+
+**API ของ machine ที่ LessonPlayer ต้องใช้** (`engine/lesson/machine.ts`)
+- `createLessonMachine(lesson, plan, { skills, newId })` → `{ initial, transition }`; `plan = planSitting(ctx, deriveProgress(lesson, skills, events), { seed })` (`ctx = { lesson, skills }`)
+- effect: `emit` (ใส่ envelope ใน runner) และ `schedule` (`READY_DONE` 900 ms, `ACK_DONE` 1000 ms) ใช้กับ `useActivityRunner(machine, { learnerId, outbox, activityId })` ได้ตรงๆ
+- phase: `sitting-intro`, `block-intro`, `item` (`view.stage`: ready/show/answering/ack/mind/feedback, `view.sub`, `view.added`, `view.feedback.texts` ข้อความพร้อมใช้), `compare` (B2), `rule`, `tell-parent`, `challenge`, `round-end`, `parent-instruction`, `handover`, `parent-note`, `sitting-end`, `stopped`
+- แฟลช: หน้าจอเรียก `FLASH_END` เมื่อ `onFlashEnd`; เวลาแฟลชใช้ `lesson.timing.flashMs` (1500) หรือ `pileFlashMs` (2000) สำหรับ `teach-flash-make`
+- เวลาตอบ: ผู้เรียกส่ง `latencyMs/latencyValid/flashInterrupted/answeredAt` มากับ `SUBMIT`, `SUBMIT_FIELDS`, `OPTION_PICK`
+- ตัวช่วยเทสต์: `engine/lesson/testHarness.ts` (เล่นบทอัตโนมัติตามนโยบาย ใช้เขียนเทสต์ต่อได้)
+
+**ข้อที่ตัดสินเองเมื่อ spec ไม่ระบุ (ขอ Architect ยืนยัน)**
+1. ครั้งที่ต้องต่อเนื่องเมื่อไม่ผ่าน: ทุกอย่างของ B (B → B ซ้ำ ≤ 2 รอบ → A3 ทบทวน → stalled-B) อยู่ในครั้งเดียว ไม่แยกครั้ง; A3 ซ้ำ (หลัง talk-A) เริ่มต้นครั้งถัดไปแล้วต่อ B ในครั้งเดียวกัน
+2. รอบของ block: A `round` 0 = ทำจริง, 1 = A2 ซ้ำ (`outcome: done`), 2 = A3 ซ้ำ, 3 = A3 ทบทวนหลัง B ไม่ผ่าน (`done`); B `round` 0 = ทำจริง, 1–2 = ซ้ำ
+3. คู่ make-ten ที่ใช้ได้มีแค่ 16 คู่ ชุดเดิมของ B3+B4 ใช้ 11 คู่ จึงเลี่ยงคู่ซ้ำกับชุดเดิมได้ไม่ครบ (เลือกคู่ใหม่ก่อน แล้วเติมคู่เก่าที่เก่าที่สุด) ขัดกับ §4.4 "คู่ไม่ซ้ำกับชุดเดิม" ตรงนี้
+4. `parent.noted` ที่มี `resolvedFlag` ใช้เมื่อพ่อกด "ทำแล้ว" ทุกหน้าคำแนะนำ (`talk-A`, `tray-B1`, `stalled-A`, `stalled-B`); `resolvedFlag: 'restart-B'` (ปุ่ม "เริ่มส่วน B ใหม่" ของหน้าพ่อ) ทำให้ B กลับไปเริ่มใหม่
+5. `block.started`/`block.completed` ใส่ `round` เสมอ (0 สำหรับรอบปกติ); `flags` ใส่เฉพาะเมื่อไม่ว่าง
+6. ข้อความที่ LS/P1–P15 ไม่ได้ระบุแต่ต้องมีบนจอ (ใช้คำตามกฎ §11 รอ Designer รับรอง): `texts.flash.hiddenMake` = "ซ่อนแล้ว!" (B3), ป้ายเริ่มหน้า `sittingIntro.button` = "ไปเลย", กล่องหยุด (`stop.*`), ข้อความคำแนะนำหน้าพ่อ `stalledA`/`stalledB`/`restartB`, ป้าย "ของจริง" ข้อ 3 (การ์ดเลข 1–9)
+7. ข้อความผิดของช่อง "ขาด" ใน B (L1/M5/M4/MX) ใช้ข้อความของ A1 (`l1`, `m5Gap`, `m4`) และ `mxB`; หน้าเฉลย B4 ที่ตอบผิดแสดงข้อความของรหัส แล้วตามด้วย P3
+8. ข้อ B1 นับ `manip` สะสมและแนบทุก event ของข้อ; B2 แนบ `manip` ที่ event แรกของ `B2.q1`
+9. LS §3 ระบุ "ข้าม A1 ไป A2" แต่ Tech Spec §5.3/AC3 ระบุ "ข้าม A1+A2 ไป A3" ทำตาม Tech Spec
+10. ชุด A2 ของ LS (6, 2, 8, 3, 1, 7) มี 7 ซ้ำกับ c1 (LS เขียนว่า "ไม่ซ้ำ c1–c3") และ 6, 8, 3 ซ้ำกับ A1 — ใช้ตามตาราง LS ตรงตัว
+11. ข้อความ LS เดิมของ "นับนิ้ว" และข้อสรุปกฎ B2 ถูก Designer แก้แล้ว (ใช้ฉบับใหม่); เทสต์คำต้องห้ามตรวจ `ยืม เก่ง ง่าย ผิด ช้า เร็ว คะแนน` (ยกเว้น `roundEnd.faster`)
+12. แก้ `eslint.config.js` 1 บรรทัด: ให้ `src/engine/**/testHarness.ts` import content ได้เหมือนไฟล์เทสต์
+
+**ยังไม่ได้ทำ (นอกขอบเขตรอบนี้)**: `engine/leitner.ts`/`isDrillUnlocked` (T9/T10), หน้าจอทั้งหมด (T6–T8, T11), `progress.ts` ยังไม่มีสถานะ "ท่องซ้ำเปิดหรือยัง" และกล่อง Leitner (รอ T9/T10)
+
+## 17. การตัดสินของ Designer/Architect ต่อรายงานรอบที่ 1 (2026-09-30)
+
+| # | เรื่อง | คำตัดสิน |
+|---|---|---|
+| 1 | คู่ make-ten ที่ใช้ได้มี 16 คู่ ชุดเดิมใช้ 11 คู่ ทำ "ชุดซ้ำไม่ซ้ำคู่" ไม่ครบ | ยอมรับ: เลือกคู่ใหม่ก่อนแล้วเติมคู่เก่า (ต้องมีเลขที่ไม่เคยอยู่ในชุดเดิมให้มากที่สุด) |
+| 2 | LS §3 ขัดกับ Tech Spec เรื่องข้าม A1 หรือ A1+A2 | Designer แก้ LS ให้ตรง Tech Spec: ข้าม A1+A2 ไป A3 |
+| 3 | ชุด A2 ซ้ำกับ c1 และ A1 บางเลข | ยอมรับ ไม่เปลี่ยน |
+| 4 | ส่วน B ทั้งหมด (ซ้ำ ≤ 2 รอบ → A3 → stalled-B) อยู่ในครั้งเดียว | ยอมรับ (spec ไม่ได้ห้าม) |
+| 5 | ข้อความที่ LS/P1–P15 ไม่ระบุ (`flash.hiddenMake`, ปุ่ม sitting-intro, `stop.*`, `stalledA/stalledB/restartB`, ข้อความผิดช่อง "ขาด" ใช้ของ A1, B4 เฉลย) | Designer รับรองตามที่ Dev-A เขียน |
+| 6 | `parent.noted.resolvedFlag` และค่า `'restart-B'` | ยอมรับ |
+| 7 | `round` ใน `block.started/completed` | ยอมรับ |
+| 8 | `SessionView.summary` ยังเป็น DiagnosticSummary เท่านั้น | ยอมรับสำหรับรอบ 1 |
+| 9 | `FieldGroup` ไม่เลื่อนโฟกัสเอง (คำตอบมี 1–2 หลัก บอกไม่ได้ว่ากรอกเสร็จ) | LessonPlayer ตั้งช่องแรกที่ว่างเป็นช่องใช้งานเมื่อเริ่มขั้น ปุ่ม "ตอบ" กดได้เมื่อกรอกครบทุกช่อง ลูกแตะช่องถัดไปเอง |
+| 10 | Tester Q-T1 จุดทดสอบวงแหวนไฮไลต์ | เพิ่ม `data-cell-highlight` (index ช่อง) ที่วงแหวนของ `TenFrame` ในงาน T6 |
+| 11 | Tester Q-T5 / Q-T9 | เช็คก่อนที่แท็บซ่อนและถูก = เร็ว (ข้ามได้) · หน้าพ่อรอบ 1 ยังไม่แสดงกล่อง Leitner (รอ T9) |
+

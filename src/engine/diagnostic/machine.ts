@@ -2,7 +2,7 @@ import { classify } from '@/engine/diagnostic/classify';
 import { isFluent } from '@/engine/diagnostic/evaluate';
 import { summarize } from '@/engine/diagnostic/summary';
 import type { AnswerRecord } from '@/engine/diagnostic/types';
-import type { AppEvent, Diagnostic, StrategyId } from '@/engine/types';
+import type { Diagnostic, EventPayload, StrategyId } from '@/engine/types';
 
 export type Phase =
   | { kind: 'parent-intro' }
@@ -56,11 +56,7 @@ export type RunnerAction =
   | { type: 'EXAMPLE_DONE' }
   | { type: 'STOP' };
 
-type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
-export type EventPayload = DistributiveOmit<
-  AppEvent,
-  'id' | 'at' | 'schemaVersion' | 'learnerId' | 'sessionId' | 'activityId'
->;
+export type { EventPayload };
 
 export type Effect =
   | { type: 'emit'; event: EventPayload }

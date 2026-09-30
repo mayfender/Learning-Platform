@@ -98,6 +98,40 @@ describe('groupSessions', () => {
   });
 });
 
+describe('groupSessions: session ของบทเรียน', () => {
+  it('session.completed ที่มี LessonSummary ไม่ถูกส่งเป็น summary ของแบบทดสอบวินิจฉัย', () => {
+    const events: AppEvent[] = [
+      {
+        id: 'l1',
+        at: '2026-01-01T00:00:00.000Z',
+        schemaVersion: 1,
+        learnerId: 'l1',
+        sessionId: 'lesson1',
+        activityId: 'ADD-04',
+        type: 'session.started',
+        activityKind: 'lesson',
+        activityVersion: 'ADD-04 v1',
+        sitting: 1,
+      },
+      {
+        id: 'l2',
+        at: '2026-01-01T00:10:00.000Z',
+        schemaVersion: 1,
+        learnerId: 'l1',
+        sessionId: 'lesson1',
+        activityId: 'ADD-04',
+        type: 'session.completed',
+        activityVersion: 'ADD-04 v1',
+        summary: { kind: 'lesson', sitting: 1, blocks: [], flags: [] },
+      },
+    ];
+    const [session] = groupSessions(events);
+    expect(session!.status).toBe('complete');
+    expect(session!.activityId).toBe('ADD-04');
+    expect(session!.summary).toBeUndefined();
+  });
+});
+
 describe('groupSessions: ข้อมูลเก่าที่ at ซ้ำ (บั๊กข้อ 5.4)', () => {
   function answered(id: string, itemId: string, at: string): AppEvent {
     return {

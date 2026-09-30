@@ -41,6 +41,12 @@ function ev(type: AppEvent['type'], id: string, at: string): AppEvent {
       };
     case 'strategy.reported':
       return { ...base, id, at, type, itemId: '5.4', strategyId: 'known' };
+    case 'block.started':
+      return { ...base, id, at, type, blockId: 'b1', blockKind: 'A' };
+    case 'block.completed':
+      return { ...base, id, at, type, blockId: 'b1', blockKind: 'A', outcome: 'passed' };
+    case 'parent.noted':
+      return { ...base, id, at, type, blockKind: 'A', fingers: 'some' };
     case 'session.completed':
     case 'session.abandoned':
       return { ...base, id, at, type, activityVersion: 'v', summary };
@@ -86,6 +92,30 @@ describe('compareEvents', () => {
 
   it('ชนิดเดียวกัน at เท่ากัน เรียงตาม id', () => {
     const sorted = [ev('item.answered', 'b', T), ev('item.answered', 'a', T)].sort(compareEvents);
+    expect(sorted.map((e) => e.id)).toEqual(['a', 'b']);
+  });
+
+  it('ชนิดใหม่ของ ADD-04 (ADR-0008): started < block.started < answered < block.completed = parent.noted < completed', () => {
+    const sorted = [
+      ev('session.completed', 'a', T),
+      ev('parent.noted', 'z', T),
+      ev('block.completed', 'c', T),
+      ev('item.answered', 'd', T),
+      ev('block.started', 'e', T),
+      ev('session.started', 'f', T),
+    ].sort(compareEvents);
+    expect(sorted.map((e) => e.type)).toEqual([
+      'session.started',
+      'block.started',
+      'item.answered',
+      'block.completed',
+      'parent.noted',
+      'session.completed',
+    ]);
+  });
+
+  it('parent.noted และ block.completed ที่ at เท่ากันเรียงตาม id', () => {
+    const sorted = [ev('parent.noted', 'b', T), ev('block.completed', 'a', T)].sort(compareEvents);
     expect(sorted.map((e) => e.id)).toEqual(['a', 'b']);
   });
 });

@@ -5,6 +5,7 @@ import { useProgress } from '@/app/ProgressProvider';
 import { formatText } from '@/app/diagnostic/formatText';
 import { useDiagnosticRunner } from '@/app/diagnostic/useDiagnosticRunner';
 import { useSilentTimer } from '@/app/diagnostic/useSilentTimer';
+import { useTapGuard } from '@/app/useTapGuard';
 import { createSilentTimer } from '@/engine/timing';
 import { formatProblem } from '@/engine/problem';
 import type { Diagnostic } from '@/engine/types';
@@ -15,8 +16,6 @@ import { ConfirmDialog } from '@/ui/ConfirmDialog';
 import { Keypad } from '@/ui/Keypad';
 import { OptionGrid } from '@/ui/OptionGrid';
 import styles from '@/app/diagnostic/DiagnosticPlayer.module.css';
-
-const TAP_GUARD_MS = 400;
 
 export interface DiagnosticPlayerProps {
   dx: Diagnostic;
@@ -31,8 +30,8 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
   });
   const [stopOpen, setStopOpen] = useState(false);
   const [value, setValue] = useState('');
-  // เวลา (performance.now) ของการแตะล่าสุดที่ทำให้เปลี่ยนหน้าจอของลูก — ดู Tech Spec §3.3.1
-  const lastTransitionAt = useRef(-Infinity);
+  // กันแตะทะลุหลังเปลี่ยนหน้า (Tech Spec §3.3.1) แยกเป็น hook ใช้ร่วมกับ LessonPlayer
+  const { tapDispatch: guardedDispatch, guardPointer } = useTapGuard();
 
   const phase = state.phase;
   const itemKey = phase.kind === 'item' ? `${phase.stage}-${phase.item}` : '';
@@ -59,48 +58,10 @@ export function DiagnosticPlayer({ dx }: DiagnosticPlayerProps) {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [strategyKey]);
 
-  // กันแตะทะลุหลังเปลี่ยนหน้า (§3.3.1): input ทั้ง pointer และคีย์บอร์ดที่เข้ามาภายใน 400 ms หลังการแตะที่
-  // เปลี่ยนหน้า ถูกทิ้งไม่ว่าตำแหน่งใด ไม่ disable ปุ่ม ไม่ใช้ setTimeout (เทียบเวลาตอน input เข้ามา)
-  function withinTapGuard(): boolean {
-    const elapsed = performance.now() - lastTransitionAt.current;
-    return elapsed >= 0 && elapsed < TAP_GUARD_MS;
-  }
-
   // ทุก action ที่เกิดจากการแตะและเปลี่ยนหน้าของลูก ต้องผ่านฟังก์ชันนี้
   function tapDispatch(action: Parameters<typeof dispatch>[0]): void {
-    lastTransitionAt.current = performance.now();
-    dispatch(action);
+    guardedDispatch(dispatch, action);
   }
-
-  function guardPointer(e: React.MouseEvent): void {
-    // ปุ่มของพ่อ (กล่องยืนยันหยุดกลางทาง) ไม่อยู่ใต้กฎนี้
-    if ((e.target as HTMLElement).closest('dialog')) return;
-    if (withinTapGuard()) {
-      e.stopPropagation();
-      e.preventDefault();
-    }
-  }
-
-  const withinTapGuardRef = useRef(withinTapGuard);
-  useEffect(() => {
-    withinTapGuardRef.current = withinTapGuard;
-  });
-  useEffect(() => {
-    // capture บน window ทำงานก่อนตัวฟังของแป้น (bubble) จึงตัดได้ก่อน
-    const listener = (e: KeyboardEvent): void => {
-      if (!withinTapGuardRef.current()) return;
-      if (
-        e.key === 'Backspace' ||
-        e.key === 'Enter' ||
-        (e.key.length === 1 && e.key >= '0' && e.key <= '9')
-      ) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-    };
-    window.addEventListener('keydown', listener, true);
-    return () => window.removeEventListener('keydown', listener, true);
-  }, []);
 
   const registerLogo = useRegisterLogoLongPress();
   const longPressRef = useRef<() => void>(() => {});

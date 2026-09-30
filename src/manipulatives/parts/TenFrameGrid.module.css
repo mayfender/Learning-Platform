@@ -1,0 +1,27 @@
+.cell:focus-visible {
+  outline: none;
+}
+
+.cell:focus-visible rect {
+  stroke: var(--color-accent);
+  stroke-width: 3px;
+}
+
+.pulse {
+  animation: pulse 600ms ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}

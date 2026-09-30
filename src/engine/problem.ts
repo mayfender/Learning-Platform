@@ -29,7 +29,9 @@ export function formatProblem(problem: Problem): string {
     case 'arith':
       return `${problem.a} ${problem.op} ${problem.b} = ?`;
     case 'missing-part':
-      return `${problem.part} + ? = ${problem.whole}`;
+      return problem.missing === 'first'
+        ? `? + ${problem.part} = ${problem.whole}`
+        : `${problem.part} + ? = ${problem.whole}`;
     case 'subitize':
       return `แฟลช ${problem.count} จุด`;
   }

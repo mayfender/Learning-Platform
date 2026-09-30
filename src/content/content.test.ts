@@ -181,7 +181,7 @@ describe('content registry', () => {
       expect(diagnostic.id).toBe(key);
     }
     for (const [key, lesson] of Object.entries(lessons)) {
-      expect((lesson as { id: string }).id).toBe(key);
+      expect(lesson.id).toBe(key);
     }
   });
 

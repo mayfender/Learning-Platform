@@ -3,8 +3,11 @@ import type { AppEvent } from '@/engine/types';
 // ลำดับชนิด event เมื่อ `at` เท่ากัน (ADR-0008 ข้อ 3)
 const TYPE_ORDER: Record<AppEvent['type'], number> = {
   'session.started': 0,
+  'block.started': 1,
   'item.answered': 2,
   'strategy.reported': 2,
+  'block.completed': 3,
+  'parent.noted': 3,
   'session.completed': 4,
   'session.abandoned': 4,
 };

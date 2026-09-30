@@ -1,4 +1,4 @@
-import type { AppEvent, ItemAnsweredEvent, SessionSummary } from '@/engine/types';
+import type { AppEvent, DiagnosticSummary, ItemAnsweredEvent } from '@/engine/types';
 
 export interface SessionView {
   sessionId: string;
@@ -7,7 +7,7 @@ export interface SessionView {
   startedAt: string;
   endedAt?: string;
   status: 'complete' | 'abandoned' | 'open';
-  summary?: SessionSummary;
+  summary?: DiagnosticSummary; // เฉพาะ session ของแบบทดสอบวินิจฉัย (บทเรียนมี LessonSummary แยก)
   items: ItemAnsweredEvent[];
 }
 
@@ -44,7 +44,10 @@ export function groupSessions(events: readonly AppEvent[]): SessionView[] {
       startedAt: started?.at ?? sorted[0]?.at ?? '',
       endedAt: ended?.at,
       status: completed ? 'complete' : abandoned ? 'abandoned' : 'open',
-      summary: ended && 'summary' in ended ? ended.summary : undefined,
+      summary:
+        ended && 'summary' in ended && ended.summary.kind === 'diagnostic'
+          ? ended.summary
+          : undefined,
       items,
     });
   }
