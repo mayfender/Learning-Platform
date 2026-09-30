@@ -97,5 +97,5 @@
 | 2026-09-30 | CI ผ่านทุกขั้น (lint, test, e2e, acceptance, build) และ deploy M1 ขึ้นเว็บแล้ว |
 | 2026-09-30 | ตรวจเอกสารสำหรับส่งต่อ session: CLAUDE.md เพิ่มหน้าที่ผู้ประสานงานและบทเรียนจาก M1, overview เพิ่ม acceptance, roles/README เพิ่มผู้ประสานงาน |
 | 2026-09-30 | พ่ออนุมัติ Lesson Spec ADD-04 และหน้าตัวอย่างของ DX-ADD Architect เขียน Tech Spec ADD-04 (แบ่งส่งมอบ 2 รอบ) และพบสาเหตุบั๊กลำดับ event (ตัวประทับ `at` ซ้ำ ms + `listEvents` เรียงตาม id สุ่ม) Designer ตอบคำถามที่บล็อก: Q3, Q8, Q9, Q11, Q14 แก้ Lesson Spec ตามนั้น |
-| 2026-09-30 | พ่อเปลี่ยน workflow: งานของ Architect/Developer/Tester ทุกชิ้นให้ spawn agent ของ role นั้น จบแล้วกลับมารายงานที่ session หลักและรอคำสั่งพ่อ ไม่ส่งต่อ role ถัดไปเอง (อัปเดต CLAUDE.md และ roles/README.md) |
+| 2026-09-30 | พ่อเปลี่ยน workflow: งานของทุก role (รวม Designer) ทุกชิ้นให้ spawn agent ของ role นั้น จบแล้วกลับมารายงานที่ session หลักและรอคำสั่งพ่อ ไม่ส่งต่อ role ถัดไปเอง (อัปเดต CLAUDE.md และ roles/README.md) |
 | 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
