@@ -257,6 +257,24 @@ export async function typed(page: Page): Promise<string> {
   return t === 'แตะตัวเลขด้านล่าง' ? '' : t;
 }
 
+/**
+ * รอจนช่องแสดงคำตอบ (AnswerDisplay, aria-live) ไม่ค้างเลขที่พิมพ์ไว้ของข้อก่อน
+ * ใช้ก่อน "ถ่ายภาพหน้า" เพื่อเทียบหน้าเมื่อตอบถูกกับผิด: ภายใต้นาฬิกาปลอมและเครื่องโหลดหนัก
+ * React อาจยังไม่ล้างค่า ทำให้หน้าเดียวกันดูต่างกันเพราะเลขที่ตอบ (รอเงื่อนไขที่เห็นได้ ไม่ใช้ sleep)
+ */
+export async function settleAnswerDisplay(page: Page): Promise<void> {
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() => {
+          const el = document.querySelector('[aria-live="polite"]');
+          return !el || !/^\d+$/.test((el.textContent ?? '').trim());
+        }),
+      { message: 'ช่องแสดงคำตอบยังค้างเลขของข้อก่อน', timeout: 5000 },
+    )
+    .toBe(true);
+}
+
 // ---------------------------------------------------------------- ตอบ
 
 export interface Answer {
@@ -366,7 +384,9 @@ async function submitExample(page: Page, dbl: boolean): Promise<void> {
  */
 export async function passExample(page: Page, o: ExampleOptions = {}): Promise<void> {
   const obs = async (l: string): Promise<void> => {
-    if (o.observe) await o.observe(l);
+    if (!o.observe) return;
+    await settleAnswerDisplay(page);
+    await o.observe(l);
   };
   const paused = pausedPages.has(page);
   await expect(page.getByText(EXAMPLE.demoText, { exact: true })).toBeVisible();
@@ -437,7 +457,9 @@ export async function runSession(
 ): Promise<string> {
   const mode = opts.input ?? 'tap';
   const obs = async (l: string): Promise<void> => {
-    if (opts.observe) await opts.observe(l, page);
+    if (!opts.observe) return;
+    await settleAnswerDisplay(page);
+    await opts.observe(l, page);
   };
   let lastStage = 0;
   let carry = 0; // เวลาที่เดินไปแล้วในข้อนี้ระหว่างรอ tap-guard

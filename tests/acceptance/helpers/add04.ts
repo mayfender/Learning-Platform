@@ -72,7 +72,7 @@ export const MSG = {
   /** Tech Spec §4.7 P7 */
   reveal: 'มาดูด้วยกันนะ',
   /** LS §4 A3 ข้อความเมื่อเลือก "นับนิ้ว" */
-  fingers: 'ไม่มีผิดเลย นิ้วช่วยได้ ลองดูว่าเห็นกล่องแล้วเร็วกว่าไหม',
+  fingers: 'นิ้วช่วยได้นะ ลองนึกภาพกล่อง 10 ช่องดูสิ ช่องว่างอยู่ตรงไหน',
   /** LS §4 ข้อสรุปกฎ A */
   ruleA: 'ช่องที่เต็ม + ช่องที่ว่าง = 10 เสมอ ดูช่องว่างก็รู้คำตอบ',
   mindQuestion: 'ในหัวเห็นอะไร',
@@ -842,9 +842,7 @@ const SILENT_FORBIDDEN =
 
 /** ตรวจหน้าของลูก: ไม่มีเวลา/คะแนน/timer/progress `silent` = หน้า flow เงียบ */
 export async function expectKidPage(page: Page, label: string, silent: boolean): Promise<void> {
-  let body = (await page.locator('body').innerText()).replace(/บอกไม่ถูก/g, '');
-  // ข้อความ LS ที่มีคำ "ผิด"/"เร็ว" อยู่เอง (ข้อความเมื่อเลือกนับนิ้ว, LS §4 A3) ไม่นับ
-  body = body.replace(/ไม่มีผิดเลย นิ้วช่วยได้ ลองดูว่าเห็นกล่องแล้วเร็วกว่าไหม/g, '');
+  const body = (await page.locator('body').innerText()).replace(/บอกไม่ถูก/g, '');
   expect(body, `หน้า ${label} ต้องไม่มีคำที่ห้าม`).not.toMatch(
     silent ? SILENT_FORBIDDEN : KID_FORBIDDEN,
   );

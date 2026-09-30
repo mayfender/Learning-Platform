@@ -721,7 +721,10 @@ test('TC-A2-02 A2 6 ข้อ: ตอบแล้วเห็นหน้าเ�
   });
   expect(seen).toEqual(A2_ITEMS.map((i) => i.n));
   await expect(page.getByText(/^(\d+\s*\+\s*\?\s*=\s*10|\?\s*\+\s*\d+\s*=\s*10)$/)).toBeVisible(); // A3.1
-  const db = await settledDb(page, 1 + 2 + 6 + 3 + 6 + 1 + 1);
+  // AC17/§6.1: session.started 1 + block.started 2 (check, A) + item.answered (c 6 + A1 3 + A2 6)
+  // + block.completed 1 (check; block A ยังไม่จบ) = 19 พอดี (ไม่มีตัวเกิน ไม่ซ้ำ)
+  const db = await settledDb(page, 1 + 2 + 6 + 3 + 6 + 1);
+  expect(db.events, 'จำนวน event ถึงจุดจบ A2').toHaveLength(19);
   A2_ITEMS.forEach((it, i) => {
     const es = answeredOf(db, it.id);
     expect(es, it.id).toHaveLength(1);
