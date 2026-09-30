@@ -61,7 +61,8 @@
 - [x] DX-1..DX-5 (DX-ADD ส่วนเพิ่ม) เสร็จและผู้ประสานงานตรวจแล้ว (2026-09-30): lint ผ่าน, unit 310/310, e2e 37 ผ่าน/8 ข้าม, acceptance 142 ผ่าน/0 ไม่ผ่าน (194 ข้ามตามขอบเขต), ลองเล่นใน dev (StrictMode) เห็นตัวอย่าง 3 จุดค้าง → ลองเอง 2 จุด → เฉลยภาพ → ข้อ 1.1 (7 จุด) ไม่มี event ของตัวอย่าง และข้อ 5.4 อยู่ก่อน session.completed ยังไม่ push (รอพ่อตัดสิน)
 - [x] Architect (ผู้ประสานงาน) ตัดสินข้อสงสัยของ Developer/Tester แล้ว ([DX-ADD spec §16](specs/DX-ADD-diagnostic.md)): compareEvents อยู่ store, เพิ่ม `data-dot` ใน TenFrame ตอน T2, ขั้นเฉลยภาพยอมรับตามที่ทำ, `at` ล้ำ `answeredAt` ไม่กี่ ms ยอมรับ
 - [x] push DX-ADD ส่วนเพิ่มขึ้นเว็บแล้ว (พ่ออนุมัติ 2026-09-30, commit 7ad2f92)
-- [ ] ADD-04 รอบที่ 1 คลื่นที่ 1 กำลังทำขนาน (เริ่ม 2026-09-30): Dev-A (T1, T4, T5 engine/เนื้อหา), Dev-B (T2 อุปกรณ์จำลอง), Tester (Test Plan + acceptance รอบ 1) คลื่นที่ 2: T6 (LessonPlayer เช็คก่อน+ส่วน A) และ T7 (หน้าพ่อ) หลังคลื่นที่ 1 ผ่านการตรวจ
+- [x] ADD-04 รอบที่ 1 คลื่นที่ 1 เสร็จและผู้ประสานงานตรวจแล้ว (Dev-A T1/T4/T5, Dev-B T2, Tester Test Plan+acceptance รอบ 1): lint ผ่าน, unit 598/598, e2e 37 ผ่าน, acceptance DX-ADD 142 ผ่าน (DX-ADD ไม่พัง) ข้อสงสัยตัดสินใน [ADD-04 spec §17](specs/ADD-04-make-ten.md) ยังไม่ push (ยังไม่มีหน้าจอ)
+- [ ] ADD-04 รอบที่ 1 คลื่นที่ 2: T6 (LessonPlayer เช็คก่อน + ส่วน A) + T7 (หน้าพ่อ) ต้องเพิ่ม `data-cell-highlight` แล้วรัน acceptance ADD-04 ให้ผ่าน, Architect ตรวจ, พ่อลองบนแท็บเล็ตจริง ก่อน push **Branch: `feature/ADD-04-make-ten`** (งาน ADD-04 ต่อจากนี้ทำบน branch นี้ ไม่ใช่ `main`)
 - [ ] เกณฑ์เวลาของ DX-ADD เข้มเกินไป (เสนอแยก "ไม่ต้องนับ" กับ "อัตโนมัติ") **Designer ยังไม่ได้ตัดสิน** ไม่แก้ในรอบนี้ ให้ Architect ประเมินผลกระทบเท่านั้น
 - [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
@@ -96,4 +97,6 @@
 | 2026-09-30 | CI ผ่านทุกขั้น (lint, test, e2e, acceptance, build) และ deploy M1 ขึ้นเว็บแล้ว |
 | 2026-09-30 | ตรวจเอกสารสำหรับส่งต่อ session: CLAUDE.md เพิ่มหน้าที่ผู้ประสานงานและบทเรียนจาก M1, overview เพิ่ม acceptance, roles/README เพิ่มผู้ประสานงาน |
 | 2026-09-30 | พ่ออนุมัติ Lesson Spec ADD-04 และหน้าตัวอย่างของ DX-ADD Architect เขียน Tech Spec ADD-04 (แบ่งส่งมอบ 2 รอบ) และพบสาเหตุบั๊กลำดับ event (ตัวประทับ `at` ซ้ำ ms + `listEvents` เรียงตาม id สุ่ม) Designer ตอบคำถามที่บล็อก: Q3, Q8, Q9, Q11, Q14 แก้ Lesson Spec ตามนั้น |
+| 2026-09-30 | พ่อกำหนด Branch และ PR: task ใหม่ให้ Architect สร้าง feature branch ของทีม, Developer เปิด PR เมื่อเสร็จและ comment รายละเอียด, Tester รับ PR เป็นงานถัดไปและ comment ผล, ผู้ประสานงาน merge เมื่อผ่านและพ่ออนุมัติ (อัปเดต CLAUDE.md, roles/*, ใช้กับ task ใหม่ ส่วน ADD-04 ที่กำลังทำอยู่ทำต่อบน `main` ในเครื่องจนจบรอบนี้) |
+| 2026-09-30 | พ่อเปลี่ยน workflow: งานของทุก role (รวม Designer) ทุกชิ้นให้ spawn agent ของ role นั้น จบแล้วกลับมารายงานที่ session หลักและรอคำสั่งพ่อ ไม่ส่งต่อ role ถัดไปเอง (อัปเดต CLAUDE.md และ roles/README.md) |
 | 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
