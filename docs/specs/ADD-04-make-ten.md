@@ -30,7 +30,7 @@
 | §2 ความเข้าใจผิด L1, M4–M7, MX | `misconceptions.ts` (เพิ่ม L1) + `engine/lesson/classify.ts` | กฎเป็นฟังก์ชัน ไม่ใช่ตารางรายข้อ เพราะโจทย์ฝึกสุ่ม §4.5 |
 | §3 เช็คก่อน c1–c6 | `ADD_04.check` (flow `silent-flash-gap` / `silent-text`) | ไม่บอกถูกผิด ไม่ถามวิธีคิด; กฎข้าม → `plan.ts` |
 | §4 A1 เห็น (8, 6, 3) | flow `guided-fill`: `TenFrame` v2 + `NumberBond` + แป้น | §3.1, §3.2, §5.2 |
-| §4 A2 ภาพจาง (7,4,9,2,6,8) | flow `teach-flash-gap` | แฟลช 900/1500 เหมือน DX-ADD |
+| §4 A2 ภาพจาง (6,2,8,3,1,7) | flow `teach-flash-gap` | แฟลช 900/1500 เหมือน DX-ADD |
 | §4 A3 นึกเอง + "ในหัวเห็นอะไร" | flow `mind-gap` + `OptionGrid` | บันทึกอย่างเดียว ไม่ตัดสิน |
 | §4 ข้อสรุปกฎ A / B | หน้า `rule` (ข้อความจาก LS) | |
 | §4 B1 เห็น (8+5, 9+6, 7+4) | flow `guided-move`: `MakeTenBoard` + `NumberBond` + แป้น 3 ขั้น | ลากจุดจากกอง §3.3 |

@@ -24,7 +24,7 @@
 
 1. **`at` = เวลาที่ event ถูกบันทึก** (ประทับตอน emit) ไม่ใช่เวลาที่เหตุการณ์เกิดจริง เวลาเหตุการณ์ที่ต่างจากเวลาบันทึกต้องเป็น field แยก (เช่น `answeredAt` ของ `item.answered`) และเอกสารของ event ต้องระบุความหมายของ field เวลาทุกตัว
 2. **`at` เพิ่มขึ้นเคร่งครัดภายใน session เดียว:** ตัวสร้าง event (runner) เก็บ `lastAtMs` ของ session แล้วประทับ `max(Date.now(), lastAtMs + 1)` เป็น ISO string (รูปแบบ `toISOString()` เสมอ) event ในชุดเดียวกัน (transition เดียว) จึงมี `at` ต่างกันตามลำดับที่ emit
-3. **ตัวเรียงกลาง `compareEvents`** (`src/store/eventOrder.ts`) เรียงตาม `at` แล้วตามลำดับชนิด แล้วตาม `id` ทุกที่ที่เรียง event ต้องใช้ตัวนี้ตัวเดียว (`MemoryStore`, `IndexedDbStore`, `groupSessions`, export)
+3. **ตัวเรียงกลาง `compareEvents`** (`src/store/eventOrder.ts`) เรียงตาม `at` แล้วตามลำดับชนิด แล้วตาม `id` ทุกที่ที่เรียง event ต้องใช้ตัวนี้ตัวเดียว (`MemoryStore`, `IndexedDbStore`, export) ส่วน `groupSessions` (engine) import จาก store ไม่ได้ตามกฎ ESLint จึงเรียงตาม `at` แบบเสถียรบนลำดับที่ store เรียงไว้แล้ว (ตัดสิน 2026-09-30)
    ลำดับชนิด: `session.started` 0 · `block.started` 1 · `item.answered` และ `strategy.reported` 2 · `block.completed` และ `parent.noted` 3 · `session.completed` และ `session.abandoned` 4
    ข้อนี้ทำให้ event เก่าที่ `at` เท่ากัน (เช่น session ของ DX-ADD ที่บันทึกไปแล้ว) อ่านออกมาถูกลำดับโดยไม่ต้องแก้ข้อมูลใน log (log ยังเพิ่มอย่างเดียว)
 4. **การเพิ่ม field เสริม (optional) หรือชนิด event ใหม่ ไม่ต้อง bump `schemaVersion`** ตัวอ่านต้องรับ `undefined` ของ field ที่เพิ่มมาทีหลังเสมอ และ `isAppEvent` ตรวจ field ใหม่เฉพาะเมื่อมีค่า
