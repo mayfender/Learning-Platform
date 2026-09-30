@@ -13,13 +13,16 @@ import styles from '@/app/routes/Home.module.css';
 // การ์ดบทเรียน (P12): ชื่อบท + บรรทัดรอง "ครั้งที่ n" หรือ "ทำครบแล้ว" ไม่มีเวลา/คะแนน/จำนวนที่ค้าง
 function LessonCard({ lesson }: { lesson: Lesson }) {
   const data = useLessonData(lesson);
-  const sitting = data?.progress.sitting;
+  const progress = data?.progress;
+  // "ทำครบแล้ว" เมื่อครบทุกครั้งและปริศนาท้ายบทจบแล้ว ไม่งั้นแสดงครั้งที่ปัจจุบัน (ไม่เกินจำนวนครั้งของบท)
   const sub =
-    sitting === undefined
+    progress === undefined
       ? undefined
-      : sitting > lesson.sittings.length
+      : progress.sitting > lesson.sittings.length && progress.challengeDone
         ? lesson.texts.card.done
-        : fill(lesson.texts.card.sitting, { n: sitting });
+        : fill(lesson.texts.card.sitting, {
+            n: Math.min(progress.sitting, lesson.sittings.length),
+          });
   return (
     <Link className={styles.activityCard} to={`/play/${lesson.id}`}>
       <span>{lesson.title}</span>

@@ -290,6 +290,7 @@ function LessonSession({ lesson, plan, learnerId }: LessonSessionProps) {
             flashMs={lesson.timing.flashMs}
             colorMode="split-5"
             filled={n}
+            cssFadeIn
             onFlashEnd={() => dispatch({ type: 'FLASH_END' })}
           />
         ),
@@ -501,7 +502,7 @@ function LessonSession({ lesson, plan, learnerId }: LessonSessionProps) {
         <div className={styles.page}>
           <div className={styles.summary}>
             {state.session.blocks
-              .filter((b) => b.kind === 'A' || b.kind === 'B')
+              .filter((b) => (b.kind === 'A' || b.kind === 'B') && b.outcome !== 'done')
               .map((b, i) => (
                 <p key={i}>
                   {lessonStrings.part[b.kind as 'A' | 'B']}:{' '}
@@ -531,7 +532,12 @@ function LessonSession({ lesson, plan, learnerId }: LessonSessionProps) {
     // หน้าบันทึกของพ่อเป็นหน้าของพ่อ ไม่อยู่ใต้ tap guard (พ่อรับเครื่องต่อจากลูกทันทีได้)
     <div
       className={styles.wrap}
-      onClickCapture={phase.kind === 'parent-note' ? undefined : guardPointer}
+      onClickCapture={
+        phase.kind === 'parent-note' ||
+        (phase.kind === 'block-intro' && phase.slot.variant === 'a2-retry')
+          ? undefined
+          : guardPointer
+      }
     >
       {content}
       <ConfirmDialog
