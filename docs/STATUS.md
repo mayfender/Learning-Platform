@@ -58,7 +58,8 @@
 - [x] พ่ออนุมัติ Lesson Spec ADD-04 และเกณฑ์ ADR-0006 ที่เสนอใน §6 (2026-09-30)
 - [x] พ่ออนุมัติเพิ่มหน้าตัวอย่างก่อนข้อ 1.1 ของ DX-ADD ([Lesson Spec §8.2.1](lessons/DX-ADD-diagnostic.md)) รอ Architect ทำ Tech Spec ส่วนเพิ่ม
 - [x] Architect เขียน [Tech Spec ADD-04](specs/ADD-04-make-ten.md) (ร่าง), [ADR-0008](architecture/adr/0008-event-log-order-time-and-fields.md), แก้ ADR-0006 เป็นยอมรับ และเพิ่ม [DX-ADD §14](specs/DX-ADD-diagnostic.md) แล้ว (2026-09-30) Designer ตอบคำถามแล้ว รอ Architect แก้ตามคำตอบและพ่อดูภาพรวม
-- [ ] ส่ง Developer + Tester: เริ่มที่ DX-1..DX-5 (DX-ADD) ก่อน แล้วค่อยรอบที่ 1 ของ ADD-04 (T1, T2, T4, T5, T6, T7)
+- [ ] DX-1..DX-5 (DX-ADD ส่วนเพิ่ม): Developer (DX-1..4) และ Tester (DX-5 ปรับ acceptance) กำลังทำขนานกัน (เริ่ม 2026-09-30) ต้องผ่านการตรวจของผู้ประสานงาน Architect และ Designer ก่อน push
+- [ ] หลัง DX-ADD ส่วนเพิ่มผ่าน: ADD-04 รอบที่ 1 (T1, T2, T4, T5, T6, T7) + Tester ทำ Test Plan ADD-04
 - [ ] เกณฑ์เวลาของ DX-ADD เข้มเกินไป (เสนอแยก "ไม่ต้องนับ" กับ "อัตโนมัติ") **Designer ยังไม่ได้ตัดสิน** ไม่แก้ในรอบนี้ ให้ Architect ประเมินผลกระทบเท่านั้น
 - [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
