@@ -8,15 +8,15 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** M1 (DX-ADD) Tester ตรวจรอบ 1 แล้ว (2026-09-29): **ปล่อยไม่ได้** มี Major 2 ข้อ (แตะซ้ำที่ตัวเลือกวิธีคิดบนอุปกรณ์แนวตั้งทำให้มีเลขค้างในข้อถัดไป, dark mode ขั้นที่ไฮไลต์ในหน้าผลอ่านไม่ออก) กับ Minor 2 ข้อ รอ Developer แก้แล้ว Tester ทดสอบซ้ำ ([รายงาน](test-reports/DX-ADD-2026-09-29.md)) ยังไม่ push
-**รอ:** พ่อทดสอบติดตั้ง PWA บนอุปกรณ์จริง (M0 AC7)
+**กำลังทำ:** M1 (DX-ADD) ผ่าน Tester รอบ 2, Architect และ Designer แล้ว กำลัง deploy ขึ้นเว็บ
+**รอ:** พ่อทำเช็คลิสต์อุปกรณ์จริง ([รายงานรอบ 2 ข้อ 6](test-reports/DX-ADD-2026-09-30.md)) แล้วให้ลูกทำ DX-ADD และ export ผลส่งให้ Designer
 
 ## Milestones
 
 | Milestone | สถานะ | เอกสาร | หมายเหตุ |
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
-| M1 แบบทดสอบวินิจฉัย DX-ADD | ❌ Tester ตรวจรอบ 1 ไม่ผ่าน (Major 2, Minor 2) รอแก้แล้วทดสอบซ้ำ | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | Test Plan: [test-plans/DX-ADD.md](test-plans/DX-ADD.md) · รายงาน: [test-reports/DX-ADD-2026-09-29.md](test-reports/DX-ADD-2026-09-29.md) · หลังแก้: Tester ทดสอบซ้ำ → Architect → Designer → deploy → ให้ลูกทำ |
+| M1 แบบทดสอบวินิจฉัย DX-ADD | ✅ เสร็จ, deploy 2026-09-30 | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | Test Plan: [test-plans/DX-ADD.md](test-plans/DX-ADD.md) · รายงาน: [รอบ 1](test-reports/DX-ADD-2026-09-29.md), [รอบ 2](test-reports/DX-ADD-2026-09-30.md) |
 | M2 บทเรียนแรก | ⏳ ยังไม่เริ่ม | — | ขั้นบนบันไดขึ้นกับผล DX-ADD ของลูก (คาดว่าขั้น 1–4) |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
@@ -48,18 +48,15 @@
 
 ## งานค้าง / รอคำตอบ
 
-- [ ] พ่อทดสอบ M0 AC7: ติดตั้ง PWA บนแท็บเล็ตหรือมือถือจริง แล้วเปิด offline
-- [ ] M1: Developer ส่งงาน → Architect ตรวจตาม AC → Designer ตรวจเจตนาการสอน → commit และ deploy
-- [ ] หลัง M1 ขึ้นเว็บ: อัปเดตข้อ 7.2 ของ `math-learning-plan.md` ให้ชี้ไปที่เว็บแทน artifact เดิม
-- [ ] Architect เพิ่มคำสั่ง `npm run acceptance` และ Playwright config สำหรับ `tests/acceptance/` (ต้องมีก่อน Tester เริ่มรัน) และรวมเข้า CI
-- [x] Tester เขียน Test Plan และ acceptance test ของ DX-ADD แล้วทดสอบ M1 (2026-09-29: 97 เคส, ไม่ผ่าน 4 เคสจากบั๊ก 4 ข้อ; ลดขอบเขตอุปกรณ์ตามที่พ่ออนุมัติ)
-- [ ] Developer แก้ BUG-DX-ADD-01 (แตะซ้ำทะลุไปกดแป้น) และ BUG-DX-ADD-02 (dark mode ไฮไลต์บันได) เป็นอย่างน้อย พร้อม BUG-03, 04 แล้วให้ Tester ทดสอบซ้ำ; พ่อทำเช็คลิสต์อุปกรณ์จริงท้ายรายงาน
+- [ ] พ่อทำเช็คลิสต์อุปกรณ์จริงท้ายรายงาน Tester รอบ 2 (รวม M0 AC7: ติดตั้ง PWA และเปิด offline)
+- [ ] ลูกทำ DX-ADD แล้วพ่อ export ไฟล์ผลส่งให้ Designer
+- [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
 
 ## ขั้นถัดไป
 
-1. ตรวจและ deploy M1
-2. ให้ลูกทำ DX-ADD บนเว็บ แล้วพ่อ export ไฟล์ผลส่งให้ Designer
+1. พ่อทำเช็คลิสต์อุปกรณ์จริง แล้วให้ลูกทำ DX-ADD
+2. พ่อ export ไฟล์ผลส่งให้ Designer (ห้าม commit ไฟล์นี้)
 3. Designer วิเคราะห์ผล แล้วเขียน Lesson Spec บทเรียนแรก (M2) พร้อมกำหนดเกณฑ์ ADR-0006
 
 ## ประวัติ
@@ -80,3 +77,6 @@
 | 2026-09-29 | Tester ตรวจ M1 รอบ 1 (acceptance 97 เคส ตามขอบเขตที่ลด: production 119 ผ่าน/12 ไม่ผ่านต่อ project, dev TC-20 ผ่าน; ชุดเต็มก่อนลดขอบเขต 196/21) เนื้อหา คณิตศาสตร์ event และแฟลชผ่านหมด แต่พบ Major 2 (แตะซ้ำที่ตัวเลือกวิธีคิดบนอุปกรณ์แนวตั้ง, dark mode ไฮไลต์บันไดอ่านไม่ออก) และ Minor 2 → ปล่อยไม่ได้ ส่งกลับ Developer |
 | 2026-09-30 | Architect ไม่รับวิธีกันแตะเบิ้ลแบบตำแหน่ง 16px/250ms และกำหนดกฎใหม่ใน Tech Spec §3.3.1 (ไม่รับ input 400ms หลังเปลี่ยนหน้า) Developer กำลังแก้ |
 | 2026-09-30 | ตัด project ipad ออกจาก Playwright และ CI ติดตั้งเฉพาะ Chromium (ADR-0007) |
+| 2026-09-30 | Tester ทดสอบซ้ำ M1 รอบ 2 (commit 0b8bfe1, matrix 3 project): BUG-01–04 และ S1–S3 แก้แล้ว, acceptance 124 ผ่าน/0 ไม่ผ่าน, lint ผ่าน, vitest 270/270 → ปล่อยได้ ส่งต่อ Architect |
+| 2026-09-30 | Designer ตอบคำถามของ Tester: Q1 (เงื่อนไข "ด่าน 5 ถูกข้าม" ในแถว 5 ตั้งใจใส่กันไว้ ไม่มีผล), Q2 (ชี้แจงใน Lesson Spec §4 ว่าตารางรายข้อคือคำตัดสินสุดท้าย), Q7 (ข้อความหน้าพ่อตาม D13 ยอมรับ) |
+| 2026-09-30 | M1 ผ่าน Architect และ Designer แล้ว push เพื่อ deploy |

@@ -1,9 +1,11 @@
 // Acceptance test ของ M1 (DX-ADD) โดย Tester — ออกแบบจาก Lesson Spec และ Tech Spec §1–§12 เท่านั้น
 // ห้ามอ่านหรือ import จาก src/ (roles/tester.md §2) ดูแผนที่ docs/test-plans/DX-ADD.md
 // ชื่อเทสต์ขึ้นต้นด้วยรหัส TC ตรงกับ Test Plan
-import { expect, test, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import {
   ACKS,
+  DEFAULT_MS,
+  guardWait,
   ITEMS,
   ITEM_BY_ID,
   LADDER,
@@ -330,6 +332,7 @@ test('TC-06 แป้นตัวเลข: ผัง ขนาด ลบ จำ
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
   const btns = page.locator('main button:visible');
   await expect(btns).toHaveCount(12);
@@ -372,9 +375,8 @@ test('TC-06 แป้นตัวเลข: ผัง ขนาด ลบ จำ
   expect(await typed(page)).toBe('0');
   await keyButton(page, '5').click();
   expect(await typed(page), '0 นำหน้าถูกแทนที่').toBe('5');
-  // คีย์บอร์ดจริง (WebKit: Backspace = ย้อนกลับของเบราว์เซอร์ ดู TC-06c จึงใช้ปุ่ม ⌫ แทน)
-  if (projectName() === 'ipad') await page.getByRole('button', { name: 'ลบตัวเลข' }).click();
-  else await page.keyboard.press('Backspace');
+  // คีย์บอร์ดจริง
+  await page.keyboard.press('Backspace');
   await page.keyboard.type('9');
   expect(await typed(page)).toBe('9');
   await page.keyboard.type('87');
@@ -401,6 +403,7 @@ test('TC-06c คีย์บอร์ดจริง: แอปต้อง prev
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
   // ตัวฟังของ Tester ลงทะเบียนทีหลังของแอป จึงเห็นค่า defaultPrevented หลังแอปทำงานแล้ว
   await page.evaluate(() => {
@@ -425,6 +428,7 @@ test('TC-06b แป้นตัวเลข: แตะด้วยนิ้ว (
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).tap();
+  await guardWait(page);
   await keyButton(page, '3').tap();
   expect(await typed(page)).toBe('3');
   await page.getByRole('button', { name: 'ตอบ', exact: true }).tap();
@@ -639,6 +643,7 @@ test('TC-09 หน้าของลูกไม่มีปุ่มดูซ�
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   await keyButton(page, '3').click();
   await submitAnswer(page, 'tap');
   await expect(page.getByText(/^(รับแล้ว!|โอเค ไปต่อ!|เยี่ยม ขอบคุณ!)$/)).toBeVisible();
@@ -876,6 +881,7 @@ test('TC-13 หมุนจอ แนวตั้ง/แนวนอน: ภา�
   }
   await page.locator('main button:visible').filter({ hasText: 'จำได้เลย' }).click();
   await expect(page.getByText('7 + 8 = ?', { exact: true })).toBeVisible();
+  await guardWait(page);
   await keyButton(page, '1').click();
   for (const o of [...orient, orient[0] as { width: number; height: number }]) {
     await page.setViewportSize(o);
@@ -933,7 +939,7 @@ test('TC-20 (IndexedDB + export) event ครบ/ไม่ซ้ำ: 1 started +
 }) => {
   const plan: Plan = {};
   ITEMS.forEach((it, i) => {
-    plan[it.id] = { ms: 100 + 137 * i };
+    plan[it.id] = { ms: 500 + 137 * i };
   });
   await fullRun(page, plan);
   const db = await readDbWhen(page, 22);
@@ -1106,6 +1112,7 @@ test('TC-24 ซ่อนแท็บระหว่างตอบ: latencyValid
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   const submit = async (digits: string): Promise<void> => {
     await typeAnswer(page, digits, 'tap');
     await submitAnswer(page, 'tap');
@@ -1532,7 +1539,7 @@ test('TC-40 หน้าผลครบ 8 ส่วนตามลำดับ L
   await expect(page.getByRole('button', { name: /export/ })).toBeVisible();
   // เวลาแสดงเฉพาะหน้านี้: ขั้น 1 ค่าเฉลี่ยด่าน 2 ตรงกับเวลาที่เดิน (300 ms ข้อละ ยกเว้น 2.3, 2.4 = 3001)
   const s2 = (await stageRows(page))[1];
-  expect(s2?.cells[1]).toBe(((300 + 300 + 3001 + 3001) / 4 / 1000).toFixed(1));
+  expect(s2?.cells[1]).toBe(((DEFAULT_MS + DEFAULT_MS + 3001 + 3001) / 4 / 1000).toFixed(1));
 });
 
 test('TC-41 ค่าเฉลี่ยเวลารายด่าน คำนวณจากทุกข้อที่เวลาใช้ได้ (รวมข้อผิด) (LS §9, D12)', async ({
@@ -1686,6 +1693,7 @@ test('TC-51 กดค้างโลโก้: 1999 ms ไม่เปิด, �
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
   await longPressLogo(page, 100, true);
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -1906,51 +1914,102 @@ test('TC-70b แตะสองครั้งที่ตัวเลือก 
   expect(ans.filter((e) => e.itemId === '3.4')).toHaveLength(0);
 });
 
-/** แตะที่จุดกึ่งกลางของ element สองครั้งห่างกัน gapMs (จำลองเด็กแตะซ้ำ) */
-async function doubleTapAt(page: Page, target: Locator, gapMs: number): Promise<void> {
-  const box = await target.boundingBox();
-  if (!box) throw new Error('target not visible');
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-  await page.mouse.click(x, y);
-  await page.waitForTimeout(gapMs);
+/** คลิกที่พิกัด (จำลองการแตะครั้งที่สองของเด็ก) */
+async function tapAt(page: Page, x: number, y: number): Promise<void> {
   await page.mouse.click(x, y);
 }
 
-for (const gap of [150]) {
-  test(`TC-70d แตะซ้ำห่างกัน ${gap} ms: แตะครั้งที่สองต้องไม่ทะลุไปกดแป้น/ปุ่มของหน้าถัดไป (§6.5, D3)`, async ({
-    page,
-  }) => {
-    await installClock(page);
-    await beginSession(page);
-    await pauseClock(page);
-    // (1) "ไปเลย" ของด่าน 2 -> แป้นของข้อ 2.1 ใช้ได้ทันที ต้องไม่มีตัวเลขค้าง
-    await runSession(page, {}, { stopBefore: '2.1' });
-    await doubleTapAt(page, page.getByRole('button', { name: 'ไปเลย' }), gap);
-    await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
-    expect(await typed(page), 'แตะซ้ำที่ "ไปเลย" ทะลุไปกดแป้น').toBe('');
-    // (2) "ตอบ" -> หน้า ack -> แตะซ้ำต้องไม่มี event เกิน
-    await keyButton(page, '3').click();
-    await doubleTapAt(page, page.getByRole('button', { name: 'ตอบ', exact: true }), gap);
-    await tick(page, 1000);
-    await expect(page.getByText('4 + ? = 10', { exact: true })).toBeVisible();
-    expect(await typed(page), 'แตะซ้ำที่ "ตอบ" ทำให้ข้อถัดไปมีค่าค้าง').toBe('');
-    // (3) ตัวเลือกวิธีคิด -> ข้อถัดไป
-    await page.goto('./');
-    await openDx(page);
-    await passParentIntro(page);
-    await startMission(page);
-    await runSession(page, {}, { stopAtStrategyOf: '3.3' });
-    await doubleTapAt(
-      page,
-      page.locator('main button:visible').filter({ hasText: 'จำได้เลย' }),
-      gap,
-    );
-    await tick(page, 0);
-    await expect(page.getByText('7 + 8 = ?', { exact: true })).toBeVisible();
-    expect(await typed(page), 'แตะซ้ำที่ตัวเลือกวิธีคิด ทะลุไปกดแป้นของข้อ 3.4').toBe('');
-  });
-}
+// Tech Spec §3.3.1: หลังแตะที่เปลี่ยนหน้า หน้าใหม่ไม่รับ pointer/คีย์บอร์ดที่เริ่มภายใน 400 ms ไม่ว่าตำแหน่งใด
+// ใช้นาฬิกาปลอมที่หยุดไว้ (performance.now เดินเฉพาะตอน tick) จึงกำหนดระยะห่างได้เป๊ะ
+test('TC-70d tap-guard ที่ตัวเลือกวิธีคิด: แตะซ้ำที่ 150/350 ms (ตำแหน่งเดิม และเยื้อง 40 px) ถูกทิ้ง แตะที่ 450 ms รับ (§3.3.1)', async ({
+  page,
+}) => {
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  const cases: Array<{ gap: number; dx: number; stopAt: string; startAt: string }> = [
+    { gap: 150, dx: 0, startAt: '1.1', stopAt: '3.3' },
+    { gap: 150, dx: 40, startAt: '3.4', stopAt: '4.1' },
+    { gap: 350, dx: 0, startAt: '4.2', stopAt: '4.2' },
+    { gap: 350, dx: 40, startAt: '4.3', stopAt: '4.3' },
+  ];
+  for (const c of cases) {
+    await runSession(page, {}, { startAt: c.startAt, stopAtStrategyOf: c.stopAt });
+    const opt = page.locator('main button:visible').filter({ hasText: 'จำได้เลย' });
+    const box = await opt.boundingBox();
+    if (!box) throw new Error('option not visible');
+    const x = box.x + box.width / 2;
+    const y = box.y + box.height / 2;
+    const vw = page.viewportSize()?.width ?? 800;
+    await tapAt(page, x, y);
+    await tick(page, c.gap);
+    await tapAt(page, x + c.dx > vw - 4 ? x - c.dx : x + c.dx, y);
+    await expect(page.locator('main button', { hasText: /^5$/ })).toBeVisible();
+    expect(await typed(page), `แตะซ้ำที่ ${c.gap} ms เยื้อง ${c.dx}px ต้องถูกทิ้ง`).toBe('');
+    // ตรงๆ ที่ปุ่ม 5 ภายใน 400 ms ก็ถูกทิ้ง
+    await keyButton(page, '5').click();
+    expect(await typed(page), 'แตะปุ่มโดยตรงภายใน 400 ms ต้องถูกทิ้ง').toBe('');
+    await tick(page, 450 - c.gap + 10);
+    await keyButton(page, '5').click();
+    expect(await typed(page), 'หลัง 450 ms ต้องรับ').toBe('5');
+    await page.getByRole('button', { name: 'ลบตัวเลข' }).click();
+    expect(await typed(page)).toBe('');
+  }
+});
+
+test('TC-70e tap-guard ที่ "ไปเลย", "ตอบ", "เริ่มภารกิจ", "ต่อไป" และคีย์บอร์ด (§3.3.1)', async ({
+  page,
+}) => {
+  await installClock(page);
+  await openApp(page);
+  await openDx(page);
+  // ต่อไป: หน้าของลูก -> แตะซ้ำที่ 150 ms ต้องไม่ไปกด "เริ่มภารกิจ"
+  const next = page.getByRole('button', { name: 'ต่อไป: หน้าของลูก' });
+  const nb = await next.boundingBox();
+  await pauseClock(page);
+  await next.click();
+  await tick(page, 150);
+  if (nb) await tapAt(page, nb.x + nb.width / 2, nb.y + nb.height / 2);
+  await tick(page, 0);
+  await expect(page.getByRole('button', { name: 'เริ่มภารกิจ' })).toBeVisible();
+  expect((await readDb(page)).events).toHaveLength(0);
+  await tick(page, 400);
+  // เริ่มภารกิจ: ครั้งที่สองที่ 150 ms ถูกทิ้ง (ยังอยู่หน้าเปิดด่าน 1)
+  const start = page.getByRole('button', { name: 'เริ่มภารกิจ' });
+  const sb = await start.boundingBox();
+  await start.click();
+  await tick(page, 150);
+  if (sb) await tapAt(page, sb.x + sb.width / 2, sb.y + sb.height / 2);
+  await tick(page, 0);
+  await expect(page.getByRole('button', { name: 'ไปเลย' })).toBeVisible();
+  await tick(page, 400);
+  // ทำด่าน 1 จนถึงหน้าเปิดด่าน 2 แล้วทดสอบ "ไปเลย" + คีย์บอร์ด
+  await runSession(page, {}, { stopBefore: '2.1' });
+  const go = page.getByRole('button', { name: 'ไปเลย' });
+  const gb = await go.boundingBox();
+  await go.click();
+  await tick(page, 350);
+  if (gb) await tapAt(page, gb.x + gb.width / 2, gb.y + gb.height / 2);
+  await page.keyboard.type('5');
+  await page.keyboard.press('Enter');
+  expect(await typed(page), 'คีย์บอร์ด/แตะภายใน 400 ms ต้องถูกทิ้ง').toBe('');
+  await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
+  await tick(page, 100); // รวม 450 ms
+  await page.keyboard.type('3');
+  expect(await typed(page), 'คีย์บอร์ดหลัง 450 ms ต้องรับ').toBe('3');
+  // ตอบ: แตะซ้ำที่ 150 ms ไม่ทำให้ event ซ้ำ
+  const sub = page.getByRole('button', { name: 'ตอบ', exact: true });
+  const bb = await sub.boundingBox();
+  await sub.click();
+  await tick(page, 150);
+  if (bb) await tapAt(page, bb.x + bb.width / 2, bb.y + bb.height / 2);
+  await tick(page, 1000);
+  await expect(page.getByText('4 + ? = 10', { exact: true })).toBeVisible();
+  expect(await typed(page)).toBe('');
+  const db = await readDbWhen(page, 6);
+  expect(byType(db.events, 'session.started')).toHaveLength(1);
+  expect(byType(db.events, 'item.answered').filter((e) => e.itemId === '2.1')).toHaveLength(1);
+});
 
 test('TC-70c แตะ "ให้พ่อดูผล" สองครั้ง: ไม่ทำให้พัง', async ({ page }) => {
   test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
@@ -1972,6 +2031,7 @@ test('TC-71 แตะรัวที่แป้น: ไม่เกิน 3 ห
   await pauseClock(page);
   await runSession(page, {}, { stopBefore: '2.1' });
   await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
   const k = keyButton(page, '4');
   for (let i = 0; i < 8; i++) await k.click({ delay: 0 });
   expect(await typed(page)).toBe('444');
@@ -2130,6 +2190,7 @@ test('TC-80 ทำครบ 20 ข้อด้วยเวลาจริง (�
     if (it.stage !== lastStage) {
       await page.getByRole('button', { name: 'ไปเลย' }).click();
       lastStage = it.stage;
+      if (it.stage > 1) await guardWait(page);
     }
     if (it.stage === 1) {
       await expect(page.getByText('ซ่อนแล้ว! กี่จุดนะ?')).toBeVisible({ timeout: 8000 });
@@ -2142,6 +2203,7 @@ test('TC-80 ทำครบ 20 ข้อด้วยเวลาจริง (�
     if (it.set) {
       await expect(page.getByText('หนูคิดข้อนี้ยังไง?')).toBeVisible({ timeout: 3000 });
       await pickStrategy(page, it.set === 'A' ? 'known' : it.id === '5.3' ? 'column' : 'round');
+      await guardWait(page);
     }
   }
   await expect(page.getByText('ภารกิจสำเร็จ!')).toBeVisible({ timeout: 4000 });
@@ -2182,4 +2244,66 @@ test('TC-81 route: เปิดหน้าเล่นโดยยังไม�
     description: `หน้าพ่อเมื่อยังไม่มีผลแบบทดสอบ: ${parentText.includes('ผลแบบทดสอบ') ? 'มีส่วนผลแบบทดสอบ' : 'ไม่มีส่วนผลแบบทดสอบ'}`,
   });
   expect(w.errors).toEqual([]);
+});
+
+// ---------------------------------------------------------------- ตรวจซ้ำ Suggestion รอบ 1 (S1–S3)
+
+test('TC-82 S1: เปิดผลอีกครั้งจากประวัติ ห้ามเห็นผลของครั้งก่อนค้างใต้ URL ใหม่; S3: ไม่มีปุ่มซ้อนในลิงก์', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await runSession(page, SCENARIOS.find((s) => s.code === 'S03')?.plan ?? {}); // ขั้น 1
+  await openResults(page);
+  await page.getByRole('button', { name: 'ทำใหม่อีกครั้ง' }).click();
+  await passParentIntro(page);
+  await startMission(page);
+  await runSession(page, {}); // ขั้น 9
+  await openResults(page);
+  expect(await recommendedStep(page)).toBe(9);
+  expect(await page.locator('main a button, main button a').count(), 'S3').toBe(0);
+  const hist = page
+    .locator('main section')
+    .filter({ has: page.getByRole('heading', { name: 'ประวัติ' }) });
+  const urlB = page.url();
+  await hist.getByRole('link').nth(1).click(); // เปิดครั้งแรก (ขั้น 1)
+  await expect(page).not.toHaveURL(urlB);
+  const seen: string[] = [];
+  for (let i = 0; i < 20; i++) {
+    seen.push(
+      await page
+        .locator('main')
+        .evaluate(
+          (m) => (/แนะนำให้เริ่มที่ ขั้นที่ (\d)/.exec(m.textContent ?? '') ?? [])[1] ?? '-',
+        ),
+    );
+    await page.waitForTimeout(30);
+  }
+  // รอบ 1 ค้างนาน 100–300 ms; ยอมให้เหลือได้ไม่เกิน 1 เฟรม (ตัวอย่างแรกทันทีหลัง URL เปลี่ยน)
+  expect(seen.slice(2), 'ต้องไม่เห็นขั้น 9 (ผลครั้งก่อน) ค้างเกิน ~60 ms').not.toContain('9');
+  await expect.poll(() => recommendedStep(page)).toBe(1);
+});
+
+test('TC-83 S2: ขณะกล่อง "หยุดภารกิจนี้?" เปิด กดคีย์บอร์ดไม่ทำให้ค่าหรือคำตอบด้านหลังเปลี่ยน', async ({
+  page,
+}) => {
+  test.skip(projectName() !== 'desktop', DESKTOP_ONLY);
+  await installClock(page);
+  await beginSession(page);
+  await pauseClock(page);
+  await runSession(page, {}, { stopBefore: '2.1' });
+  await page.getByRole('button', { name: 'ไปเลย' }).click();
+  await guardWait(page);
+  await keyButton(page, '3').click();
+  await longPressLogo(page, 2000, true);
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.keyboard.type('55');
+  await page.keyboard.press('Backspace');
+  await page.getByRole('dialog').getByRole('button', { name: 'ทำต่อ' }).click();
+  expect(await typed(page)).toBe('3');
+  await expect(page.getByText('7 + ? = 10', { exact: true })).toBeVisible();
+  const db = await readDb(page);
+  expect(byType(db.events, 'item.answered').filter((e) => e.itemId === '2.1')).toHaveLength(0);
 });

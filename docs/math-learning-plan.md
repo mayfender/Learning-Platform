@@ -104,7 +104,8 @@
 - จับเวลาแบบเงียบ ลูกไม่เห็น
 - ตัวเลือก "หนูคิดยังไง": นับนิ้ว / นับต่อในใจ / แยกให้ครบ 10 / จำได้เลย (ด่าน 3) และ นับทีละ 1 / ตั้งบวกในใจ / แยกสิบกับหน่วย / ปัดเลขให้กลม (ด่าน 4)
 - ผลลัพธ์แนะนำขั้นที่ควรเริ่มบนบันได พร้อมตารางรายข้อ และปุ่มคัดลอกผล
-- ลิงก์: https://claude.ai/artifact/NGMGLHvTaUhCV1mC1oFC5Y
+- เวอร์ชันแรก (artifact): https://claude.ai/artifact/NGMGLHvTaUhCV1mC1oFC5Y
+- **เวอร์ชันปัจจุบัน (DX-ADD v2, 20 ข้อ 5 ด่าน) อยู่ในเว็บแอป:** https://mayfender.github.io/Learning-Platform/ ดูรายละเอียดที่ [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md)
 
 ### 7.3 Design ที่ใช้ร่วมกัน
 - ฟอนต์: Kodchasan (หัวข้อ) + Noto Sans Thai (เนื้อหา)

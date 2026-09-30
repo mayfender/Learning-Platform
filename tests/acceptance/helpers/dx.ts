@@ -186,11 +186,23 @@ export const T0 = new Date('2026-03-01T09:00:00Z');
 
 /** ติดตั้งนาฬิกาปลอม (ต้องเรียกก่อน goto) เวลาจะเดินเองจนกว่าจะ pause */
 export async function installClock(page: Page): Promise<void> {
+  pausedPages.delete(page);
   await page.clock.install({ time: T0 });
+}
+const pausedPages = new WeakSet<Page>();
+/** Tech Spec §3.3.1: หลังแตะที่เปลี่ยนหน้า หน้าใหม่ไม่รับ input ภายใน 400 ms */
+export const GUARD_MS = 450;
+/** ความหน่วงเริ่มต้นของแต่ละข้อ (ต้อง ≥ GUARD_MS เพราะข้อหลังแตะที่เปลี่ยนหน้าตอบได้เร็วสุด 450 ms) */
+export const DEFAULT_MS = 500;
+/** รอให้พ้น tap-guard (นาฬิกาปลอมที่หยุดอยู่ = เดินเวลา; ไม่งั้นรอเวลาจริง) */
+export async function guardWait(page: Page): Promise<void> {
+  if (pausedPages.has(page)) await tick(page, GUARD_MS);
+  else await page.waitForTimeout(GUARD_MS);
 }
 /** หยุดนาฬิกา หลังจากนี้เวลาเดินเฉพาะเมื่อเรียก tick() */
 export async function pauseClock(page: Page): Promise<void> {
   await page.clock.pauseAt(new Date(T0.getTime() + 60 * 60_000));
+  pausedPages.add(page);
 }
 /** เดินเวลา ms แล้วรอให้ React render (WebKit ต้องรอสั้นๆ หลัง runFor) */
 export async function tick(page: Page, ms: number): Promise<void> {
@@ -213,9 +225,11 @@ export async function openDx(page: Page): Promise<void> {
 export async function passParentIntro(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'ต่อไป: หน้าของลูก' }).click();
   await expect(page.getByRole('heading', { name: 'ช่วยพ่อสำรวจหน่อย!' })).toBeVisible();
+  await guardWait(page);
 }
 export async function startMission(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'เริ่มภารกิจ' }).click();
+  await guardWait(page);
 }
 /** สร้างผู้เรียน (ถ้ายังไม่มี) -> เปิดภารกิจ -> เข้าหน้า intro ของด่าน 1 */
 export async function beginSession(page: Page): Promise<void> {
@@ -316,6 +330,7 @@ export async function runSession(
     if (opts.observe) await opts.observe(l, page);
   };
   let lastStage = 0;
+  let carry = 0; // เวลาที่เดินไปแล้วในข้อนี้ระหว่างรอ tap-guard
   const startIdx = Math.max(
     0,
     ITEMS.findIndex((i) => i.id === (opts.startAt ?? '1.1')),
@@ -337,6 +352,11 @@ export async function runSession(
       if (opts.stopBefore === item.id) return item.id;
       await page.getByRole('button', { name: 'ไปเลย' }).click();
       lastStage = item.stage;
+      carry = 0;
+      if (item.stage > 1) {
+        await guardWait(page);
+        carry = GUARD_MS;
+      }
     }
     if (opts.stopBefore === item.id) return item.id;
     const a = plan[item.id] ?? {};
@@ -350,7 +370,8 @@ export async function runSession(
       await expect(page.getByText(item.text ?? '', { exact: true })).toBeVisible();
     }
     await obs(`item-${item.id}`);
-    await tick(page, a.ms ?? 300);
+    await tick(page, Math.max(0, (a.ms ?? DEFAULT_MS) - carry));
+    carry = 0;
     await typeAnswer(page, String(response), mode);
     await submitAnswer(page, mode);
     await expect(page.getByText(/^(รับแล้ว!|โอเค ไปต่อ!|เยี่ยม ขอบคุณ!)$/)).toBeVisible();
@@ -362,7 +383,8 @@ export async function runSession(
       await obs(`strategy-${item.id}`);
       if (opts.stopAtStrategyOf === item.id) return item.id;
       await pickStrategy(page, a.s ?? defaultStrategy(item) ?? 'unsure');
-      await tick(page, 0);
+      await guardWait(page);
+      carry = GUARD_MS;
     }
   }
   await expect(page.getByText('ภารกิจสำเร็จ!')).toBeVisible();
