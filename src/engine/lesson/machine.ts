@@ -67,7 +67,8 @@ export type LessonAction =
   | { type: 'CHALLENGE_RESTART' }
   | { type: 'CHALLENGE_PICK'; card: number }
   | { type: 'CHALLENGE_REVEAL' }
-  | { type: 'PARENT_DONE' } // หน้าพ่อแนะนำ: "ทำแล้ว"
+  | { type: 'PARENT_DONE' } // หน้าพ่อแนะนำ: "ทำแล้ว" (emit parent.noted resolvedFlag)
+  | { type: 'PARENT_CONTINUE' } // หน้าพ่อแนะนำ: ไปต่อโดยยังไม่ปิดธง (พ่อกด "ทำแล้ว" ที่หน้าพ่อของบทภายหลังได้ Tech Spec §5.7)
   | { type: 'HANDOVER_DONE' } // ลูกส่งเครื่องให้พ่อแล้ว
   | { type: 'NOTE_SAVE'; fingers: NoteFrequency; mouth: NoteFrequency; note?: string }
   | { type: 'NOTE_SKIP' }
@@ -357,6 +358,8 @@ export function createLessonMachine(
     return (
       (slot.variant === 'main' &&
         (slot.kind === 'check' || slot.kind === 'A' || slot.kind === 'B')) ||
+      slot.variant === 'a2-retry' || // A2 ซ้ำ / A3 ชุดใหม่: มีหน้าเปิดส่วนเหมือนส่วน A ปกติ (ไม่ emit block.started ทันที)
+      slot.variant === 'a3-retry' ||
       slot.variant === 'challenge'
     );
   }
@@ -1408,6 +1411,10 @@ export function createLessonMachine(
         return onChallenge(state, action);
 
       case 'parent-instruction': {
+        if (action.type === 'PARENT_CONTINUE') {
+          const next = advanceQueue(state);
+          return { state: next.state, effects: next.effects };
+        }
         if (action.type !== 'PARENT_DONE') return noop(state);
         const noted: EventPayload = { type: 'parent.noted', resolvedFlag: phase.reason };
         const s = fold(state, [noted]);

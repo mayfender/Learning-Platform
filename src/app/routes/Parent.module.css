@@ -8,6 +8,15 @@
   gap: var(--space-3);
 }
 
+.linkList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
 .warning {
   color: var(--color-try-again);
 }

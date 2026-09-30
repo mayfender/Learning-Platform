@@ -262,10 +262,14 @@ export function buildBlock(
         steps: asSteps(generateA2Retry(seed, partsOf(A.a2), { idPrefix: `A2.r${slot.round}` })),
       };
     case 'a3-retry':
+      // A3 ชุดใหม่ที่วัดผ่านซ้ำ: ต่อท้ายด้วยข้อสรุปกฎ A เหมือนส่วน A ปกติ (Tech Spec §5.2.4 "ต่อท้าย A3")
       return {
         slot,
         seed,
-        steps: asSteps(generateA3Retry(seed, partsOf(A.a3), { idPrefix: `A3.r${slot.round}` })),
+        steps: [
+          ...asSteps(generateA3Retry(seed, partsOf(A.a3), { idPrefix: `A3.r${slot.round}` })),
+          { kind: 'rule', which: 'A' },
+        ],
       };
     case 'remedial':
       return {

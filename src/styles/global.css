@@ -43,7 +43,18 @@ button {
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    /* ปิด transition จริง (ไม่ใช่แค่ทำให้สั้น): duration สั้นมากยังสร้าง CSSTransition ที่ค้างอยู่ 1 เฟรม
+       เมื่อค่า fill/font-size/outline เปลี่ยน (เช่น แยกเลขเปลี่ยนจาก ? เป็นตัวเลข) */
+    transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@keyframes ten-frame-flash-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }

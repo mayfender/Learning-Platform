@@ -204,6 +204,16 @@ describe('TenFrame', () => {
       expect(container.querySelectorAll('circle')).toHaveLength(10);
     });
 
+    it('วงแหวนไฮไลต์มี data-cell-highlight = index ช่อง (จุดทดสอบของ Tester)', () => {
+      const { container } = render(
+        <TenFrame mode="show" filled={6} highlight={{ indices: [6, 7, 8, 9] }} />,
+      );
+      const rings = [...container.querySelectorAll('[data-cell-highlight]')];
+      expect(rings.map((r) => r.getAttribute('data-cell-highlight'))).toEqual(['6', '7', '8', '9']);
+      const none = render(<TenFrame mode="show" filled={6} />);
+      expect(none.container.querySelectorAll('[data-cell-highlight]')).toHaveLength(0);
+    });
+
     it('highlight pulse: มี animation; reduced motion: วงแหวนคงที่ (ไม่มี class)', () => {
       const a = render(
         <TenFrame mode="show" filled={8} highlight={{ indices: [8], pulse: true }} />,

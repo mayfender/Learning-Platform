@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from '@/ui/useReducedMotion';
 
-export type FadeClass = 'in' | 'idle' | 'out';
+export type FadeClass = 'idle' | 'out';
 
 export interface FlashState {
   /** แฟลชรอบนี้จบแล้ว (ไม่ผูกกับ mode ตอน mount เพื่อให้เปลี่ยน hidden -> flash ได้) */
@@ -22,9 +22,9 @@ export function useFlash(
 ): FlashState {
   const reducedMotion = useReducedMotion();
   const [ended, setEnded] = useState(false);
-  const [fadeClass, setFadeClass] = useState<FadeClass>(
-    mode === 'flash' && !reducedMotion ? 'in' : 'idle',
-  );
+  // fade-in ทำด้วย CSS animation ที่ผู้เรียกใส่ตอน mount (ไม่พึ่ง timer ของ JS จึงเดินตามเวลาจริงแม้นาฬิกาถูกหยุด)
+  // ที่นี่จึงมีแค่ idle (แสดง) กับ out (กำลัง fade-out)
+  const [fadeClass, setFadeClass] = useState<FadeClass>('idle');
   const onFlashEndRef = useRef(onFlashEnd);
   useEffect(() => {
     onFlashEndRef.current = onFlashEnd;
@@ -33,7 +33,7 @@ export function useFlash(
   useEffect(() => {
     if (mode !== 'flash') return;
     setEnded(false);
-    setFadeClass(reducedMotion ? 'idle' : 'in');
+    setFadeClass('idle');
     const ms = flashMs ?? 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
@@ -46,9 +46,6 @@ export function useFlash(
         }, ms),
       );
     } else {
-      // setTimeout(0) แทน requestAnimationFrame: ให้เบราว์เซอร์ paint สถานะ opacity:0 ก่อน แล้วค่อย
-      // เปลี่ยนเป็น idle เพื่อให้ transition ไล่สีเกิดขึ้นจริง (jsdom ไม่มี rAF)
-      timers.push(setTimeout(() => setFadeClass('idle'), 0));
       timers.push(setTimeout(() => setFadeClass('out'), ms));
       timers.push(
         setTimeout(() => {

@@ -10,6 +10,8 @@ export interface ConfirmDialogProps {
   cancelLabel: string;
   onConfirm: () => void;
   onCancel: () => void;
+  /** ปุ่มเพิ่มเติม (เช่น "ข้ามส่วนนี้" ของบทเรียน) แสดงเมื่อส่งทั้ง label และ onClick */
+  extraAction?: { label: string; onClick: () => void };
 }
 
 export function ConfirmDialog({
@@ -20,6 +22,7 @@ export function ConfirmDialog({
   cancelLabel,
   onConfirm,
   onCancel,
+  extraAction,
 }: ConfirmDialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -41,6 +44,11 @@ export function ConfirmDialog({
         <Button variant="secondary" type="button" onClick={onCancel}>
           {cancelLabel}
         </Button>
+        {extraAction && (
+          <Button variant="secondary" type="button" onClick={extraAction.onClick}>
+            {extraAction.label}
+          </Button>
+        )}
         <Button type="button" onClick={onConfirm}>
           {confirmLabel}
         </Button>

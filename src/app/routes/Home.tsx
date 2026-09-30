@@ -3,9 +3,30 @@ import { Link } from 'react-router';
 import { strings } from '@/app/strings';
 import { UpdateBanner } from '@/app/UpdateBanner';
 import { useProgress } from '@/app/ProgressProvider';
-import { diagnostics } from '@/content/registry';
+import { useLessonData } from '@/app/lesson/useLessonData';
+import { diagnostics, lessons } from '@/content/registry';
+import { fill } from '@/engine/lesson/feedback';
+import type { Lesson } from '@/engine/lesson/types';
 import { Button } from '@/ui/Button';
 import styles from '@/app/routes/Home.module.css';
+
+// การ์ดบทเรียน (P12): ชื่อบท + บรรทัดรอง "ครั้งที่ n" หรือ "ทำครบแล้ว" ไม่มีเวลา/คะแนน/จำนวนที่ค้าง
+function LessonCard({ lesson }: { lesson: Lesson }) {
+  const data = useLessonData(lesson);
+  const sitting = data?.progress.sitting;
+  const sub =
+    sitting === undefined
+      ? undefined
+      : sitting > lesson.sittings.length
+        ? lesson.texts.card.done
+        : fill(lesson.texts.card.sitting, { n: sitting });
+  return (
+    <Link className={styles.activityCard} to={`/play/${lesson.id}`}>
+      <span>{lesson.title}</span>
+      {sub && <span className={styles.cardSub}>{sub}</span>}
+    </Link>
+  );
+}
 
 export function Home() {
   const { currentLearner, createLearner } = useProgress();
@@ -43,15 +64,21 @@ export function Home() {
     );
   }
 
+  const lessonList = Object.values(lessons);
   const activities = Object.values(diagnostics);
 
   return (
     <div>
       <h1>{strings.home.greeting(currentLearner.nickname)}</h1>
-      {activities.length === 0 ? (
+      {activities.length + lessonList.length === 0 ? (
         <p>{strings.home.noActivity}</p>
       ) : (
         <ul className={styles.activityList}>
+          {lessonList.map((lesson) => (
+            <li key={lesson.id}>
+              <LessonCard lesson={lesson} />
+            </li>
+          ))}
           {activities.map((dx) => (
             <li key={dx.id}>
               <Link className={styles.activityCard} to={`/play/${dx.id}`}>

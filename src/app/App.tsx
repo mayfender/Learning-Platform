@@ -4,6 +4,7 @@ import { Layout } from '@/app/Layout';
 import { LogoLongPressProvider } from '@/app/LayoutContext';
 import { ProgressProvider } from '@/app/ProgressProvider';
 import { DiagnosticResults } from '@/app/diagnostic/DiagnosticResults';
+import { ParentLesson } from '@/app/lesson/ParentLesson';
 import { Home } from '@/app/routes/Home';
 import { Parent } from '@/app/routes/Parent';
 import { Play } from '@/app/routes/Play';
@@ -24,6 +25,7 @@ export function App() {
               <Route path="/play/:activityId" element={<Play />} />
               <Route path="/parent" element={<Parent />} />
               <Route path="/parent/results/:sessionId" element={<DiagnosticResults />} />
+              <Route path="/parent/lesson/:lessonId" element={<ParentLesson />} />
               {DevManipulatives && (
                 <Route
                   path="/dev/manipulatives"

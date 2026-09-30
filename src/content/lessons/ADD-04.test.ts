@@ -435,6 +435,7 @@ describe('ADD-04 เนื้อหา: ข้อความตามตัว�
       'มีวิธีอื่นไหม',
       'นิ้วช่วยตอนไหน',
     ]);
+    expect(g.numberTalks.openingNote).toBe('ถามด้วยความอยากรู้ ไม่ใช่จับผิด');
     expect(g.numberTalks.thoughts.map((x) => x.thought)).toEqual([
       '"8 ขาด 2 เอา 2 จาก 5 เหลือ 3 เป็น 13"',
       '"นับต่อจาก 8: 9, 10, 11, 12, 13"',

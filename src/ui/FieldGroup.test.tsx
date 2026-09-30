@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { FieldGroup, type FieldDef } from '@/ui/FieldGroup';
-import { allFieldsFilled } from '@/ui/fieldGroupUtils';
+import { allFieldsFilled, firstEmptyField } from '@/ui/fieldGroupUtils';
 
 afterEach(cleanup);
 
@@ -46,6 +46,13 @@ describe('FieldGroup', () => {
     expect(allFieldsFilled(fields, { gap: '2', rest: '6' })).toBe(false);
     expect(allFieldsFilled(fields, { gap: '2', rest: '6', total: '' })).toBe(false);
     expect(allFieldsFilled(fields, { gap: '2', rest: '6', total: '14' })).toBe(true);
+  });
+
+  it('firstEmptyField: ช่องแรกที่ยังว่างเป็นช่องใช้งานเมื่อเริ่มขั้น (ไม่เลื่อนโฟกัสเอง)', () => {
+    expect(firstEmptyField(fields, {})).toBe('gap');
+    expect(firstEmptyField(fields, { gap: '2' })).toBe('rest');
+    expect(firstEmptyField(fields, { gap: '2', total: '14' })).toBe('rest');
+    expect(firstEmptyField(fields, { gap: '2', rest: '6', total: '14' })).toBe('gap');
   });
 
   it('disabled: แตะไม่เรียก onFocus', () => {

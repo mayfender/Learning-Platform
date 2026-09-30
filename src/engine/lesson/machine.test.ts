@@ -1010,3 +1010,72 @@ describe('flow เงียบไม่ให้ข้อมูลถูก/ผ�
     });
   });
 });
+
+// หน้าพ่อแนะนำ: ไปต่อโดยไม่ปิดธง (พ่อกด "ทำแล้ว" ที่หน้าพ่อของบทภายหลัง — Tech Spec §5.7)
+describe('parent-instruction: PARENT_CONTINUE', () => {
+  const a3Fail: Policy = {
+    latencyMs: (i) => (i.id === 'c3' ? 5100 : i.section === 'A3' ? 9000 : 1000),
+  };
+
+  it('ไปต่อโดยไม่ emit parent.noted และธง talk-A ยังค้างในความก้าวหน้า', () => {
+    const run = play(newRun(planFor()), {
+      ...a3Fail,
+      stopWhen: (r) => r.phase.kind === 'parent-instruction',
+    });
+    expect(run.phase).toEqual({ kind: 'parent-instruction', reason: 'talk-A' });
+    const before = run.events.length;
+    run.do({ type: 'PARENT_CONTINUE' });
+    expect(run.events).toHaveLength(before);
+    expect(run.of('parent.noted')).toHaveLength(0);
+    expect(run.phase.kind).toBe('handover');
+    expect(run.state.progress.pendingFlags).toContain('talk-A');
+  });
+
+  it('ใช้ PARENT_CONTINUE นอกหน้าคำแนะนำไม่มีผล', () => {
+    const run = newRun(planFor());
+    const before = run.state;
+    run.do({ type: 'PARENT_CONTINUE' });
+    expect(run.state).toBe(before);
+  });
+});
+
+describe('หน้าเปิดส่วนก่อน A2 ซ้ำ', () => {
+  it('A ไม่ผ่านแล้วมีหน้า "ไปเลย" คั่นก่อน A2 ซ้ำ และยังไม่ emit block.started ของรอบซ้ำ', () => {
+    const run = play(newRun(planFor()), {
+      latencyMs: (i) => (i.id === 'c3' ? 5100 : i.section === 'A3' ? 9000 : 1000),
+      stopWhen: (r) => r.phase.kind === 'block-intro' && r.phase.slot.variant === 'a2-retry',
+    });
+    expect(run.phase).toMatchObject({ kind: 'block-intro', text: lesson.texts.intros.A });
+    expect(run.of('block.started').map((b) => [b.blockKind, b.round])).toEqual([
+      ['check', 0],
+      ['A', 0],
+    ]);
+    run.do({ type: 'BLOCK_GO' });
+    expect(run.of('block.started').at(-1)).toMatchObject({ blockKind: 'A', round: 1 });
+  });
+});
+
+describe('หน้าเปิดส่วนของ A3 ชุดใหม่ที่เริ่มครั้งถัดไป', () => {
+  it('ครั้งที่ 2 ที่ค้าง A3 ซ้ำ เริ่มด้วยหน้า "ไปเลย" ของส่วน A ก่อนข้อ A3', () => {
+    const a3Fail: Policy = {
+      latencyMs: (i) => (i.id === 'c3' ? 5100 : i.section === 'A3' ? 9000 : 1000),
+      // พ่อกด "ทำแล้ว" (PARENT_DONE) ที่หน้าคำแนะนำเดิม
+    };
+    const s1 = toStored(play(newRun(planFor()), a3Fail).events, {
+      sessionId: 's1',
+      startMs: Date.UTC(2026, 0, 1),
+    });
+    const run = newRun(planFor(s1, 2));
+    run.do({ type: 'START' });
+    expect(run.phase.kind).toBe('block-intro');
+    expect(run.phase.kind === 'block-intro' && run.phase.text).toBe(lesson.texts.intros.A);
+    run.do({ type: 'BLOCK_GO' });
+    expect(run.phase.kind).toBe('item');
+    // จบ A3 ชุดใหม่แล้วแสดงข้อสรุปกฎ A ก่อนปิดส่วน
+    play(run, { stopWhen: (r) => r.phase.kind === 'rule' });
+    expect(run.phase).toMatchObject({ kind: 'rule', which: 'A', text: lesson.texts.rules.A });
+    expect(run.of('block.completed').filter((b) => b.blockKind === 'A')).toHaveLength(0);
+    run.do({ type: 'NEXT' });
+    expect(run.of('block.completed').filter((b) => b.blockKind === 'A')).toHaveLength(1);
+  });
+});

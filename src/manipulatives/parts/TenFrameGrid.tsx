@@ -95,8 +95,16 @@ export function TenFrameGrid({
           : {};
         return (
           <g key={i} data-cell-index={i} data-cell-state={state} {...interactiveProps}>
-            {/* พื้นที่แตะเต็มช่อง (rect ไม่ใช่ circle เพื่อไม่ปนกับการนับจุด) */}
-            {interactive && <rect x={x} y={y} width={CELL} height={CELL} fill="transparent" />}
+            {/* พื้นที่เต็มช่อง (rect ไม่ใช่ circle เพื่อไม่ปนกับการนับจุด): เป็นพื้นที่แตะเมื่อ interactive
+                ไม่งั้นโปร่งใสและไม่รับ pointer แต่ทำให้ช่องว่างมีขนาดจริงใน DOM (วัดตำแหน่ง/ไฮไลต์ได้) */}
+            <rect
+              x={x}
+              y={y}
+              width={CELL}
+              height={CELL}
+              fill="transparent"
+              pointerEvents={interactive ? undefined : 'none'}
+            />
             {state === 'dot' && (
               <circle
                 data-dot
@@ -134,6 +142,7 @@ export function TenFrameGrid({
           <rect
             key={`h${i}`}
             data-highlight={i}
+            data-cell-highlight={i}
             className={pulse ? styles.pulse : undefined}
             x={x + 2}
             y={y + 2}

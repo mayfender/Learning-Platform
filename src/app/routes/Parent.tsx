@@ -6,6 +6,8 @@ import { useProgress } from '@/app/ProgressProvider';
 import { applyTheme, readTheme, writeTheme, type ThemePref } from '@/app/theme';
 import { HistoryList } from '@/app/diagnostic/HistoryList';
 import { loadDiagnosticSessions } from '@/app/diagnostic/loadSessions';
+import { lessonStrings } from '@/app/lesson/lessonStrings';
+import { diagnostics, lessons } from '@/content/registry';
 import type { SessionView } from '@/engine/diagnostic/sessions';
 import { Button } from '@/ui/Button';
 import {
@@ -60,7 +62,10 @@ export function Parent() {
       setSessions([]);
       return;
     }
-    void loadDiagnosticSessions(store, outbox, { learnerId: currentLearner.id }).then(setSessions);
+    void loadDiagnosticSessions(store, outbox, { learnerId: currentLearner.id }).then((all) =>
+      // ประวัติในส่วนนี้เฉพาะแบบทดสอบวินิจฉัย (บทเรียนดูที่หน้าพ่อของบท)
+      setSessions(all.filter((s) => diagnostics[s.activityId] !== undefined)),
+    );
   }, [store, outbox, currentLearner]);
 
   function onThemeChange(next: ThemePref): void {
@@ -134,6 +139,19 @@ export function Parent() {
             </select>
           </label>
         )}
+      </section>
+
+      <section className={styles.section}>
+        <h2>{lessonStrings.parentPage.linkSection}</h2>
+        <ul className={styles.linkList}>
+          {Object.values(lessons).map((lesson) => (
+            <li key={lesson.id}>
+              <Link to={`/parent/lesson/${lesson.id}`}>
+                {lessonStrings.parentPage.openLink(lesson.title)}
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className={styles.section}>

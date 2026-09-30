@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { AppEvent, EventPayload } from '@/engine/types';
 import { newId } from '@/store/ids';
 import type { Outbox } from '@/store/outbox';
@@ -17,6 +18,9 @@ export interface UseActivityRunnerOptions {
   learnerId: string;
   outbox: Outbox;
   activityId: string;
+  // true = render ทันทีเมื่อ dispatch (flushSync) แม้ dispatch มาจาก timer: ข้อที่เวลาต่อเนื่อง (พร้อมนะ → แฟลช → ซ่อน)
+  // เดินตามเวลาจริงโดยไม่รอ React schedule รอบถัดไป (ค่าเริ่มต้น false เพื่อไม่เปลี่ยนพฤติกรรมของ DX-ADD)
+  syncRender?: boolean;
 }
 
 export interface ActivityRunner<S, A> {
@@ -30,7 +34,7 @@ export interface ActivityRunner<S, A> {
 // `machine` ต้องคงที่ตลอดอายุ component (ผู้เรียกใช้ useMemo)
 export function useActivityRunner<S, A extends { type: string }>(
   machine: ActivityMachine<S, A>,
-  { learnerId, outbox, activityId }: UseActivityRunnerOptions,
+  { learnerId, outbox, activityId, syncRender = false }: UseActivityRunnerOptions,
 ): ActivityRunner<S, A> {
   const sessionIdRef = useRef<string | undefined>(undefined);
   if (sessionIdRef.current === undefined) {
@@ -77,7 +81,8 @@ export function useActivityRunner<S, A extends { type: string }>(
     }
     // ส่งทุก event ของ transition เดียวกันเป็นชุดเดียว (outbox flush ทีละชุด)
     outbox.append(emitted);
-    setState(next);
+    if (syncRender) flushSync(() => setState(next));
+    else setState(next);
   }
 
   return { state, sessionId, dispatch };

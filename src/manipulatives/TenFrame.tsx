@@ -94,9 +94,17 @@ export function TenFrame(props: TenFrameProps) {
 
   const opacity = fadeClass === 'idle' ? 1 : 0;
   const baseStyle: React.CSSProperties = { width, maxWidth: '100%', height: 'auto' };
+  // fade-in ของแฟลชเป็น CSS animation (ดู global.css) fade-out เป็น transition ของ opacity
   const style: React.CSSProperties = reducedMotion
     ? { ...baseStyle, opacity }
-    : { ...baseStyle, opacity, transition: 'opacity 150ms ease' };
+    : {
+        ...baseStyle,
+        opacity,
+        transition: 'opacity 150ms ease',
+        ...(mode === 'flash' && fadeClass === 'idle'
+          ? { animation: 'ten-frame-flash-in 150ms ease' }
+          : {}),
+      };
   // interactive: ลูกของ role="img" ถูกอ่านเป็นภาพเดียว ปุ่มช่องจึงต้องอยู่ใต้ role="group"
   const isInteractive = interactive && mode === 'show';
 

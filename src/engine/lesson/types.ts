@@ -201,6 +201,7 @@ export interface LessonParentGuide {
     title: string;
     problems: string;
     openingQuestions: readonly string[];
+    openingNote: string; // LS §5: (ถามด้วยความอยากรู้ ไม่ใช่จับผิด)
     thoughts: readonly { thought: string; response: string }[];
     avoid: readonly string[];
   };
