@@ -2,7 +2,7 @@
 
 - เจ้าของเอกสาร: Software Architect
 - อัปเดตล่าสุด: 2026-09-29
-- ADR: [0001 deploy](adr/0001-static-web-deploy.md) · [0002 stack](adr/0002-stack-react-typescript-vite.md) · [0003 storage](adr/0003-local-storage-indexeddb.md) · [0004 content](adr/0004-content-as-typescript-modules.md) · [0005 manipulatives](adr/0005-manipulatives-svg-components.md) · [0006 SRS](adr/0006-spaced-repetition-leitner.md) · [0007 testing](adr/0007-testing-strategy.md)
+- ADR: [0001 deploy](adr/0001-static-web-deploy.md) · [0002 stack](adr/0002-stack-react-typescript-vite.md) · [0003 storage](adr/0003-local-storage-indexeddb.md) · [0004 content](adr/0004-content-as-typescript-modules.md) · [0005 manipulatives](adr/0005-manipulatives-svg-components.md) · [0006 SRS](adr/0006-spaced-repetition-leitner.md) · [0007 testing](adr/0007-testing-strategy.md) · [0008 event log](adr/0008-event-log-order-time-and-fields.md)
 
 ## 1. สรุปสั้น
 
@@ -256,4 +256,4 @@ Deploy: push เข้า branch `main` → GitHub Actions รัน lint, test,
 
 ## 10. คำถามที่ยังเปิดอยู่
 
-- Learning Designer ต้องกำหนดช่วงเวลาและเกณฑ์ของ Leitner (ADR-0006)
+- (ปิดแล้ว 2026-09-30) ช่วงเวลาและเกณฑ์ Leitner ตัดสินใน ADR-0006 ตาม Lesson Spec ADD-04

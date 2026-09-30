@@ -5,6 +5,7 @@
 - ADR ที่เกี่ยวข้อง: 0002, 0003, 0004, 0005, 0007 (0006 Leitner ยังไม่ทำ แต่ event ต้องมีข้อมูลพอ)
 - ต่อจาก: [M0-scaffold.md](M0-scaffold.md)
 - วันที่: 2026-09-29
+- ส่วนเพิ่ม 2026-09-30 (Architect): [§14](#14-ส่วนเพิ่ม-2026-09-30) หน้าตัวอย่างก่อนข้อ 1.1, แก้ลำดับ event, `strategyLatencyMs`/`answeredAt`, ประเมินผลกระทบการแยกเกณฑ์เวลา 2 ระดับ (สถานะ: ร่าง รอ Developer; Q-DX1–2 ตัดสินแล้ว Q-DX3 เลื่อน)
 
 > ข้อความภาษาไทยทุกข้อที่มาจาก Lesson Spec ต้อง**ตรงทุกตัวอักษร** ในเอกสารนี้อ้างเลขข้อของ Lesson Spec (เช่น "LS §8.3") แทนการคัดลอกซ้ำ ยกเว้นตัวอย่างโค้ด
 
@@ -867,3 +868,194 @@ helper: สร้างผู้เรียนผ่าน UI, `answer(page, di
 - ยกเลิก heuristic ตามตำแหน่ง (16 px / 250 ms) แทนด้วยกฎของ §3.3.1: `DiagnosticPlayer` บันทึก `performance.now()` ทุกครั้งที่ dispatch จากการแตะที่เปลี่ยนหน้า (`tapDispatch`: ต่อไป/เริ่มภารกิจ/ไปเลย/ตอบ/เลือกวิธีคิด) แล้วทิ้ง input ที่เข้ามาภายใน 400 ms หลังจากนั้นไม่ว่าตำแหน่งใด — คลิก (capture ที่ wrapper) และคีย์บอร์ด (`keydown` capture บน window: เลข/Backspace/Enter, `preventDefault` เพื่อไม่ให้ WebKit ย้อนหน้า)
 - ไม่ disable ปุ่ม ไม่ใช้ setTimeout เทียบเวลาตอน input เข้ามา; กล่องยืนยันของพ่อ (`dialog`) ยกเว้น; เวลาเงียบไม่เปลี่ยน; ถ้า `performance.now()` ถอยหลัง (elapsed < 0) ถือว่าพ้น guard
 - เทสต์: `DiagnosticPlayer.test` (แตะที่ 150 และ 350 ms ทั้งตำแหน่งเดิมและเยื้อง 40 px ถูกทิ้ง, คีย์บอร์ดภายใน 400 ms ถูกทิ้ง, ที่ 450 ms รับ; ใช้ fake timers ที่ fake `performance` ด้วย); e2e test 7 ใช้เวลาจริง (แตะซ้ำจุดเดิม ~100 ms, จุดอื่น 60 px ~200 ms, กดคีย์บอร์ด ถูกทิ้ง แล้วรับหลังพ้น 400 ms); helper e2e รอ 450 ms หลังแตะที่เปลี่ยนหน้า
+
+## 14. ส่วนเพิ่ม 2026-09-30
+
+เขียนโดย Architect หลังลูกทำ DX-ADD ครั้งแรก สถานะ: **ร่าง รอ Developer** ไม่แก้ส่วนที่มีอยู่แล้ว (§1–§13) งานนี้ทำก่อนงานย่อย T1 ของ [Tech Spec ADD-04](ADD-04-make-ten.md) เพราะแก้ runner และ store ที่ ADD-04 ใช้ต่อ อ้างอิง [ADR-0008](../architecture/adr/0008-event-log-order-time-and-fields.md)
+
+ขอบเขตไฟล์ที่แก้ได้: `src/engine/**`, `src/content/**`, `src/store/**`, `src/app/diagnostic/**`, `src/manipulatives/TenFrame.tsx` (ไม่ต้องแก้ถ้าไม่จำเป็น), เทสต์ unit/component และ `tests/e2e/` ส่วน `tests/acceptance/` เป็นของ Tester (ดู §14.1.5)
+
+### 14.1 หน้าตัวอย่างและข้อลองเองก่อนข้อ 1.1 (LS §8.2.1)
+
+#### 14.1.1 สิ่งที่ลูกเห็น
+
+หลังกด "ไปเลย" ของหน้าเปิดด่าน 1 และก่อนข้อ 1.1 มี 2 ขั้นที่ **ไม่บันทึก event ไม่นับในผล ไม่มีผลกับเวลา ไม่นับใน ack** ข้อความ ตัวเลข และจังหวะตรง LS §8.2.1 ทุกตัวอักษร
+
+| ขั้น | ลูกเห็น | ลูกทำ | ผลของแอป |
+|---|---|---|---|
+| ตัวอย่าง (`demo`) | `TenFrame mode="show" colorMode="single" filled={3}` ค้างไว้ ไม่ซ่อน ข้อความ `example.texts.demo` แป้นตัวเลขใช้ได้ทันที | พิมพ์ 3 แล้วกด "ตอบ" | ค่า 3 → ไปขั้นลองเอง ค่าอื่น → **ไม่ไปต่อ ล้างช่องคำตอบ** (ไม่มีข้อความ ไม่มีสี ไม่มีเสียง ลองใหม่ได้ไม่จำกัด) คำถามเปิด Q-DX1 |
+| ลองเอง (`try`) | "พร้อมนะ..." 900 ms → แฟลช 2 จุด 1500 ms พร้อม "ดู!" → ซ่อนพร้อม "ซ่อนแล้ว! กี่จุดนะ?" (จังหวะและข้อความเหมือนข้อจริง ใช้ `flash.ready/show/hidden` เดิม) ใต้ภาพมี `example.texts.try` | พิมพ์ตัวเลขใดก็ได้ (0–999) แล้วกด "ตอบ" | ไปขั้นเฉลย |
+| เฉลย (`reveal`) | `TenFrame mode="show" filled={2}` 2000 ms พร้อมข้อความ `example.texts.reveal` ไม่มีปุ่ม | — | ครบ 2000 ms → ข้อ 1.1 (ready) อัตโนมัติ ไม่บอกว่าตอบถูกหรือผิด |
+
+- จำนวนจุดตัวอย่าง 3 และ 2 ต้อง **ไม่ตรงกับข้อจริง** (7, 9, 6, 8) มีเทสต์เนื้อหาตรวจ
+- แสดงทุกครั้งที่เริ่มทำ DX-ADD (ไม่มีทางข้าม) ใช้เวลารวมไม่เกิน 30 วินาที
+- reduced motion: จังหวะเท่าเดิม (แฟลช 1500 ms ไม่เปลี่ยน) ตัดแค่ fade เหมือนข้อจริง
+- `useSilentTimer` **ห้าม start** ในขั้นตัวอย่างทั้งหมด (`itemKey` ว่าง) ข้อ 1.1 เริ่มจับเวลาหลังภาพซ่อนตามเดิม
+- ขั้นตัวอย่างไม่เพิ่ม `state.submitted` (ข้อความ ack ข้อจริงข้อแรกต้องเป็น `acks[0]` เหมือนเดิม) และไม่มี ack ในขั้นตัวอย่าง
+
+#### 14.1.2 เนื้อหา (`DX-ADD.ts` + type)
+
+```ts
+// src/engine/types.ts
+export interface DiagnosticExample {
+  demo: { count: number; acceptOnly: number };                                 // 3, 3
+  try: { count: number; readyMs: number; flashMs: number; revealMs: number };  // 2, 900, 1500, 2000
+  texts: { demo: string; try: string; reveal: string };                        // ตาม LS §8.2.1
+}
+// Diagnostic เพิ่ม field เสริม
+example?: DiagnosticExample;
+```
+- ข้อความใน `DX_ADD.example.texts` คัดจาก LS §8.2.1: `demo` = `ตัวอย่าง: ดูจุดทั้งหมดในกล่อง มีกี่จุด พิมพ์ตัวเลขแล้วกด ตอบ` · `try` = `ลองดูอีกที คราวนี้ภาพจะหายไป พิมพ์ว่าเห็นกี่จุด` · `reveal` = `มี 2 จุด ต่อไปเป็นข้อจริงแล้ว` (เก็บทั้งประโยคใน content เทสต์เนื้อหาตรวจว่ามีเลขเท่ากับ `try.count`)
+- `version` ยังเป็น `DX-ADD v2` (เนื้อหาข้อ เฉลย เกณฑ์ ไม่เปลี่ยน ผลเทียบกับครั้งก่อนได้)
+- ถ้า `dx.example` ไม่มี ให้ข้ามขั้นตัวอย่าง (เผื่อแบบทดสอบอื่นในอนาคต)
+
+#### 14.1.3 State machine (`engine/diagnostic/machine.ts`)
+
+```ts
+// เพิ่มใน Phase
+| { kind: 'example'; step: 'demo' | 'try-ready' | 'try-show' | 'try-answering' | 'try-reveal' }
+// เพิ่มใน RunnerAction
+| { type: 'EXAMPLE_SUBMIT'; response: number } | { type: 'EXAMPLE_DONE' }
+// schedule.action เพิ่ม 'EXAMPLE_DONE'
+```
+
+| จาก | action | ไป | effect |
+|---|---|---|---|
+| stage-intro ของด่านแรก (`stage === 0`) เมื่อมี `dx.example` | STAGE_GO | example/demo | — (ไม่เรียก `enterItem`) |
+| example/demo | EXAMPLE_SUBMIT (`response === demo.acceptOnly`) | example/try-ready | schedule(`try.readyMs`, READY_DONE) |
+| example/demo | EXAMPLE_SUBMIT (ค่าอื่น) | ไม่เปลี่ยน | ไม่มี |
+| example/try-ready | READY_DONE | example/try-show | — |
+| example/try-show | FLASH_END | example/try-answering | — |
+| example/try-answering | EXAMPLE_SUBMIT (ค่าใดก็ได้) | example/try-reveal | schedule(`try.revealMs`, EXAMPLE_DONE) |
+| example/try-reveal | EXAMPLE_DONE | `enterItem(0, 0)` | ตาม `enterItem` |
+| ทุก example/* | STOP | stopped | `started` เป็น true แล้ว จึง emit `session.abandoned` (partial ไม่มีข้อ) ตามกติกาเดิม |
+
+- **ห้าม emit event ใดในขั้น example** และ `answers`, `submitted`, `pending` ไม่เปลี่ยน
+- `READY_DONE` และ `FLASH_END` ใช้ซ้ำได้เพราะแยกด้วย `phase.kind` (`'item'` กับ `'example'` ไม่ชนกัน)
+
+#### 14.1.4 หน้าจอ (`DiagnosticPlayer`)
+
+- โครงเดียวกับหน้าข้อด่าน 1 (ภาพซ้าย แป้นขวา) ใช้ `AnswerDisplay` + `Keypad` โดย `Keypad disabled` เมื่อ step เป็น `try-ready`, `try-show`, `try-reveal`
+- แตะ "ตอบ" ในขั้นตัวอย่างผ่าน `tapDispatch` (tap guard §3.3.1 ทำงานตามปกติ) ยกเว้นกรณีค่าไม่ใช่ 3 ที่ขั้น demo ให้ล้าง `value` โดยไม่ dispatch และไม่บันทึกเวลา guard
+- key ของ `TenFrame`: demo `example-demo`, try-ready `example-try` (hidden), try-show `example-try-flash` (flash, `onFlashEnd → FLASH_END`), try-answering `example-try` (hidden), try-reveal `example-reveal` (show)
+- ข้อความเหนือภาพ: try-ready/show/answering ใช้ `dx.texts.flash.ready/show/hidden`; demo และ reveal ใช้ `example.texts.demo` / `example.texts.reveal`; ข้อความใต้ภาพของ try = `example.texts.try` (ตำแหน่งข้อความ LS ไม่ได้ระบุ ดูคำถามเปิด Q-DX2)
+- ห้ามแสดงคำว่าถูก/ผิด/เฉลย/คะแนน ตามกฎ §9 เดิม
+
+#### 14.1.5 เทสต์ที่กระทบและที่ต้องเพิ่ม
+
+เพิ่มใหม่ (Developer)
+- `machine.test.ts`: ตาราง §14.1.3 ทุกแถว, ค่าอื่นที่ demo ไม่เปลี่ยน phase, ทุก step ไม่มี effect `emit`, `answers`/`submitted`/`pending` ไม่เปลี่ยน, `dx.example` ไม่มี → ข้าม, STOP ระหว่าง example
+- `DX-ADD.test.ts`: `example.demo.count` และ `example.try.count` ไม่ตรงจำนวนจุดข้อ 1.1–1.4, `readyMs/flashMs` ตรงข้อจริง, ข้อความตรง LS §8.2.1
+- `DiagnosticPlayer.test.tsx` (fake timers): นับ `[data-dot]` ได้ 3 ค้างอยู่ที่ 10 วินาที, พิมพ์ 2 กด ตอบ ไม่ไปต่อและช่องว่างแล้ว, พิมพ์ 3 → "พร้อมนะ..." ถึง 899 ms → แฟลช 2 จุดถึง 1500 ms → ซ่อน (0 จุด) → ตอบ 5 → เห็น 2 จุดค้าง 2000 ms พร้อมข้อความ → ข้อ 1.1 เข้า "พร้อมนะ..."; reduced motion เวลาเท่าเดิม; ห่อ `StrictMode` แล้ว event เท่าเดิม (มีแค่ `session.started` ก่อนข้อ 1.1)
+- e2e `dx-add.spec.ts` (ทุก project): helper `passExample(page)`; เทสต์ 1 ตรวจว่า export ยังมี event **22 ตัว** เท่าเดิม และ `assertKidSafe` หน้าตัวอย่างทั้ง 3 ขั้น
+
+ที่กระทบ (ต้องแก้เพราะเดินจาก "ไปเลย" ของด่าน 1 ตรงไปข้อ 1.1)
+- unit/component: `machine.test.ts` (ลำดับ phase ครบ 20 ข้อ), `DiagnosticPlayer.test.tsx` (เทสต์ที่กด "ไปเลย" ด่าน 1 แล้วคาดว่าเห็น "พร้อมนะ..." และเทสต์ StrictMode ตอบ 2 ข้อ), `Play.test.tsx` ถ้าเดินไปถึงข้อ
+- e2e `tests/e2e/dx-add.spec.ts`: ฟังก์ชัน `play()` (ด่านแรกที่ `goButton.click()` แล้วรอแป้น enabled) และเทสต์ที่กด "ไปเลย" ด่าน 1 (ประมาณบรรทัด 88–96, 196, 226, 247 และเทสต์ 5–7 ที่เดินถึง 1.1) ให้เรียก `passExample` หลังกด "ไปเลย" ของด่าน 1
+- acceptance (**Tester ปรับตาม Test Plan** Developer ห้ามแก้): `tests/acceptance/helpers/dx.ts` (`beginSession`, ตัววนข้อที่รอ "ไปเลย" ด่านแรก) และเทสต์ที่กด "ไปเลย" ด่าน 1 ประมาณ 21 จุดใน `DX-ADD.spec.ts` ที่ต้องดูเป็นพิเศษ: TC-03 (ลำดับหน้าจอ เพิ่มหน้าตัวอย่าง), TC-08 (จังหวะแฟลชวัดจริงของข้อ 1.1), TC-09/TC-11 (หน้าเหมือนกันถูก/ผิด ไม่มีคำต้องห้าม), TC-13 (หมุนจอ), TC-20 (จำนวน event ต้องยัง 22), TC-70/TC-70e (แตะเบิ้ล "ไปเลย" ตอนนี้ตกที่หน้าตัวอย่าง ต้องไม่กด "ตอบ"), TC-80 (ทำครบด้วยเวลาจริง เพิ่มประมาณ 5 วินาที) ขนาดงานฝั่ง Tester: S–M
+
+#### 14.1.6 Acceptance Criteria เพิ่ม
+
+- [ ] **AC15** หลัง "ไปเลย" ของด่าน 1 เห็นตัวอย่าง 3 จุดค้างไว้ (นับ `[data-dot]` ได้ 3 ตลอด ≥ 10 วินาที) พิมพ์ 3 กด "ตอบ" จึงไปต่อ พิมพ์เลขอื่นแล้วไม่ไปต่อและช่องถูกล้าง
+- [ ] **AC16** ลองเอง: "พร้อมนะ..." 900 ms → เห็น 2 จุด 1500 ms → ซ่อน (0 จุด) → ตอบเลขใดก็ได้ → เห็น 2 จุดอีก 2000 ms พร้อมข้อความเฉลย → เข้า "พร้อมนะ..." ของข้อ 1.1 เอง ไม่มีข้อความบอกถูก/ผิด
+- [ ] **AC17** ตัวอย่างและลองเองไม่ทิ้งร่องรอย: export ของการทำครบมี event 22 ตัวเท่าเดิม, ข้อความ ack ของข้อ 1.1 = `รับแล้ว!` (ตัวแรก) เหมือนก่อนเพิ่มหน้าตัวอย่าง, `latencyMs` ของข้อ 1.1 นับหลังภาพซ่อนของข้อ 1.1 เท่านั้น
+- [ ] **AC18** หน้าตัวอย่างทั้ง 3 ขั้นไม่มีคำต้องห้ามตาม AC5 และใช้ได้ที่ 360px ไม่มี scroll แนวนอน
+
+### 14.2 บั๊ก: `item.answered` ของข้อ 5.4 อยู่หลัง `session.completed`
+
+**อาการ:** ในไฟล์ export ของ session แรกของลูก event `item.answered` ของข้อ 5.4 (ข้อสุดท้าย) อยู่หลัง `session.completed` ทั้งที่ `at` เท่ากัน (03:26:17.662) สรุปผลถูกต้อง เพราะ `session.completed.summary` คำนวณจาก state ไม่ใช่จากลำดับ event
+
+**สาเหตุ (ยืนยันจากโค้ด):** ไม่ใช่ลำดับการเขียนและไม่ใช่ลำดับ effect (`machine.ts` ส่ง effect `[item.answered, session.completed]` ตามลำดับถูก และ `useDiagnosticRunner` ส่งเป็นชุดเดียว) ปัญหาอยู่ 2 ชั้น
+1. `useDiagnosticRunner.dispatch` ประทับ `at: new Date().toISOString()` **ทีละ event ในลูปเดียวกัน** ข้อสุดท้ายที่ถามวิธีคิดจะ emit `item.answered` และ `session.completed` ใน transition เดียวกัน (`STRATEGY_PICK`) จึงได้ `at` เท่ากันระดับ ms
+2. `MemoryStore.listEvents` และ `IndexedDbStore.listEvents` เรียงด้วย `a.at.localeCompare(b.at) || a.id.localeCompare(b.id)` เมื่อ `at` เท่ากัน `id` (UUID สุ่ม) ตัดสินลำดับ จึงสลับได้แบบสุ่ม (ราว 50%) `exportData` ใช้ `listEvents` ไฟล์ export จึงผิดลำดับ ส่วน `groupSessions` เรียงด้วย `at` อย่างเดียว พึ่งลำดับเข้าของ store
+
+**วิธีแก้ (ตาม ADR-0008):**
+1. **`src/store/eventOrder.ts` (ใหม่):** `compareEvents(a: AppEvent, b: AppEvent): number` = `at` (เทียบสตริง ISO) แล้วลำดับชนิด (`session.started` 0, `item.answered`/`strategy.reported` 2, `session.completed`/`session.abandoned` 4 และชนิดใหม่ตาม ADR-0008 ข้อ 3) แล้ว `id`
+2. `MemoryStore.listEvents`, `IndexedDbStore.listEvents`, `groupSessions` (`sessions.ts`) ใช้ `compareEvents` (ลบตัวเรียงเดิม)
+3. **`at` เพิ่มขึ้นเคร่งครัดต่อ session:** เพิ่ม `createEventStamper()` (ไฟล์ใหม่ `src/store/stamp.ts`) คืน `next(): string` = `new Date(Math.max(Date.now(), last + 1)).toISOString()` แล้วจำ `last` `useDiagnosticRunner` สร้างตัวประทับ 1 ตัวต่อ session (`useRef`) และเรียกต่อ event
+4. ข้อมูลเก่า (session ที่บันทึกแล้วมี `at` ซ้ำ) **ไม่ต้องแก้ใน log** ตัวเรียงใหม่อ่านออกมาถูกลำดับ export ครั้งใหม่ก็ถูก
+
+**เทสต์ที่ต้องมี:**
+- `eventOrder.test.ts`: `at` เท่ากัน `item.answered` ต้องมาก่อน `session.completed` และ `session.abandoned` ทุกลำดับของ `id` (วน 200 ชุด `id` สุ่ม), `at` ต่างกันเรียงตาม `at`, ลำดับชนิดครบทุกชนิด
+- `progressStore.contract.ts` (ใช้กับ `MemoryStore` และ `IndexedDbStore`): เขียน `session.completed` (`id: 'a'`) ก่อน `item.answered` (`id: 'z'`) ที่ `at` เท่ากัน อ่านออกมาต้อง `item.answered` ก่อน
+- `exportImport.test.ts`: export แล้ว `events` ที่ `at` เท่ากันเรียง `item.answered` ก่อน `session.completed`
+- `sessions.test.ts`: fixture ข้อมูลเก่าที่ `at` ซ้ำ (ตามอาการข้อ 5.4) ต้องได้ `items` ครบ 20 ข้อ และ `endedAt` ไม่ก่อนข้อสุดท้าย
+- `stamp.test.ts`: นาฬิกาปลอมคืนเวลาเดิม 3 ครั้งต้องได้ `t`, `t+1`, `t+2` ms; นาฬิกาถอยหลังไม่ทำให้ `at` ถอย
+- `DiagnosticPlayer.test.tsx`: ทำข้อสุดท้ายจนจบ (ด่านที่ถามวิธีคิด) ด้วย `Date` ปลอมที่หยุดนิ่ง event 2 ตัวสุดท้ายต้องมี `at` ต่างกัน และ `item.answered` มาก่อน
+- e2e เทสต์ 1 (ทุก project): ตรวจไฟล์ export ของ session นั้นว่า `at` ของทุก event เพิ่มขึ้นเคร่งครัดตามลำดับใน array และ `session.completed` เป็นตัวสุดท้าย (รันกับ `E2E_DEV=1` อีก 1 ครั้งด้วย)
+
+### 14.3 `strategyLatencyMs` และความหมายของ `at`
+
+**ตรวจแล้ว:** ข้อที่ไม่ถามวิธีคิด `at` = เวลากด "ตอบ" ข้อที่ถามวิธีคิด (3.3, 3.4, ด่าน 4, 5.3, 5.4) `at` = เวลาเลือกวิธีคิดเสร็จ = เวลากด "ตอบ" + ack `timing.ackMs` (1000 ms) + เวลาที่ลูกอ่านและเลือกตัวเลือก `latencyMs` ไม่ได้รับผลเพราะวัดถึงตอนกด "ตอบ" (`useSilentTimer.submit()`) จึงถูกต้อง แต่ผู้วิเคราะห์ที่ใช้ `at` เป็นเวลาตอบจะคลาดเฉพาะข้อที่ถามวิธีคิด
+
+**กติกาใหม่ (ไม่เปลี่ยนความหมายของ `at` ไม่ทำให้ข้อมูลเก่าเสีย):**
+- `at` ยังเป็นเวลาบันทึก event (ADR-0008 ข้อ 1) ไม่แก้ค่าเก่า
+- เพิ่ม field เสริมใน `item.answered` (ไม่ bump `schemaVersion` ตาม ADR-0008 ข้อ 4)
+
+| field | ความหมาย | ที่มา | event เก่า |
+|---|---|---|---|
+| `answeredAt?: string` | เวลา ISO ที่ลูกกด "ตอบ" | ประทับตอน `SUBMIT` (ตอนเรียก `timer.submit()`) | ไม่มี ใช้ `answerTime(e)` = `answeredAt ?? at` (ข้อที่ไม่ถามวิธีคิดเท่ากับเวลาตอบพอดี ข้อที่ถามคลาดประมาณ 1–3 วินาที) |
+| `strategyLatencyMs?: number` | เวลาตั้งแต่หน้าเลือกวิธีคิดแสดงจนลูกแตะเลือก (ms ปัดเป็นจำนวนเต็ม) แยกจาก `latencyMs` | ตัวจับเวลาเงียบตัวที่ 2 (`createSilentTimer`) เริ่มตอนเข้า phase `strategy` หยุดตอน `STRATEGY_PICK` | ไม่มี |
+
+- เฉพาะข้อที่ถามวิธีคิดเท่านั้นที่มี `strategyLatencyMs` ถ้าแท็บถูกซ่อนระหว่างหน้าเลือกวิธีคิด ให้ **ไม่ใส่ field นี้** (ค่าใช้ไม่ได้ ไม่เดา) ไม่มีธง `strategyLatencyValid`
+- ค่าจริงไม่ควรต่ำกว่า 400 ms เพราะ tap guard §3.3.1 ทิ้ง input ในช่วงนั้น (บันทึกตามที่วัดได้ ไม่ปรับ)
+- **ห้ามแสดงในหน้าของลูก** และไม่ต้องแสดงในหน้าผลสำหรับพ่อ (เก็บใน log/export ให้ Designer วิเคราะห์)
+- ไม่มีผลต่อการประเมิน (ไม่ใช้ในความคล่อง ระดับ หรือคำแนะนำ)
+
+**การเปลี่ยนโค้ด:**
+- `RunnerAction`: `SUBMIT` เพิ่ม `answeredAt: string` (ประทับใน `DiagnosticPlayer.onSubmit`) และ `STRATEGY_PICK` เพิ่ม `strategyLatencyMs?: number`
+- `PendingAnswer`/`AnswerRecord` เพิ่ม `answeredAt: string`, `strategyLatencyMs?: number`; `toItemAnsweredEvent` ส่งต่อ
+- `ItemAnsweredEvent` เพิ่ม 2 field เสริม; `isAppEvent` ตรวจชนิด (`string` / `number`) เมื่อมีค่า
+- ใน `DiagnosticPlayer` เพิ่มตัวจับเวลาหน้าเลือกวิธีคิด (เริ่มเมื่อ `phase.kind === 'strategy'`, `invalidate` เมื่อ `visibilitychange` เป็น hidden) `useSilentTimer` ไม่เปลี่ยน
+- `src/engine/answerTime.ts`: `answerTime(e: ItemAnsweredEvent): string` = `e.answeredAt ?? e.at`
+
+**เทสต์:**
+- `machine.test.ts`: `STRATEGY_PICK` ที่มี `strategyLatencyMs` → event มีค่านั้น; ไม่ส่ง → ไม่มี field; `SUBMIT` → `answeredAt` อยู่ใน event ทั้งข้อที่ถามและไม่ถามวิธีคิด
+- `DiagnosticPlayer.test.tsx` (fake timers): ตอบข้อ 4.1 → รอ 1000 ms (ack) → รอ 2300 ms ที่หน้าเลือก → เลือก → `strategyLatencyMs` ≈ 2300 (± 50) และ `answeredAt` ก่อน `at` อย่างน้อย 3300 ms; ซ่อนแท็บระหว่างเลือก → ไม่มี `strategyLatencyMs`
+- `migrations.test.ts`: `isAppEvent` รับ event เก่าที่ไม่มี 2 field และปฏิเสธเมื่อชนิดผิด (`strategyLatencyMs: '5'`)
+- `answerTime.test.ts`: มี/ไม่มี `answeredAt`
+- e2e เทสต์ 1: ไฟล์ export ข้อที่ถามวิธีคิดทุกข้อมี `strategyLatencyMs` ≥ 0 ข้อที่ไม่ถามไม่มี และทุกข้อมี `answeredAt` ≤ `at`
+- ข้อมูลเก่าใน IndexedDB (fixture event ไม่มี field ใหม่) โหลดหน้าผลและ export ได้ ไม่ error
+
+**Acceptance Criteria เพิ่ม**
+- [ ] **AC19** event ของ session ใหม่: ทุก `item.answered` มี `answeredAt`, ข้อที่ถามวิธีคิด (3.3, 3.4, 4.1–4.4, 5.3, 5.4) มี `strategyLatencyMs` ข้ออื่นไม่มี และ `at` ทั้ง session เพิ่มขึ้นเคร่งครัดโดย `session.completed` เป็นตัวสุดท้าย
+- [ ] **AC20** session เก่า (ไม่มี field ใหม่ และมี `at` ซ้ำ) เปิดหน้าผล/ประวัติ/export ได้ถูกต้อง ลำดับ event ถูก
+
+### 14.4 ประเมินผลกระทบ: แยกเกณฑ์เวลาของ DX-ADD เป็น 2 ระดับ ("ไม่ต้องนับ" กับ "อัตโนมัติ")
+
+**ยังไม่ทำ (Designer เลื่อนการตัดสินไปหลังลูกทำ DX-ADD ซ้ำ 2026-09-30)** และไม่แก้ Lesson Spec ประเมินตามสมมติฐานที่ง่ายที่สุด: ทุกข้อที่มี `fluentMs` เดิมได้ 2 ค่า คือ `noCountMs` (หลวงกว่า) และ `automaticMs` (เข้มกว่า) ระดับด่านและคำแนะนำอ้างระดับใดระดับหนึ่งตามที่ Designer กำหนด
+
+**ขนาดรวม: M** ไม่มีการเปลี่ยน schema ที่ทำให้ข้อมูลเก่าพัง ความเสี่ยงหลักคือความหมายของระดับ `good/mid/low` ที่ผูกกับคำแนะนำขั้น 1–9
+
+| ชั้น | ต้องแก้ | ขนาด |
+|---|---|---|
+| Type (`engine/types.ts`) | `Item.fluentMs` คงไว้ (ค่า "ไม่ต้องนับ") + เพิ่ม `automaticMs?` (หรือ `fluency?: { noCountMs; automaticMs }`); `StageLevelCriteria`/`StageGroup` ระบุว่าใช้ระดับใด (`minFluent` แยกต่อระดับ) | S |
+| เนื้อหา (`content/diagnostics/DX-ADD.ts`) | ใส่ค่า 2 ระดับในข้อที่มี `fluentMs` (ด่าน 2–5 รวม 12 ข้อ) และปรับ `level`/`groups`/`recommendation` ตามที่ Designer กำหนด; เวอร์ชัน `DX-ADD v3` (เกณฑ์เปลี่ยน ผลเทียบกับ v2 ตรงๆ ไม่ได้) | S–M |
+| Engine | `isFluent()` (evaluate.ts) คืน 3 สถานะ (`automatic` / `no-count` / `slow`, `null` ถ้าไม่มีเกณฑ์) แทน `boolean \| null`; `summarizeStage` (`fluentCount` แยก 2 ระดับ), `evaluateGroup` (5A/5B/5C ต้องเลือกระดับ), `recommend` (เงื่อนไข `stage-not-good`), `machine.ts` (`PendingAnswer.fluent`, `AnswerRecord.fluent`) | M |
+| Event | เพิ่ม `fluentLevel?` และ `automaticMs?` (snapshot) ส่วน `fluent`/`fluentMs` เดิมคงไว้ ไม่ต้อง bump `schemaVersion` (ADR-0008) ข้อมูลเก่าคำนวณ 2 ระดับย้อนหลังได้เพราะ `latencyMs` และ `latencyValid` อยู่ใน log | S |
+| หน้าผลสำหรับพ่อ | คอลัมน์ "คล่อง" (`ใช่/ไม่/—`) เป็น 3 สถานะ, `results.levels`, ข้อความกลุ่ม 5A–5C, ตาราง §5.7 ข้อ 2 และ 5 ข้อความใหม่ Designer ต้องเขียน | S–M |
+| ผลเก่า | session v2 เดิมต้องแสดงตามเกณฑ์ v2 (ใช้ `summary` ที่เก็บไว้ และ `DX_ADD` v2 ต้องอยู่ใน registry ตามเวอร์ชัน) ไม่งั้น session `open` (§5.7) ประเมินใหม่ไม่ได้ | S |
+| เทสต์ unit | `evaluate.test.ts`, `recommend.test.ts`, `machine.test.ts`, `DX-ADD.test.ts` (ตารางเกณฑ์ 20 ข้อพิมพ์ใหม่จาก LS), `DiagnosticResults.test.tsx`, `migrations.test.ts` | M |
+| เทสต์ e2e/acceptance | e2e ตรวจข้อความระดับในหน้าผล; **acceptance (Tester)**: TC ที่ตรวจความคล่อง (TC-30, TC-33, TC-40, TC-41) และชุดข้อมูลใน `helpers/scenarios.ts` ต้องออกแบบใหม่จาก LS ฉบับที่ Designer แก้ | M (ฝั่ง Tester) |
+
+ข้อที่ Designer ต้องตอบก่อน (กำหนดขนาดจริง): (1) ระดับ `good/mid/low` ผูกกับ "ไม่ต้องนับ" หรือ "อัตโนมัติ" (2) 5A–5C ใช้ระดับใด (3) ต้องเป็น `DX-ADD v3` และแสดงผล v2 เดิมตามเกณฑ์เดิมหรือไม่ ถ้า Designer ตัดสินให้เปลี่ยนเฉพาะค่าเวลา (ไม่เพิ่มระดับ) งานเหลือ S (แก้ตัวเลขใน `DX-ADD.ts` กับตารางในเทสต์)
+
+### 14.5 แผนงานย่อยของส่วนเพิ่มนี้
+
+| ลำดับ | งาน | ขนาด |
+|---|---|---|
+| DX-1 | แก้ลำดับ event: `eventOrder.ts`, `stamp.ts`, ปรับ 2 store + `sessions.ts` + เทสต์ (§14.2) | S |
+| DX-2 | `answeredAt` + `strategyLatencyMs` + `answerTime` + `isAppEvent` + เทสต์ (§14.3) | S |
+| DX-3 | หน้าตัวอย่างและข้อลองเอง: type, content, machine, Player, เทสต์ unit/component (§14.1.1–14.1.4) | M |
+| DX-4 | ปรับ e2e (`passExample`) + เทสต์ e2e ใหม่ + รันครบ 3 project และ `E2E_DEV=1` (§14.1.5) | S |
+| DX-5 | Tester ปรับ Test Plan/acceptance ตาม §14.1.5 และ AC15–AC20 | S–M |
+
+ลำดับส่งมอบ: DX-1 → DX-2 (ไฟล์เดียวกัน ทำต่อกัน) → DX-3 → DX-4 ผ่าน Tester, Architect, Designer แล้ว push ตามปกติ DX-1/DX-2 ไม่กระทบสิ่งที่ลูกเห็น ถ้าเร่งจะ deploy แยกก่อนได้ เพราะ ADD-04 ต้องใช้ ขนาดรวมส่วนเพิ่ม: **M**
+
+### 14.6 คำถามที่ยังเปิดอยู่ (ส่วนเพิ่มนี้)
+
+| # | ถึง | คำถาม | ข้อเสนอ |
+|---|---|---|---|
+| Q-DX1 | Designer | ที่ขั้นตัวอย่าง ถ้าลูกพิมพ์เลขที่ไม่ใช่ 3 แล้วกด "ตอบ" (LS บอก "รับเฉพาะ 3") ให้ตอบสนองอย่างไร | ล้างช่องคำตอบเฉยๆ ไม่มีข้อความ ถ้าต้องการข้อความช่วย (เช่น "ลองนับอีกที") ขอเป็นข้อความใน LS | **ตัดสินแล้ว 2026-09-30: ตามข้อเสนอ**
+| Q-DX2 | Designer | ตำแหน่งข้อความ `demo`/`try` เหนือหรือใต้ภาพ และในขั้น try ข้อความ `try` แสดงตลอดขั้นหรือแค่ก่อนแฟลช | ข้อความ `try` อยู่ใต้ภาพตลอดขั้น (ผังเดียวกับคำสั่งใต้โจทย์ของข้อจริง) ข้อความเหนือภาพ = "พร้อมนะ..."/"ดู!"/"ซ่อนแล้ว! กี่จุดนะ?" ตามข้อจริง | **ตัดสินแล้ว 2026-09-30: ตามข้อเสนอ**
+| Q-DX3 | Designer | ตัดสินการแยกเกณฑ์ 2 ระดับ (§14.4) ได้หรือยัง | รอคำตอบ ไม่ทำในรอบนี้ | **เลื่อนตัดสิน (2026-09-30): ไม่ทำ DX-ADD v3 ก่อนลูกทำ DX-ADD ซ้ำหลัง ADD-04 §14.4 เก็บเป็นข้อมูลประเมิน ไม่ใช่คำถามที่รอคำตอบ**

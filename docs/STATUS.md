@@ -9,7 +9,7 @@
 ## สถานะตอนนี้
 
 **กำลังทำ:** ไม่มีงานที่กำลังพัฒนา M1 (DX-ADD) deploy ขึ้นเว็บแล้ว (CI ผ่านทุกขั้นรวม acceptance)
-**รอ:** พ่อทำเช็คลิสต์อุปกรณ์จริง ([รายงานรอบ 2 ข้อ 6](test-reports/DX-ADD-2026-09-30.md)) แล้วให้ลูกทำ DX-ADD และ export ผลส่งให้ Designer
+**รอ:** พ่อตอบคำถามที่ Designer ถามหลังวิเคราะห์ผล DX-ADD ครั้งแรก เพื่อกำหนดทิศทางบทเรียนแรก (M2) · พ่อทำเช็คลิสต์อุปกรณ์จริง ([รายงานรอบ 2 ข้อ 6](test-reports/DX-ADD-2026-09-30.md)) ถ้ายังไม่ได้ทำ
 
 ## Milestones
 
@@ -17,7 +17,7 @@
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
 | M1 แบบทดสอบวินิจฉัย DX-ADD | ✅ เสร็จ, deploy 2026-09-30 | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | Test Plan: [test-plans/DX-ADD.md](test-plans/DX-ADD.md) · รายงาน: [รอบ 1](test-reports/DX-ADD-2026-09-29.md), [รอบ 2](test-reports/DX-ADD-2026-09-30.md) |
-| M2 บทเรียนแรก | ⏳ ยังไม่เริ่ม | — | ขั้นบนบันไดขึ้นกับผล DX-ADD ของลูก (คาดว่าขั้น 1–4) |
+| M2 บทเรียนแรก ADD-04 | ✅ Lesson Spec อนุมัติ 2026-09-30 · ⏳ Architect กำลังเขียน Tech Spec | [lessons/ADD-04-make-ten.md](lessons/ADD-04-make-ten.md) | ขั้น 2 (ส่วน A) + ขั้น 4 (ส่วน B) เสนอเกณฑ์ ADR-0006 ไว้ใน §6 |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
 ## สถานะเอกสาร
@@ -53,7 +53,13 @@
 ## งานค้าง / รอคำตอบ
 
 - [ ] พ่อทำเช็คลิสต์อุปกรณ์จริงท้ายรายงาน Tester รอบ 2 (รวม M0 AC7: ติดตั้ง PWA และเปิด offline)
-- [ ] ลูกทำ DX-ADD แล้วพ่อ export ไฟล์ผลส่งให้ Designer
+- [x] ลูกทำ DX-ADD แล้วพ่อ export ไฟล์ผลส่งให้ Designer (ได้รับ 2026-09-30 ห้าม commit ไฟล์นี้)
+- [x] พ่อตอบคำถามของ Designer แล้ว (2026-09-30): ลูกใช้นิ้วและขยับปาก, เลือกวิธีคิดเอง, เริ่มซ้ำเพราะพ่ออธิบายข้อแรก, เห็นด้วยกับทางเลือก B
+- [x] พ่ออนุมัติ Lesson Spec ADD-04 และเกณฑ์ ADR-0006 ที่เสนอใน §6 (2026-09-30)
+- [x] พ่ออนุมัติเพิ่มหน้าตัวอย่างก่อนข้อ 1.1 ของ DX-ADD ([Lesson Spec §8.2.1](lessons/DX-ADD-diagnostic.md)) รอ Architect ทำ Tech Spec ส่วนเพิ่ม
+- [x] Architect เขียน [Tech Spec ADD-04](specs/ADD-04-make-ten.md) (ร่าง), [ADR-0008](architecture/adr/0008-event-log-order-time-and-fields.md), แก้ ADR-0006 เป็นยอมรับ และเพิ่ม [DX-ADD §14](specs/DX-ADD-diagnostic.md) แล้ว (2026-09-30) Designer ตอบคำถามแล้ว รอ Architect แก้ตามคำตอบและพ่อดูภาพรวม
+- [ ] ส่ง Developer + Tester: เริ่มที่ DX-1..DX-5 (DX-ADD) ก่อน แล้วค่อยรอบที่ 1 ของ ADD-04 (T1, T2, T4, T5, T6, T7)
+- [ ] เกณฑ์เวลาของ DX-ADD เข้มเกินไป (เสนอแยก "ไม่ต้องนับ" กับ "อัตโนมัติ") **Designer ยังไม่ได้ตัดสิน** ไม่แก้ในรอบนี้ ให้ Architect ประเมินผลกระทบเท่านั้น
 - [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
 
@@ -86,3 +92,5 @@
 | 2026-09-30 | M1 ผ่าน Architect และ Designer แล้ว push เพื่อ deploy |
 | 2026-09-30 | CI ผ่านทุกขั้น (lint, test, e2e, acceptance, build) และ deploy M1 ขึ้นเว็บแล้ว |
 | 2026-09-30 | ตรวจเอกสารสำหรับส่งต่อ session: CLAUDE.md เพิ่มหน้าที่ผู้ประสานงานและบทเรียนจาก M1, overview เพิ่ม acceptance, roles/README เพิ่มผู้ประสานงาน |
+| 2026-09-30 | พ่ออนุมัติ Lesson Spec ADD-04 และหน้าตัวอย่างของ DX-ADD Architect เขียน Tech Spec ADD-04 (แบ่งส่งมอบ 2 รอบ) และพบสาเหตุบั๊กลำดับ event (ตัวประทับ `at` ซ้ำ ms + `listEvents` เรียงตาม id สุ่ม) Designer ตอบคำถามที่บล็อก: Q3, Q8, Q9, Q11, Q14 แก้ Lesson Spec ตามนั้น |
+| 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
