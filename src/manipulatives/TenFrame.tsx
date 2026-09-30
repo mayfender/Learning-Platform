@@ -16,6 +16,8 @@ export interface TenFrameProps extends ManipulativeBaseProps {
   highlight?: { indices: readonly number[]; pulse?: boolean };
   /** เรียกเมื่อ interactive และแตะช่องใดก็ได้ (component ไม่เปลี่ยนค่าเอง ผู้เรียกตัดสิน) */
   onCellTap?: (index: number, state: CellState) => void;
+  /** แฟลช fade-in ด้วย CSS animation แทน timer (ใช้ใน ADD-04 ให้ภาพเห็นชัดตามเวลาจริงแม้นาฬิกาทดสอบหยุด) */
+  cssFadeIn?: boolean;
 }
 
 const SIZE_WIDTH: Record<NonNullable<TenFrameProps['size']>, string> = {
@@ -61,10 +63,11 @@ export function TenFrame(props: TenFrameProps) {
     added,
     highlight,
     onCellTap,
+    cssFadeIn = false,
   } = props;
   if (import.meta.env.DEV) validate(props);
 
-  const { ended, fadeClass, reducedMotion } = useFlash(mode, flashMs, onFlashEnd);
+  const { ended, fadeClass, reducedMotion } = useFlash(mode, flashMs, onFlashEnd, cssFadeIn);
 
   const ariaLabel = label ?? 'ตาราง 10 ช่อง';
   const width = SIZE_WIDTH[size];
@@ -94,14 +97,13 @@ export function TenFrame(props: TenFrameProps) {
 
   const opacity = fadeClass === 'idle' ? 1 : 0;
   const baseStyle: React.CSSProperties = { width, maxWidth: '100%', height: 'auto' };
-  // fade-in ของแฟลชเป็น CSS animation (ดู global.css) fade-out เป็น transition ของ opacity
   const style: React.CSSProperties = reducedMotion
     ? { ...baseStyle, opacity }
     : {
         ...baseStyle,
         opacity,
         transition: 'opacity 150ms ease',
-        ...(mode === 'flash' && fadeClass === 'idle'
+        ...(cssFadeIn && mode === 'flash' && fadeClass === 'idle'
           ? { animation: 'ten-frame-flash-in 150ms ease' }
           : {}),
       };
