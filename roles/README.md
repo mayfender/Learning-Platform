@@ -61,10 +61,19 @@ Architect ตรวจตาม Tech Spec ──► Designer ตรวจตา�
 
 ## ผู้ประสานงาน
 
-session หลักที่คุยกับพ่อเป็นผู้ประสานงาน: spawn agent ของทุก role (รวม Designer) เมื่อ agent ทำเสร็จให้กลับมารายงานพ่อและรอคำสั่งต่อไป ไม่ส่งต่อ role ถัดไปเอง ตรวจงานเอง และเป็นคนเดียวที่ commit และ push ส่วน role อื่นห้าม commit หรือ push เอง รายละเอียดอยู่ใน [CLAUDE.md](../CLAUDE.md) หัวข้อ "หน้าที่ของ session หลัก"
+session หลักที่คุยกับพ่อเป็นผู้ประสานงาน: spawn agent ของทุก role (รวม Designer) เมื่อ agent ทำเสร็จให้กลับมารายงานพ่อและรอคำสั่งต่อไป ไม่ส่งต่อ role ถัดไปเอง ตรวจงานเอง และเป็นคนเดียวที่ commit และ push ส่วน role อื่น commit/push ได้เฉพาะ feature branch ของงานนั้น (ห้ามแตะ `main`, ห้าม merge) รายละเอียดอยู่ใน [CLAUDE.md](../CLAUDE.md) หัวข้อ "หน้าที่ของ session หลัก" และ "Branch และ PR"
 
 ## วิธีเรียกใช้ role กับ AI
 
 พิมพ์บอก AI ให้ทำงานในบทนั้นโดยอ้างไฟล์ เช่น
 
 > ทำงานในบท Learning Designer ตาม `roles/learning-designer.md` ออกแบบบทเรียน ADD-04 จากผลแบบทดสอบนี้ ...
+
+## Branch และ PR ต่อ task
+
+1. Architect สร้าง feature branch `feature/<รหัสงาน>-<ชื่อสั้น>` ของทีมตอนเริ่ม task
+2. ทุก role ทำงานและ commit/push บน branch นี้
+3. Developer ทำเสร็จแล้วเปิด PR และ comment รายละเอียดตามรูปแบบรายงานส่งงาน
+4. Tester รับ PR เป็นงานถัดไป ทดสอบ และรายงานเป็น comment บน PR
+5. Architect และ Designer ตรวจบน PR เดียวกัน
+6. ผู้ประสานงาน merge เข้า `main` เมื่อผ่านทุก role และพ่ออนุมัติ (merge = deploy)

@@ -38,6 +38,7 @@ Developer ส่งงาน ──► Tester รันและทดสอบ 
 ## 4. ขอบเขตงาน
 
 **ทำ**
+- **รับ PR ที่ Developer เปิดเป็นงานถัดไป** checkout feature branch ทดสอบ แล้วรายงานเป็น comment บน PR (สรุปผล บั๊กพร้อมระดับ ลิงก์ Test Report) และแจ้ง Architect กับพ่อ
 - เขียน Test Plan ต่อ milestone หรือบทเรียน
 - เขียน acceptance test อัตโนมัติ (Playwright) ใน `tests/acceptance/`
 - รันทุกอย่าง แล้วทดสอบด้วยมือและแบบ exploratory ในเบราว์เซอร์
@@ -48,7 +49,7 @@ Developer ส่งงาน ──► Tester รันและทดสอบ 
 **ไม่ทำ**
 - ไม่แก้โค้ดใน `src/` และไม่แก้ `tests/e2e/` หรือ `*.test.*` ของ Developer
 - ไม่เปลี่ยน spec หรือเกณฑ์ผ่าน
-- ไม่ commit และไม่ push เอง (ส่งให้ผู้ประสานงานหลักตรวจก่อน commit)
+- ไม่แตะ `main` ไม่ merge ไม่ force-push (commit/push ได้เฉพาะไฟล์ของ Tester บน feature branch ของงานนั้น)
 
 ## 5. ข้อมูลที่ต้องใช้
 
