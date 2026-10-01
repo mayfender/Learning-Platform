@@ -4,7 +4,7 @@
 
 ## เริ่มทุก session ด้วยการอ่าน
 1. **[docs/STATUS.md](docs/STATUS.md)**: สถานะล่าสุด งานค้าง และขั้นถัดไป (สำคัญที่สุด)
-2. [roles/README.md](roles/README.md): 4 role ลำดับส่งต่องาน และกติการ่วม
+2. [roles/README.md](roles/README.md): 5 role ลำดับส่งต่องาน และกติการ่วม
 3. อ่านเพิ่มเฉพาะที่เกี่ยวกับงาน
    - [docs/math-learning-plan.md](docs/math-learning-plan.md): เป้าหมายและหลักการสอน
    - [docs/architecture/overview.md](docs/architecture/overview.md) + `docs/architecture/adr/`: สถาปัตยกรรม
@@ -14,8 +14,8 @@
 4. เช็คงานที่ค้างในเครื่อง: `git status` และ `git log origin/main..HEAD` (อาจมีงานของ agent จาก session ก่อนที่ยังไม่ commit หรือยังไม่ push)
 
 ## วิธีทำงาน
-- ทำงานผ่าน 4 role ตามไฟล์ใน `roles/` (Designer, Architect, Developer, Tester) โดยแต่ละ role มี AI model ที่กำหนดไว้ในไฟล์ของ role นั้น
-- ลำดับงาน: Lesson Spec → พ่ออนุมัติ → Tech Spec → Developer และ Tester ทำขนานกัน → Tester ทดสอบ → Architect ตรวจ → Designer ตรวจ → พ่อลองกับลูก (แต่ละขั้น spawn agent ของ role นั้น จบขั้นแล้วกลับมารายงานพ่อที่ session หลักและรอคำสั่งก่อนไปขั้นถัดไป ดูหัวข้อ "หน้าที่ของ session หลัก")
+- ทำงานผ่าน 5 role ตามไฟล์ใน `roles/` (Designer, UX/UI Designer, Architect, Developer, Tester) โดยแต่ละ role มี AI model ที่กำหนดไว้ในไฟล์ของ role นั้น
+- ลำดับงาน: Lesson Spec → พ่ออนุมัติ → UX/UI Designer ทำ mockup (`docs/mockups/<รหัสงาน>/`) → พ่อดูและอนุมัติ mockup → Tech Spec → Developer และ Tester ทำขนานกัน → Tester ทดสอบ → Architect ตรวจ → Designer ตรวจ → พ่อลองกับลูก (แต่ละขั้น spawn agent ของ role นั้น จบขั้นแล้วกลับมารายงานพ่อที่ session หลักและรอคำสั่งก่อนไปขั้นถัดไป ดูหัวข้อ "หน้าที่ของ session หลัก")
 - Tester ต้องทำงานเป็นอิสระ: ออกแบบเทสต์จาก spec โดยไม่อ่านโค้ด และรายงานตรงไปที่ Architect และพ่อ
 - รหัสงาน: `ADD-04`, `DX-ADD` ฯลฯ ใช้ชื่อไฟล์เดียวกันทั้งใน `docs/lessons/` และ `docs/specs/`
 - ห้ามเปลี่ยนเนื้อหาการสอน โจทย์ หรือเฉลยที่อนุมัติแล้ว ถ้าเจอปัญหา ให้รายงานกลับไปที่ role ต้นทาง
@@ -24,7 +24,7 @@
 
 ## หน้าที่ของ session หลัก (ผู้ประสานงาน)
 session ที่คุยกับพ่อโดยตรงคือผู้ประสานงาน มีหน้าที่ดังนี้
-- **งานของทั้ง 4 role (Designer, Architect, Developer, Tester) ทุกชิ้น ทั้งเล็กและใหญ่ รวมถึงการตรวจงานในบทของ role นั้น ให้ spawn ไปยัง agent ของ role นั้น** ที่ใช้ model ตามไฟล์ role (Designer = Opus) ห้ามทำแทนใน session หลัก (เขียน/แก้ Lesson Spec, วิเคราะห์ผลลูก, ตอบคำถามเชิงการสอน, แก้ ADR/spec/config, แก้โค้ด) session หลักทำหน้าที่ผู้ประสานงานล้วนๆ: คุยกับพ่อ ส่งงาน ตรวจรายงาน commit และ push
+- **งานของทั้ง 5 role (Designer, UX/UI Designer, Architect, Developer, Tester) ทุกชิ้น ทั้งเล็กและใหญ่ รวมถึงการตรวจงานในบทของ role นั้น ให้ spawn ไปยัง agent ของ role นั้น** ที่ใช้ model ตามไฟล์ role (Designer = Opus) ห้ามทำแทนใน session หลัก (เขียน/แก้ Lesson Spec, วิเคราะห์ผลลูก, ตอบคำถามเชิงการสอน, แก้ ADR/spec/config, แก้โค้ด) session หลักทำหน้าที่ผู้ประสานงานล้วนๆ: คุยกับพ่อ ส่งงาน ตรวจรายงาน commit และ push
 - **วงจรการทำงาน (ตัดสินเมื่อ 2026-09-30):** ผู้ประสานงาน spawn agent ที่รับผิดชอบ → agent ทำเสร็จ (landing) → **กลับมาที่ session หลักเพื่อรายงานพ่อ แล้วรอคำสั่งถัดไป** ห้ามส่งต่อให้ role ถัดไปเองโดยอัตโนมัติ ก่อนรายงานให้ตรวจงานของ agent เองตามข้อ "ห้ามเชื่อรายงานของ agent" และข้อสงสัยที่เจอให้เสนอเป็นงานถัดไปของ role ที่เป็นเจ้าของในรายงาน (เรื่องที่ต้องให้พ่อตัดสินให้ถามพ่อ) รอพ่อสั่งให้ส่ง agent ไหนต่อ
 - **คำสั่งที่ส่งให้ subagent ต้องมีครบ:** ไฟล์ role ที่ต้องอ่าน, spec ที่ใช้, ชื่อ feature branch ที่ทำงานอยู่ (ดูหัวข้อ "Branch และ PR"), ขอบเขต (ไฟล์ไหนแก้ได้/ห้ามแก้), คำตอบของคำถามที่ตัดสินแล้ว, "commit/push ได้เฉพาะ feature branch ห้ามแตะ `main` ห้าม merge ห้าม force-push", "ปิด server ที่เปิด", "รันเทสต์แบบ project เดียวระหว่างแก้ แล้วค่อยรันครบตอนจบ" และรูปแบบรายงานกลับ (ภาษาไทย สั้น)
 - **คำสั่งของ Designer agent:** ให้อ่านไฟล์ role, `docs/math-learning-plan.md`, Lesson Spec ที่เกี่ยว, ผลของลูก (ไฟล์ export ห้าม commit) และคำตอบของพ่อ พร้อมระบุว่าเขียน/แก้ไฟล์ไหนใน `docs/lessons/` และรายงานกลับเป็นภาษาไทย พร้อมคำถามที่ต้องให้พ่อตัดสิน

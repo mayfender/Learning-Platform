@@ -1,10 +1,11 @@
 # Roles และลำดับการทำงาน
 
-โปรเจกต์นี้แบ่งงานเป็น 4 role และมีเจ้าของโปรเจกต์ (พ่อ) เป็นผู้ตัดสินใจสุดท้าย
+โปรเจกต์นี้แบ่งงานเป็น 5 role และมีเจ้าของโปรเจกต์ (พ่อ) เป็นผู้ตัดสินใจสุดท้าย
 
 | Role | AI Model | ไฟล์ | ผลงานหลัก | เก็บไว้ที่ |
 |---|---|---|---|---|
 | ผู้เชี่ยวชาญออกแบบการเรียนรู้ (Learning Designer) | Opus | [learning-designer.md](learning-designer.md) | Lesson Spec | `docs/lessons/` |
+| UX/UI Designer | Sonnet | [ux-ui-designer.md](ux-ui-designer.md) | Mockup ที่คลิกดูได้ | `docs/mockups/` |
 | Software Architect | Sonnet | [software-architect.md](software-architect.md) | Architecture Overview, ADR, Tech Spec | `docs/architecture/`, `docs/specs/` |
 | Developer | Sonnet | [developer.md](developer.md) | โค้ด, เทสต์, รายงานส่งงาน | `src/`, `tests/e2e/`, `docs/specs/` |
 | Tester | Sonnet | [tester.md](tester.md) | Test Plan, acceptance test, Test Report | `docs/test-plans/`, `tests/acceptance/`, `docs/test-reports/` |
@@ -17,7 +18,7 @@
 พ่อ (เป้าหมาย / ผลการทดสอบของลูก)
    │
    ▼
-Learning Designer ──► Lesson Spec ──► [พ่ออนุมัติ]
+Learning Designer ──► Lesson Spec ──► [พ่ออนุมัติ] ──► UX/UI Designer ──► Mockup ──► [พ่อดูและอนุมัติ]
                                           │
                                           ▼
 Software Architect ──► Tech Spec (+ ADR ถ้ามีการตัดสินใจใหม่)

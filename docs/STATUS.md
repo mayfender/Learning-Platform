@@ -32,7 +32,7 @@
 | Tech Spec M0 | เสร็จ |
 | Tech Spec DX-ADD | เสร็จ (มี §3.3.1 กันแตะเบิ้ล 400ms เพิ่ม 2026-09-30) |
 | Test Plan / Test Report DX-ADD | รอบ 2 ผ่าน |
-| [roles/](../roles/README.md) | 4 role: Designer, Architect, Developer, Tester |
+| [roles/](../roles/README.md) | 5 role: Designer, UX/UI Designer, Architect, Developer, Tester |
 
 ## การตัดสินใจสำคัญ (ของเจ้าของโปรเจกต์)
 
