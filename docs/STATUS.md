@@ -17,7 +17,7 @@
 |---|---|---|---|
 | M0 โครงโปรเจกต์ | ✅ เสร็จ, deploy แล้ว | [specs/M0-scaffold.md](specs/M0-scaffold.md) | AC 12/13 เหลือ AC7 (ติดตั้ง PWA และใช้ offline บนอุปกรณ์จริง) |
 | M1 แบบทดสอบวินิจฉัย DX-ADD | ✅ เสร็จ, deploy 2026-09-30 | [lessons/DX-ADD-diagnostic.md](lessons/DX-ADD-diagnostic.md) · [specs/DX-ADD-diagnostic.md](specs/DX-ADD-diagnostic.md) | Test Plan: [test-plans/DX-ADD.md](test-plans/DX-ADD.md) · รายงาน: [รอบ 1](test-reports/DX-ADD-2026-09-29.md), [รอบ 2](test-reports/DX-ADD-2026-09-30.md) |
-| M2 บทเรียนแรก ADD-04 | ✅ Lesson Spec อนุมัติ 2026-09-30 · ⏳ Architect กำลังเขียน Tech Spec | [lessons/ADD-04-make-ten.md](lessons/ADD-04-make-ten.md) | ขั้น 2 (ส่วน A) + ขั้น 4 (ส่วน B) เสนอเกณฑ์ ADR-0006 ไว้ใน §6 |
+| M2 บทเรียนแรก ADD-04 | ❌ ยกเลิก 2026-10-02: พ่อทดลองแล้วเห็นว่าง่ายเกินไป ใช้งานไม่ได้ ลบเอกสารและ branch ออกจาก repo (commit เดิมยังเรียกได้ที่ `refs/pull/1/head`) แทนที่ด้วย ADD-05 | — | ADR-0006 และ ADR-0008 ที่ได้จากงานนี้ยังใช้ต่อ |
 | M3+ บทเรียนถัดไป, Leitner, อุปกรณ์จำลองชิ้นอื่น | ⏳ | — | |
 
 ## สถานะเอกสาร
@@ -57,12 +57,10 @@
 - [x] พ่อตอบคำถามของ Designer แล้ว (2026-09-30): ลูกใช้นิ้วและขยับปาก, เลือกวิธีคิดเอง, เริ่มซ้ำเพราะพ่ออธิบายข้อแรก, เห็นด้วยกับทางเลือก B
 - [x] พ่ออนุมัติ Lesson Spec ADD-04 และเกณฑ์ ADR-0006 ที่เสนอใน §6 (2026-09-30)
 - [x] พ่ออนุมัติเพิ่มหน้าตัวอย่างก่อนข้อ 1.1 ของ DX-ADD ([Lesson Spec §8.2.1](lessons/DX-ADD-diagnostic.md)) รอ Architect ทำ Tech Spec ส่วนเพิ่ม
-- [x] Architect เขียน [Tech Spec ADD-04](specs/ADD-04-make-ten.md) (ร่าง), [ADR-0008](architecture/adr/0008-event-log-order-time-and-fields.md), แก้ ADR-0006 เป็นยอมรับ และเพิ่ม [DX-ADD §14](specs/DX-ADD-diagnostic.md) แล้ว (2026-09-30) Designer ตอบคำถามแล้ว รอ Architect แก้ตามคำตอบและพ่อดูภาพรวม
+- [x] Architect เขียน Tech Spec ADD-04 (ถูกลบแล้ว) (ร่าง), [ADR-0008](architecture/adr/0008-event-log-order-time-and-fields.md), แก้ ADR-0006 เป็นยอมรับ และเพิ่ม [DX-ADD §14](specs/DX-ADD-diagnostic.md) แล้ว (2026-09-30) Designer ตอบคำถามแล้ว รอ Architect แก้ตามคำตอบและพ่อดูภาพรวม
 - [x] DX-1..DX-5 (DX-ADD ส่วนเพิ่ม) เสร็จและผู้ประสานงานตรวจแล้ว (2026-09-30): lint ผ่าน, unit 310/310, e2e 37 ผ่าน/8 ข้าม, acceptance 142 ผ่าน/0 ไม่ผ่าน (194 ข้ามตามขอบเขต), ลองเล่นใน dev (StrictMode) เห็นตัวอย่าง 3 จุดค้าง → ลองเอง 2 จุด → เฉลยภาพ → ข้อ 1.1 (7 จุด) ไม่มี event ของตัวอย่าง และข้อ 5.4 อยู่ก่อน session.completed ยังไม่ push (รอพ่อตัดสิน)
 - [x] Architect (ผู้ประสานงาน) ตัดสินข้อสงสัยของ Developer/Tester แล้ว ([DX-ADD spec §16](specs/DX-ADD-diagnostic.md)): compareEvents อยู่ store, เพิ่ม `data-dot` ใน TenFrame ตอน T2, ขั้นเฉลยภาพยอมรับตามที่ทำ, `at` ล้ำ `answeredAt` ไม่กี่ ms ยอมรับ
 - [x] push DX-ADD ส่วนเพิ่มขึ้นเว็บแล้ว (พ่ออนุมัติ 2026-09-30, commit 7ad2f92)
-- [x] ADD-04 รอบที่ 1 คลื่นที่ 1 เสร็จและผู้ประสานงานตรวจแล้ว (Dev-A T1/T4/T5, Dev-B T2, Tester Test Plan+acceptance รอบ 1): lint ผ่าน, unit 598/598, e2e 37 ผ่าน, acceptance DX-ADD 142 ผ่าน (DX-ADD ไม่พัง) ข้อสงสัยตัดสินใน [ADD-04 spec §17](specs/ADD-04-make-ten.md) ยังไม่ push (ยังไม่มีหน้าจอ)
-- [ ] ADD-04 รอบที่ 1 คลื่นที่ 2: T6 (LessonPlayer เช็คก่อน + ส่วน A) + T7 (หน้าพ่อ) ต้องเพิ่ม `data-cell-highlight` แล้วรัน acceptance ADD-04 ให้ผ่าน, Architect ตรวจ, พ่อลองบนแท็บเล็ตจริง ก่อน push **Branch: `feature/ADD-04-make-ten`** (งาน ADD-04 ต่อจากนี้ทำบน branch นี้ ไม่ใช่ `main`)
 - [ ] เกณฑ์เวลาของ DX-ADD เข้มเกินไป (เสนอแยก "ไม่ต้องนับ" กับ "อัตโนมัติ") **Designer ยังไม่ได้ตัดสิน** ไม่แก้ในรอบนี้ ให้ Architect ประเมินผลกระทบเท่านั้น
 - [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
 - [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
@@ -100,3 +98,4 @@
 | 2026-09-30 | พ่อกำหนด Branch และ PR: task ใหม่ให้ Architect สร้าง feature branch ของทีม, Developer เปิด PR เมื่อเสร็จและ comment รายละเอียด, Tester รับ PR เป็นงานถัดไปและ comment ผล, ผู้ประสานงาน merge เมื่อผ่านและพ่ออนุมัติ (อัปเดต CLAUDE.md, roles/*, ใช้กับ task ใหม่ ส่วน ADD-04 ที่กำลังทำอยู่ทำต่อบน `main` ในเครื่องจนจบรอบนี้) |
 | 2026-09-30 | พ่อเปลี่ยน workflow: งานของทุก role (รวม Designer) ทุกชิ้นให้ spawn agent ของ role นั้น จบแล้วกลับมารายงานที่ session หลักและรอคำสั่งพ่อ ไม่ส่งต่อ role ถัดไปเอง (อัปเดต CLAUDE.md และ roles/README.md) |
 | 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
+| 2026-10-02 | พ่อสั่งยกเลิก ADD-04: ปิด PR 1, ลบ branch feature/ADD-04-make-ten และลบ Lesson Spec/Tech Spec ของ ADD-04 ออกจาก main (โค้ดรอบ 1 อยู่แค่บน branch จึงไม่เคยเข้า main) |
