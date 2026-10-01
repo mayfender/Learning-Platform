@@ -925,3 +925,10 @@ Tester ออกแบบ acceptance เองจาก LS และเอกส
 - **ส่วนที่แก้นอกขอบเขตที่ระบุ (ต้องให้ Architect รับทราบ):** (1) engine `machine.ts`: เพิ่ม action `PARENT_CONTINUE` (ไปต่อโดยไม่ปิดธง) และหน้าเปิด "ไปเลย" ก่อน A2 ซ้ำ/A3 ชุดใหม่; `plan.ts`: A3 ชุดใหม่ต่อท้ายด้วยข้อสรุปกฎ A (2) content: `sittingIntro.button` "ไปเลย"→"เริ่ม" (ซ้ำกับปุ่มหน้าเปิดส่วน), เพิ่ม `numberTalks.openingNote` (LS §5 วงเล็บ "ถามด้วยความอยากรู้ ไม่ใช่จับผิด" ที่หายไป) (3) `useActivityRunner` option `syncRender` (flushSync) (4) `TenFrame`/`useFlash` prop `cssFadeIn` (opt-in, DX-ADD ไม่เปลี่ยน) (5) `global.css` reduced motion ใช้ `transition: none` (6) `TenFrameGrid` ช่องว่างมี rect โปร่งใสเสมอ (7) `ConfirmDialog` ปุ่มเพิ่ม
 - **ข้อขัดกับ acceptance (ห้ามแก้ tests/acceptance):** TC-A3-01 ใช้ข้อความนับนิ้วเก่า (LS ปัจจุบันเปลี่ยนแล้ว); TC-A2-02 คาด 20 event แต่ตามสเปกคือ 19
 - **ข้อจำกัดรอบ 1:** ครั้งที่ 2 เล่นได้เฉพาะ A3 ซ้ำ (ส่วน B ยังไม่มี) ถ้าจบครั้งที่ 2 ก็นับเป็น 1 ครั้ง อาจกระทบแผนรอบ 2
+
+### แก้ตามการตรวจ Architect รอบ 1 (Developer)
+
+- **Must-1:** `LessonPlayer.tsx` เลิกยกเว้น tap guard ที่หน้าเปิด A2 ซ้ำและหน้า `parent-note` (ใช้ `guardPointer` ทุกหน้า ยกเว้น `<dialog>` ตามเดิม) แก้เทสต์ของ Developer (`LessonPlayer.test.tsx`, `tests/e2e/add-04.spec.ts`) ให้รอ 450 ms ก่อนกรอกฟอร์มของพ่อ acceptance บางเคสของ Tester ที่คลิกหน้าเหล่านี้ทันทีจะพังชั่วคราว (Tester ปรับตาม)
+- **Must-2:** `plan.ts` เลิกใช้ธง `talk-A` กัน A3 ซ้ำ A3 ซ้ำวางเมื่อ `A.next === 'a3-retry'` และครั้งปัจจุบัน >= 2 ธงที่ค้างแทรกหน้าคำแนะนำไว้หัวคิวเท่านั้น `PARENT_CONTINUE` ใน `machine.ts` ใช้ได้เฉพาะ `talk-A`/`stalled-A` และ UI ซ่อนปุ่ม "ต่อไป" ของหน้าคำแนะนำอื่น (ไม่เปลี่ยนข้อความ)
+- **Must-3:** `progress.ts` เพิ่ม `isSittingDone`/`currentSitting`: ครั้งปัจจุบัน = 1 + จำนวนครั้งที่เสร็จติดกัน นับจาก block ใน `sittings[n].blocks` (check มี block จบ; A `next` เป็น null หรือ `a3-retry`; B `next` เป็น null; practice ครบ; challenge จบ) `sittingsCompleted` (นับ session.completed) ใช้แสดงหน้าพ่อเท่านั้น ไม่ migrate ข้อมูล
+- เทสต์เพิ่มใน `plan.test.ts` (9 เคส: A ผ่านทันที, A ไม่ผ่าน, ครั้ง 2 มีแค่ A3 ซ้ำ, stalled-A, เล่นครบ, ปิดแอปกลางส่วน A/หลัง A3 ซ้ำผ่าน/กลาง A3 ซ้ำ, PARENT_CONTINUE แล้วจบครั้ง)

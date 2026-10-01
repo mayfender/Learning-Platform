@@ -55,8 +55,10 @@ export interface ParentNoteRecord {
 
 export interface LessonProgress {
   lessonId: string;
+  // จำนวน session ของบทที่จบ (session.completed) ใช้แสดงในหน้าพ่อเท่านั้น ไม่ใช้กำหนดครั้งปัจจุบัน
   sittingsCompleted: number;
-  sitting: number; // ครั้งที่ปัจจุบัน = ครั้งที่จบแล้ว + 1
+  // ครั้งที่ปัจจุบัน = 1 + จำนวนครั้งที่เสร็จติดกันจากครั้งที่ 1 (นับจาก block ที่จัดการแล้ว Tech Spec §17 ข้อ 15)
+  sitting: number;
   runs: BlockRun[];
   check: { done: boolean; skipA12: boolean; skipB12: boolean };
   A: PartProgress;
@@ -221,6 +223,41 @@ export function applyEvent(
   return p;
 }
 
+// ครั้งที่ n เสร็จเมื่อทุก block ใน sittings[n].blocks ถูกจัดการแล้ว (Tech Spec §17 ข้อ 15)
+// A3 ซ้ำ/A2 ซ้ำไม่ใช่ block ของครั้งใดใน config จึงไม่ทำให้ครั้งที่ไหนนับว่าเสร็จเอง
+export function isSittingDone(
+  lesson: Lesson,
+  p: LessonProgress,
+  blocks: readonly BlockKind[],
+): boolean {
+  return blocks.every((kind) => {
+    switch (kind) {
+      case 'check':
+        return p.runs.some((r) => r.kind === 'check' && r.completed !== undefined);
+      case 'A':
+        // ผ่าน/ข้าม/stalled (next null) หรือ A2 ซ้ำจบแล้ว (รอ A3 ซ้ำในครั้งถัดไป)
+        return p.A.next === null || p.A.next === 'a3-retry';
+      case 'B':
+        return p.B.next === null;
+      case 'practice':
+        return lesson.practice.rounds.every((r) => p.practiceDone.includes(r.skillId));
+      case 'challenge':
+        return p.challengeDone;
+      default:
+        return true;
+    }
+  });
+}
+
+export function currentSitting(lesson: Lesson, p: LessonProgress): number {
+  let n = 1;
+  for (const config of lesson.sittings) {
+    if (config.no !== n || !isSittingDone(lesson, p, config.blocks)) break;
+    n += 1;
+  }
+  return n;
+}
+
 // คำนวณความก้าวหน้าจาก log ของบท (ต้องส่ง event ที่เรียงด้วย compareEvents แล้ว)
 export function deriveProgress(
   lesson: Lesson,
@@ -250,6 +287,6 @@ export function deriveProgress(
     progress = applyEvent(progress, e, ctx);
   }
   progress.sittingsCompleted = completed;
-  progress.sitting = completed + 1;
+  progress.sitting = currentSitting(lesson, progress);
   return progress;
 }

@@ -106,8 +106,8 @@ export function planSitting(
   const a = progress.A;
   if (a.next === 'main') push(blockSlot('A', 'main', A_ROUND.main));
   else if (a.next === 'a2-retry') push(blockSlot('A', 'a2-retry', A_ROUND.a2Retry));
-  else if (a.next === 'a3-retry' && !progress.pendingFlags.includes('talk-A')) {
-    // ยังไม่ผ่าน Number Talks ของพ่อ (talk-A ค้าง) → A3 ซ้ำรอ "ครั้งถัดไป"
+  else if (a.next === 'a3-retry' && progress.sitting >= 2) {
+    // A3 ซ้ำอยู่ครั้งถัดไปเสมอ ธงของพ่อไม่เป็นเงื่อนไข (หน้าคำแนะนำที่ค้างแทรกไว้หัวคิวด้านล่าง)
     push(blockSlot('A', 'a3-retry', A_ROUND.a3Retry));
   }
 

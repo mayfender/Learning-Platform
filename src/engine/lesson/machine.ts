@@ -1411,7 +1411,11 @@ export function createLessonMachine(
         return onChallenge(state, action);
 
       case 'parent-instruction': {
-        if (action.type === 'PARENT_CONTINUE') {
+        // "ต่อไป" ปิดธงไม่ได้ใช้ได้เฉพาะ talk-A/stalled-A; tray-B1 ต้องไปต่อด้วย "ทำแล้ว" เท่านั้น (§5.3)
+        if (
+          action.type === 'PARENT_CONTINUE' &&
+          (phase.reason === 'talk-A' || phase.reason === 'stalled-A')
+        ) {
           const next = advanceQueue(state);
           return { state: next.state, effects: next.effects };
         }

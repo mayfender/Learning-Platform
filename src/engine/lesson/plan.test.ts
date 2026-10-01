@@ -209,7 +209,7 @@ describe('AC12: ผ่าน/ไม่ผ่าน/ทำซ้ำ (ส่วน
     expect(progress.pendingFlags).toEqual([]); // ทั้ง talk-A และ stalled-A ถูกพ่อกด "ทำแล้ว"
   });
 
-  it('ปิดแอประหว่างหน้า Number Talks: talk-A ค้าง → ครั้งเดียวกันเปิดมาเจอคำแนะนำ ไม่เจอ A3 ซ้ำ', () => {
+  it('ปิดแอประหว่างหน้า Number Talks: talk-A ค้าง → ครั้งถัดไปเจอหน้าคำแนะนำแล้ว A3 ซ้ำ (ไม่ใช่หน้าคำแนะนำอย่างเดียว)', () => {
     const run = play(newRun(planFor()), {
       ...a3Fail,
       stopWhen: (r) => r.phase.kind === 'parent-instruction',
@@ -218,10 +218,138 @@ describe('AC12: ผ่าน/ไม่ผ่าน/ทำซ้ำ (ส่วน
     run.do({ type: 'STOP' });
     const stored = toStored(run.events, { sessionId: 's1', startMs: day(1) });
     const progress = deriveProgress(lesson, skills, stored);
-    expect(progress.sitting).toBe(1);
+    // A2 ซ้ำจบแล้ว → ครั้งที่ 1 เสร็จ (นับจาก block ไม่ต้องรอ session.completed)
+    expect(progress.sitting).toBe(2);
     expect(progress.pendingFlags).toEqual(['talk-A']);
     const plan = planSitting(ctx, progress, { seed: 3 });
-    expect(plan.queue).toEqual([{ type: 'instruction', reason: 'talk-A' }]);
+    expect(queueOf(plan).slice(0, 2)).toEqual(['talk-A', 'A:a3-retry:2']);
+  });
+});
+
+const queueOf = (plan: ReturnType<typeof planFor>): string[] =>
+  plan.queue.map((q) =>
+    q.type === 'block' ? `${q.slot.kind}:${q.slot.variant}:${q.slot.round}` : q.reason,
+  );
+
+// เล่นครั้งของรอบ 1: เหมือน restrictPlan ใน LessonPlayer (ตัดส่วนที่ยังไม่เปิดให้เล่นออก)
+function sitRound1(prior: AppEvent[], policy: Policy, n: number) {
+  const plan = planFor(prior, n);
+  const restricted = {
+    ...plan,
+    queue: plan.queue.filter(
+      (q) => q.type === 'instruction' || q.slot.kind === 'check' || q.slot.kind === 'A',
+    ),
+  };
+  const run = play(newRun(restricted), policy);
+  return { run, stored: toStored(run.events, { sessionId: `s${n}`, startMs: day(n) }) };
+}
+
+describe('ครั้งปัจจุบันนับจาก block (Must-3 / §17 ข้อ 15)', () => {
+  const a3Ok: Policy = { latencyMs: (i) => (i.id === 'c3' || i.id === 'c5' ? 9000 : 1000) };
+  const a3Bad: Policy = { latencyMs: (i) => (i.section === 'A3' || i.id === 'c5' ? 6000 : 1000) };
+
+  it('A ผ่านทันที: ครั้งที่ 1 เสร็จ → ครั้งที่ 2 เริ่มที่ B', () => {
+    const s1 = sitRound1([], a3Ok, 1);
+    const progress = deriveProgress(lesson, skills, s1.stored);
+    expect(progress.sitting).toBe(2);
+    expect(queueOf(planFor(s1.stored))[0]).toBe('B:main:0');
+  });
+
+  it('A ไม่ผ่าน: ครั้งถัดไปคือครั้งที่ 2 เริ่มที่ A3 ซ้ำ แล้วต่อ B (รอบ 2 ไม่ข้าม A3 ซ้ำ)', () => {
+    const s1 = sitRound1([], a3Fail, 1);
+    expect(deriveProgress(lesson, skills, s1.stored).sitting).toBe(2);
+    expect(queueOf(planFor(s1.stored)).slice(0, 2)).toEqual(['A:a3-retry:2', 'B:main:0']);
+  });
+
+  it('ครั้งที่ 2 ของรอบ 1 มีแค่ A3 ซ้ำ ผ่านแล้วจบ session: ยังเป็นครั้งที่ 2 และรอบ 2 วาง B ตามหลัง', () => {
+    const s1 = sitRound1([], a3Fail, 1);
+    const s2 = sitRound1(s1.stored, { latencyMs: () => 1000 }, 2);
+    expect(s2.run.of('block.completed').map((b) => [b.blockKind, b.round, b.outcome])).toEqual([
+      ['A', 2, 'passed'],
+    ]);
+    expect(s2.run.types().at(-1)).toBe('session.completed');
+    const progress = deriveProgress(lesson, skills, [...s1.stored, ...s2.stored]);
+    expect(progress.sittingsCompleted).toBe(2); // นับ session ไว้แสดงหน้าพ่อ
+    expect(progress.sitting).toBe(2); // แต่ครั้งปัจจุบันยังเป็น 2 (B ยังไม่ได้เล่น)
+    expect(progress.A.status).toBe('passed');
+    const plan = planFor([...s1.stored, ...s2.stored]);
+    expect(plan.sitting).toBe(2);
+    expect(queueOf(plan)).toEqual([
+      'B:main:0',
+      'practice:practice:0',
+      'practice:practice:0',
+      'challenge:challenge:0',
+    ]);
+  });
+
+  it('A3 ซ้ำไม่ผ่าน → stalled-A และครั้งปัจจุบันยัง 2 เปิด B ให้เล่น', () => {
+    const s1 = sitRound1([], a3Fail, 1);
+    const s2 = sitRound1(s1.stored, a3Bad, 2);
+    expect(s2.run.of('block.completed')[0]).toMatchObject({ outcome: 'not-passed' });
+    const all = [...s1.stored, ...s2.stored];
+    const progress = deriveProgress(lesson, skills, all);
+    expect(progress.A.status).toBe('stalled');
+    expect(progress.sitting).toBe(2);
+    expect(queueOf(planFor(all))[0]).toBe('B:main:0');
+  });
+
+  it('เล่นครบทุกครั้ง (A ไม่ผ่านก่อน): ครั้งปัจจุบัน 3 = มากกว่าจำนวนครั้งของบท และบทครบ', () => {
+    const s1 = sit([], a3Fail, 1);
+    const s2 = sit(s1.stored, { mind: () => 'skip' }, 2);
+    const progress = deriveProgress(lesson, skills, [...s1.stored, ...s2.stored]);
+    expect(progress.sitting).toBe(3);
+    expect(progress.challengeDone).toBe(true);
+    expect(planFor([...s1.stored, ...s2.stored]).lessonComplete).toBe(true);
+  });
+
+  it('ปิดแอปกลางทาง: กลางส่วน A ของครั้งที่ 1 ยังเป็นครั้งที่ 1', () => {
+    const run = play(newRun(planFor()), {
+      stopWhen: (r) => r.events.filter((e) => e.type === 'item.answered').length >= 10,
+    });
+    run.do({ type: 'STOP' });
+    const stored = toStored(run.events, { sessionId: 's1', startMs: day(1) });
+    expect(deriveProgress(lesson, skills, stored).sitting).toBe(1);
+  });
+
+  it('ปิดแอปหลัง A3 ซ้ำผ่านแต่ก่อนจบ session: ครั้งที่ 2 และ A ไม่ต้องทำซ้ำ', () => {
+    const s1 = sitRound1([], a3Fail, 1);
+    const run = play(newRun(planFor(s1.stored, 2)), {
+      latencyMs: () => 1000,
+      stopWhen: (r) => r.of('block.completed').length >= 1,
+    });
+    run.do({ type: 'STOP' });
+    const stored = toStored(run.events, { sessionId: 's2', startMs: day(2) });
+    const progress = deriveProgress(lesson, skills, [...s1.stored, ...stored]);
+    expect(progress.A.status).toBe('passed');
+    expect(progress.sitting).toBe(2);
+    expect(queueOf(planFor([...s1.stored, ...stored]))[0]).toBe('B:main:0');
+  });
+
+  it('ปิดแอประหว่าง A3 ซ้ำ (ยังไม่จบ block): ครั้งที่ 2 เริ่ม A3 ซ้ำใหม่', () => {
+    const s1 = sitRound1([], a3Fail, 1);
+    const run = play(newRun(planFor(s1.stored, 2)), {
+      stopWhen: (r) => r.events.filter((e) => e.type === 'item.answered').length >= 2,
+    });
+    run.do({ type: 'STOP' });
+    const stored = toStored(run.events, { sessionId: 's2', startMs: day(2) });
+    const all = [...s1.stored, ...stored];
+    expect(deriveProgress(lesson, skills, all).sitting).toBe(2);
+    expect(queueOf(planFor(all))[0]).toBe('A:a3-retry:2');
+  });
+
+  it('พ่อกด "ต่อไป" (PARENT_CONTINUE) แล้วปิดครั้ง: ครั้งถัดไปได้หน้าคำแนะนำ + A3 ซ้ำ ไม่ใช่หน้าคำแนะนำอย่างเดียว', () => {
+    const run = play(newRun(planFor()), {
+      ...a3Fail,
+      stopWhen: (r) => r.phase.kind === 'parent-instruction',
+    });
+    run.do({ type: 'PARENT_CONTINUE' });
+    play(run, a3Fail);
+    expect(run.types().at(-1)).toBe('session.completed');
+    const stored = toStored(run.events, { sessionId: 's1', startMs: day(1) });
+    const progress = deriveProgress(lesson, skills, stored);
+    expect(progress.pendingFlags).toEqual(['talk-A']);
+    expect(progress.sitting).toBe(2);
+    expect(queueOf(planFor(stored)).slice(0, 3)).toEqual(['talk-A', 'A:a3-retry:2', 'B:main:0']);
   });
 });
 
