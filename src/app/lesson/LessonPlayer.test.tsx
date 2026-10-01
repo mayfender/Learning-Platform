@@ -149,6 +149,10 @@ describe.each([false, true])('LessonPlayer ครั้งที่ 1 (StrictMod
     tick(450);
     click(T.next);
     expect(screen.getByText(T.parentNote.title)).toBeInTheDocument();
+    // tap guard 400 ms ครอบหน้าบันทึกของพ่อด้วย: แตะทันทีหลังส่งเครื่องต้องไม่ทำงาน
+    click(T.parentNote.skip);
+    expect(screen.getByText(T.parentNote.title)).toBeInTheDocument();
+    tick(450);
     click(T.parentNote.skip);
 
     const events = await eventsOf(store);

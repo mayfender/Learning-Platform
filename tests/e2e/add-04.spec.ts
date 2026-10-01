@@ -222,6 +222,7 @@ async function handoverToNote(page: Page): Promise<void> {
   await expect(page.getByText('วันนี้พอแค่นี้ ส่งเครื่องให้พ่อได้เลย')).toBeVisible();
   await nextPage(page);
   await expect(page.getByRole('heading', { name: 'บันทึกสำหรับพ่อ' })).toBeVisible();
+  await settle(page); // tap guard ครอบหน้าบันทึกของพ่อด้วย (Must-1)
 }
 
 test.describe('ADD-04 ครั้งที่ 1', () => {

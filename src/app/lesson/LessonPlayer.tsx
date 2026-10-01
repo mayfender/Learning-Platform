@@ -477,7 +477,9 @@ function LessonSession({ lesson, plan, learnerId }: LessonSessionProps) {
         <div className={styles.page}>
           <p className={styles.centerText}>{text}</p>
           <div className={styles.actions}>
-            <Button onClick={() => tapDispatch({ type: 'PARENT_CONTINUE' })}>{texts.next}</Button>
+            {(phase.reason === 'talk-A' || phase.reason === 'stalled-A') && (
+              <Button onClick={() => tapDispatch({ type: 'PARENT_CONTINUE' })}>{texts.next}</Button>
+            )}
             <Button variant="secondary" onClick={() => tapDispatch({ type: 'PARENT_DONE' })}>
               {g.done}
             </Button>
@@ -529,16 +531,9 @@ function LessonSession({ lesson, plan, learnerId }: LessonSessionProps) {
   }
 
   return (
-    // หน้าบันทึกของพ่อเป็นหน้าของพ่อ ไม่อยู่ใต้ tap guard (พ่อรับเครื่องต่อจากลูกทันทีได้)
-    <div
-      className={styles.wrap}
-      onClickCapture={
-        phase.kind === 'parent-note' ||
-        (phase.kind === 'block-intro' && phase.slot.variant === 'a2-retry')
-          ? undefined
-          : guardPointer
-      }
-    >
+    // ทุกหน้าอยู่ใต้ tap guard 400 ms (Tech Spec §3.3.1/§5.2) รวมหน้าเปิด A2 ซ้ำ/A3 ชุดใหม่และหน้า parent-note
+    // (กันแตะเบิ้ลของลูกไปกดฟอร์มของพ่อ) ยกเว้น <dialog> ของพ่อใน useTapGuard
+    <div className={styles.wrap} onClickCapture={guardPointer}>
       {content}
       <ConfirmDialog
         open={stopOpen}
