@@ -15,8 +15,8 @@
 
 ## วิธีทำงาน
 - **ระบบ role ใหม่ (ตัดสินเมื่อ 2026-10-02):** ใช้ 2 role: **Learning Designer** ([roles/learning-designer.md](roles/learning-designer.md), Opus) และ **Builder** ([roles/builder.md](roles/builder.md), Sonnet, รวม UX/UI + Developer) role เดิม (Architect, Developer, Tester, UX/UI Designer) **ปิดใช้งาน** อยู่ที่ `roles/disabled/` ห้าม spawn
-- ลำดับงาน: Learning Designer ทำ Lesson Spec → พ่ออนุมัติ → Builder ทำ mockup (`docs/mockups/<รหัสงาน>/`) → พ่อดูและอนุมัติ mockup → Builder เขียน Tech Spec สั้น โค้ด เทสต์ และทดสอบเอง → เปิด PR → ผู้ประสานงานตรวจเอง (รันเทสต์ ลองเล่นในเบราว์เซอร์ อ่านผล CI) → พ่ออนุมัติ → merge → พ่อลองกับลูก (แต่ละขั้น spawn agent ของ role นั้น จบขั้นแล้วกลับมารายงานพ่อที่ session หลักและรอคำสั่งก่อนไปขั้นถัดไป ดูหัวข้อ "หน้าที่ของ session หลัก")
-- ไม่มี Tester อิสระแล้ว ผู้ประสานงานต้องตรวจงานของ Builder เข้มขึ้น: รันเทสต์ซ้ำเอง และลองเล่นจริงในเบราว์เซอร์ทุกครั้ง ตรวจสิ่งที่ลูกเห็นจริง
+- ลำดับงาน: Learning Designer ส่ง requirement/Lesson Spec ให้ Builder → พ่ออนุมัติ requirement → Builder ออกแบบและสร้าง **HTML single page** เลย (ไม่มี mockup) บน `main` ที่ `public/topics/<เรื่อง>/NN-<ชื่อ>.html` (ชื่อไฟล์ขึ้นต้นด้วยเลขลำดับ) → พ่อทดสอบเอง → ผลใช้งานจริงกลับไป Learning Designer (แต่ละขั้น spawn agent ของ role นั้น จบขั้นแล้วกลับมารายงานพ่อที่ session หลักและรอคำสั่งก่อนไปขั้นถัดไป)
+- ไม่มี Tester, mockup, branch, PR และเทสต์อัตโนมัติสำหรับหน้า HTML แล้ว (พ่อกำหนด 2026-10-02): Builder ทำบน `main` ตรงๆ พ่อทดสอบเอง ผู้ประสานงานเปิดหน้าดูเบื้องต้นก่อนรายงาน (เช่น เปิดไฟล์ในเบราว์เซอร์ ดู console) ส่วนแอป React เดิมใน `src/` (DX-ADD) ยังใช้กติกาเดิม: lint/test/e2e/acceptance ต้องผ่านก่อน push
 - รหัสงาน: `ADD-04`, `DX-ADD` ฯลฯ ใช้ชื่อไฟล์เดียวกันทั้งใน `docs/lessons/` และ `docs/specs/`
 - ห้ามเปลี่ยนเนื้อหาการสอน โจทย์ หรือเฉลยที่อนุมัติแล้ว ถ้าเจอปัญหา ให้รายงานกลับไปที่ role ต้นทาง
 - **อัปเดต `docs/STATUS.md` ทุกครั้งที่งานเปลี่ยนสถานะ** (เริ่ม เสร็จ อนุมัติ หรือมีการตัดสินใจใหม่)
@@ -29,10 +29,10 @@ session ที่คุยกับพ่อโดยตรงคือผู้
 - **คำสั่งที่ส่งให้ subagent ต้องมีครบ:** ไฟล์ role ที่ต้องอ่าน, spec ที่ใช้, ชื่อ feature branch ที่ทำงานอยู่ (ดูหัวข้อ "Branch และ PR"), ขอบเขต (ไฟล์ไหนแก้ได้/ห้ามแก้), คำตอบของคำถามที่ตัดสินแล้ว, "commit/push ได้เฉพาะ feature branch ห้ามแตะ `main` ห้าม merge ห้าม force-push", "ปิด server ที่เปิด", "รันเทสต์แบบ project เดียวระหว่างแก้ แล้วค่อยรันครบตอนจบ" และรูปแบบรายงานกลับ (ภาษาไทย สั้น)
 - **คำสั่งของ Designer agent:** ให้อ่านไฟล์ role, `docs/math-learning-plan.md`, Lesson Spec ที่เกี่ยว, ผลของลูก (ไฟล์ export ห้าม commit) และคำตอบของพ่อ พร้อมระบุว่าเขียน/แก้ไฟล์ไหนใน `docs/lessons/` และรายงานกลับเป็นภาษาไทย พร้อมคำถามที่ต้องให้พ่อตัดสิน
 - **ห้ามเชื่อรายงานของ agent ก่อนตรวจเอง:** รันเทสต์ซ้ำเอง และ**ลองเล่นจริงในเบราว์เซอร์** (preview ตั้งไว้ใน `.claude/launch.json` ชื่อ `dev`) บั๊กร้ายแรงของ M1 ทั้ง 2 ตัวเจอด้วยวิธีนี้ ทั้งที่เทสต์ของ Developer ผ่านหมด
-- **`main` แตะได้เฉพาะผู้ประสานงาน** commit/push เข้า `main` และ merge PR เป็นหน้าที่ของผู้ประสานงานเท่านั้น (agent ของ role อื่น commit/push ได้เฉพาะ feature branch) และ **push/merge เข้า `main` = deploy ขึ้นเว็บที่ลูกใช้** ให้ทำเฉพาะเมื่อผ่านการตรวจของผู้ประสานงานและ CI แล้วและพ่ออนุมัติ หรือเป็นงานเอกสารหรือ config ที่ไม่กระทบแอป
+- **`main`:** Builder commit/push งาน HTML ใน `public/topics/` เข้า `main` ได้ตรงๆ ส่วนการแก้อื่น (`src/`, `.github/`, config) ผู้ประสานงานเท่านั้น commit/push เข้า `main` และ merge PR เป็นหน้าที่ของผู้ประสานงานเท่านั้น (agent ของ role อื่น commit/push ได้เฉพาะ feature branch) และ **push/merge เข้า `main` = deploy ขึ้นเว็บที่ลูกใช้** ให้ทำเฉพาะเมื่อผ่านการตรวจของผู้ประสานงานและ CI แล้วและพ่ออนุมัติ หรือเป็นงานเอกสารหรือ config ที่ไม่กระทบแอป
 - ถ้า session ขาดกลางคัน subagent จะหยุดด้วย session ใหม่ให้ดู `git status` แล้วส่ง subagent ใหม่ไปทำต่อจากงานที่ค้างในเครื่อง
 
-## Branch และ PR (ตัดสินเมื่อ 2026-09-30 ใช้กับ task ใหม่ทุกชิ้นนับจากนี้)
+## Branch และ PR (ใช้เฉพาะงานแก้แอป React ใน `src/`; งานหน้า HTML ของ Builder ทำบน `main` ตรงๆ ไม่ใช้หัวข้อนี้)
 1. **เริ่ม task ใหม่:** สั่ง **Builder** (หรือผู้ประสานงาน) สร้าง feature branch ของทีมจาก `main` ล่าสุด ชื่อ `feature/<รหัสงาน>-<ชื่อสั้น>` (เช่น `feature/ADD-05-tens`) แล้ว `git push -u origin <branch>` และบันทึกชื่อ branch ไว้ในหัว Tech Spec กับ `docs/STATUS.md` ทุก role ทำงานบน branch นี้ (รวมถึงเอกสารของ Learning Designer)
 2. **ระหว่างทำ:** agent ทุก role commit และ push ได้**เฉพาะ feature branch** เป็น commit เล็กๆ ที่สื่อความหมาย ห้ามแตะ `main` ห้าม merge ห้าม force-push
 3. **Builder ทำเสร็จ:** Builder เปิด PR (`gh pr create --base main --head <branch>`) แล้ว**ใส่รายละเอียดเป็น comment บน PR** ตามรูปแบบรายงานส่งงานใน [roles/builder.md](roles/builder.md) (สิ่งที่ทำ, AC, ผลเทสต์, ทดสอบบนเบราว์เซอร์, สิ่งที่ต่างจาก Spec, คำถาม) ผู้ประสานงานตรวจ PR เอง

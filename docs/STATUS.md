@@ -32,7 +32,7 @@
 | Tech Spec M0 | เสร็จ |
 | Tech Spec DX-ADD | เสร็จ (มี §3.3.1 กันแตะเบิ้ล 400ms เพิ่ม 2026-09-30) |
 | Test Plan / Test Report DX-ADD | รอบ 2 ผ่าน |
-| [roles/](../roles/README.md) | 2 role ใช้งาน: Learning Designer, Builder (UX/UI + Developer) · role เดิมปิดใช้งานที่ `roles/disabled/` |
+| [roles/](../roles/README.md) | 2 role ใช้งาน: Learning Designer, Builder (สร้าง HTML single page บน main ไม่มี mockup/branch/PR/เทสต์) · role เดิมปิดใช้งานที่ `roles/disabled/` |
 
 ## การตัดสินใจสำคัญ (ของเจ้าของโปรเจกต์)
 
@@ -96,3 +96,4 @@
 | 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
 | 2026-10-02 | พ่อสั่งยกเลิก ADD-04: ปิด PR 1, ลบ branch feature/ADD-04-make-ten และลบ Lesson Spec/Tech Spec ของ ADD-04 ออกจาก main (โค้ดรอบ 1 อยู่แค่บน branch จึงไม่เคยเข้า main) |
 | 2026-10-02 | พ่อวางระบบ role ใหม่: ปิดทุก role ยกเว้น Learning Designer และเพิ่ม Builder (UX/UI + Developer) รับงานต่อจาก Learning Designer, ล้างงานค้างทั้งหมด (ลบ branch ADD-05 และรายการค้างใน STATUS) เริ่มใหม่ |
+| 2026-10-02 | พ่อกำหนดวิธีทำงานของ Builder: งานเป็น "เรื่อง" (เช่น ฝึกการบวก) Builder รับ requirement จาก Learning Designer แล้วออกแบบและสร้าง HTML single page เลย (ไม่มี mockup) ชื่อไฟล์ขึ้นต้นด้วยเลขลำดับ ที่ `public/topics/<เรื่อง>/` import JS library จาก CDN ได้ ไม่เขียนเทสต์ พ่อทดสอบเอง ทำบน `main` ตรงๆ ไม่แยก branch/PR |
