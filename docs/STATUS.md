@@ -1,6 +1,6 @@
 # Project Status
 
-- อัปเดตล่าสุด: 2026-09-30
+- อัปเดตล่าสุด: 2026-10-02
 - เว็บ: https://mayfender.github.io/Learning-Platform/
 - Repo: https://github.com/mayfender/Learning-Platform
 
@@ -8,8 +8,8 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** ไม่มีงานที่กำลังพัฒนา M1 (DX-ADD) deploy ขึ้นเว็บแล้ว (CI ผ่านทุกขั้นรวม acceptance)
-**รอ:** พ่อตอบคำถามที่ Designer ถามหลังวิเคราะห์ผล DX-ADD ครั้งแรก เพื่อกำหนดทิศทางบทเรียนแรก (M2) · พ่อทำเช็คลิสต์อุปกรณ์จริง ([รายงานรอบ 2 ข้อ 6](test-reports/DX-ADD-2026-09-30.md)) ถ้ายังไม่ได้ทำ
+**กำลังทำ:** ไม่มี พ่อสั่งล้างงานค้างทั้งหมดและเริ่มใหม่ (2026-10-02) M1 (DX-ADD) deploy ขึ้นเว็บแล้วและใช้งานอยู่
+**รอ:** พ่อวางแผนขั้นถัดไปกับ Learning Designer ภายใต้ระบบ role ใหม่ (2 role: Learning Designer + Builder)
 
 ## Milestones
 
@@ -32,7 +32,7 @@
 | Tech Spec M0 | เสร็จ |
 | Tech Spec DX-ADD | เสร็จ (มี §3.3.1 กันแตะเบิ้ล 400ms เพิ่ม 2026-09-30) |
 | Test Plan / Test Report DX-ADD | รอบ 2 ผ่าน |
-| [roles/](../roles/README.md) | 5 role: Designer, UX/UI Designer, Architect, Developer, Tester |
+| [roles/](../roles/README.md) | 2 role ใช้งาน: Learning Designer, Builder (UX/UI + Developer) · role เดิมปิดใช้งานที่ `roles/disabled/` |
 
 ## การตัดสินใจสำคัญ (ของเจ้าของโปรเจกต์)
 
@@ -52,7 +52,6 @@
 
 ## งานค้าง / รอคำตอบ
 
-- [ ] พ่อทำเช็คลิสต์อุปกรณ์จริงท้ายรายงาน Tester รอบ 2 (รวม M0 AC7: ติดตั้ง PWA และเปิด offline)
 - [x] ลูกทำ DX-ADD แล้วพ่อ export ไฟล์ผลส่งให้ Designer (ได้รับ 2026-09-30 ห้าม commit ไฟล์นี้)
 - [x] พ่อตอบคำถามของ Designer แล้ว (2026-09-30): ลูกใช้นิ้วและขยับปาก, เลือกวิธีคิดเอง, เริ่มซ้ำเพราะพ่ออธิบายข้อแรก, เห็นด้วยกับทางเลือก B
 - [x] พ่ออนุมัติ Lesson Spec ADD-04 และเกณฑ์ ADR-0006 ที่เสนอใน §6 (2026-09-30)
@@ -61,9 +60,6 @@
 - [x] DX-1..DX-5 (DX-ADD ส่วนเพิ่ม) เสร็จและผู้ประสานงานตรวจแล้ว (2026-09-30): lint ผ่าน, unit 310/310, e2e 37 ผ่าน/8 ข้าม, acceptance 142 ผ่าน/0 ไม่ผ่าน (194 ข้ามตามขอบเขต), ลองเล่นใน dev (StrictMode) เห็นตัวอย่าง 3 จุดค้าง → ลองเอง 2 จุด → เฉลยภาพ → ข้อ 1.1 (7 จุด) ไม่มี event ของตัวอย่าง และข้อ 5.4 อยู่ก่อน session.completed ยังไม่ push (รอพ่อตัดสิน)
 - [x] Architect (ผู้ประสานงาน) ตัดสินข้อสงสัยของ Developer/Tester แล้ว ([DX-ADD spec §16](specs/DX-ADD-diagnostic.md)): compareEvents อยู่ store, เพิ่ม `data-dot` ใน TenFrame ตอน T2, ขั้นเฉลยภาพยอมรับตามที่ทำ, `at` ล้ำ `answeredAt` ไม่กี่ ms ยอมรับ
 - [x] push DX-ADD ส่วนเพิ่มขึ้นเว็บแล้ว (พ่ออนุมัติ 2026-09-30, commit 7ad2f92)
-- [ ] เกณฑ์เวลาของ DX-ADD เข้มเกินไป (เสนอแยก "ไม่ต้องนับ" กับ "อัตโนมัติ") **Designer ยังไม่ได้ตัดสิน** ไม่แก้ในรอบนี้ ให้ Architect ประเมินผลกระทบเท่านั้น
-- [ ] Q6 (Architect): เวลาของข้อ 5.3/5.4 ถูกตัดทิ้ง (`*`) ในการทดสอบครั้งหนึ่ง แต่ทำซ้ำไม่ได้ ให้สังเกตบนอุปกรณ์จริง
-- [ ] ชื่อแอปและ icon ถาวร (ไม่รีบ)
 
 ## ขั้นถัดไป
 
@@ -99,3 +95,4 @@
 | 2026-09-30 | พ่อเปลี่ยน workflow: งานของทุก role (รวม Designer) ทุกชิ้นให้ spawn agent ของ role นั้น จบแล้วกลับมารายงานที่ session หลักและรอคำสั่งพ่อ ไม่ส่งต่อ role ถัดไปเอง (อัปเดต CLAUDE.md และ roles/README.md) |
 | 2026-09-30 | ลูกทำ DX-ADD ครบ 20 ข้อ พ่อ export ผลให้ Designer วิเคราะห์ (แอปแนะนำขั้น 2 ตามกฎข้อ 2) Designer พบว่าเกณฑ์เวลาเริ่มต้นอาจเข้มเกินไปและมีข้อสังเกตเรื่อง log 2 จุดที่ต้องแจ้ง Architect กำลังคุยทิศทาง M2 กับพ่อ |
 | 2026-10-02 | พ่อสั่งยกเลิก ADD-04: ปิด PR 1, ลบ branch feature/ADD-04-make-ten และลบ Lesson Spec/Tech Spec ของ ADD-04 ออกจาก main (โค้ดรอบ 1 อยู่แค่บน branch จึงไม่เคยเข้า main) |
+| 2026-10-02 | พ่อวางระบบ role ใหม่: ปิดทุก role ยกเว้น Learning Designer และเพิ่ม Builder (UX/UI + Developer) รับงานต่อจาก Learning Designer, ล้างงานค้างทั้งหมด (ลบ branch ADD-05 และรายการค้างใน STATUS) เริ่มใหม่ |
