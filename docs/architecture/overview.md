@@ -1,6 +1,7 @@
 # Architecture Overview
 
-- เจ้าของเอกสาร: Software Architect
+- เจ้าของเอกสาร: Software Architect (role ปิดใช้งานตั้งแต่ 2026-10-02 เอกสารนี้อธิบายแอป React ใน `src/` เป็นข้อมูลอ้างอิง ผู้ประสานงานเป็นผู้แก้ไขต่อ)
+- หมายเหตุ: บทเรียนใหม่ไม่ใช้สถาปัตยกรรมนี้ แต่เป็นหน้า HTML single page ใน `public/topics/<เรื่อง>/` ที่ Builder สร้าง (เก็บผลใน localStorage และส่งออกเป็น JSON) ดู [roles/builder.md](../../roles/builder.md)
 - อัปเดตล่าสุด: 2026-09-29
 - ADR: [0001 deploy](adr/0001-static-web-deploy.md) · [0002 stack](adr/0002-stack-react-typescript-vite.md) · [0003 storage](adr/0003-local-storage-indexeddb.md) · [0004 content](adr/0004-content-as-typescript-modules.md) · [0005 manipulatives](adr/0005-manipulatives-svg-components.md) · [0006 SRS](adr/0006-spaced-repetition-leitner.md) · [0007 testing](adr/0007-testing-strategy.md) · [0008 event log](adr/0008-event-log-order-time-and-fields.md)
 
@@ -235,8 +236,8 @@ import ใช้วิธีรวมโดยตัด event ที่ `id` ซ
 |---|---|
 | `npm run dev` | dev server |
 | `npm test` | Vitest (unit + component + ตรวจเนื้อหา) |
-| `npm run e2e` | Playwright 3 project (e2e ของ Developer) |
-| `npm run acceptance` | acceptance test ของ Tester (`tests/acceptance/`, 3 project เดียวกัน) |
+| `npm run e2e` | Playwright 3 project (e2e ของแอป React) |
+| `npm run acceptance` | acceptance test ของแอป React (`tests/acceptance/`, 3 project เดียวกัน) |
 | `npm run build` | build static + PWA ลง `dist/` |
 | `npm run preview` | เปิด build จริงในเครื่อง |
 | `npm run lint` | ESLint + Prettier + type check |
