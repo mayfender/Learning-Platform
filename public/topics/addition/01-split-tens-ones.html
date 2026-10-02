@@ -1,0 +1,1360 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>แยกสิบ แยกหน่วย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@500;700&family=Noto+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f6fb;--card:#fff;--ink:#1b2233;--mut:#5b6479;--line:#dce1ec;
+  --accent:#2f62c9;--accent-ink:#fff;--soft:#e8effc;
+  --rod:#16998b;--rod2:#0f7f73;--dA:#2f62c9;--dB:#ee8420;--dC:#8a5cd0;
+  --ok-bg:#e3f4ea;--ok-ink:#16603f;--note-bg:#e8effc;--note-ink:#1d3f86;--warn-bg:#fff2dc;--warn-ink:#7a4a05;
+  --frame:#8b95ab;--frame-bg:#f8f9fd;--shadow:0 2px 10px rgba(20,30,60,.08);
+  --head:'Kodchasan','Noto Sans Thai',system-ui,sans-serif;--body:'Noto Sans Thai',system-ui,-apple-system,'Segoe UI',sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1320;--card:#1a2033;--ink:#e9edf7;--mut:#a0a9bf;--line:#2c3550;
+    --accent:#6f9bff;--accent-ink:#0b1226;--soft:#243051;
+    --rod:#2fc0b0;--rod2:#22a595;--dA:#7aa5ff;--dB:#ffa24d;--dC:#b58cf0;
+    --ok-bg:#173a2b;--ok-ink:#b6ecd1;--note-bg:#1f2c4d;--note-ink:#c3d5ff;--warn-bg:#3d2d10;--warn-ink:#ffd9a0;
+    --frame:#6b7590;--frame-bg:#141a2b;--shadow:0 2px 10px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:18px;line-height:1.55;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;touch-action:manipulation}
+#app{max-width:1040px;margin:0 auto;padding:0 16px 40px;min-height:100vh}
+.top{display:flex;align-items:center;gap:8px;min-height:52px;padding:6px 0}
+.top .crumb{flex:1;text-align:center;font-family:var(--head);font-weight:500;color:var(--mut);font-size:16px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link{background:none;border:0;color:var(--accent);padding:10px 8px;min-height:48px;cursor:pointer;font-size:16px}
+.skip{background:none;border:0;color:var(--mut);opacity:.55;padding:10px 8px;min-height:48px;font-size:13px;cursor:pointer}
+.skip.arm{opacity:1;color:var(--warn-ink);background:var(--warn-bg);border-radius:10px}
+h1,h2,h3{font-family:var(--head);margin:.2em 0 .4em;line-height:1.25}
+h1{font-size:34px}h2{font-size:26px}h3{font-size:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px}
+.card + .card{margin-top:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:52px;min-width:52px;padding:10px 22px;border-radius:14px;border:2px solid var(--accent);background:var(--card);color:var(--accent);font-weight:700;cursor:pointer;font-size:18px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.small{min-height:48px;padding:6px 14px;font-size:16px}
+.btn.ghost{border-color:var(--line);color:var(--ink);font-weight:500}
+.row-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;align-items:center}
+.menu{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:14px}
+.menu .tile{text-align:left;border:2px solid var(--line);background:var(--card);border-radius:16px;padding:16px;cursor:pointer;min-height:96px;display:block;width:100%}
+.menu .tile b{font-family:var(--head);font-size:20px;display:block}
+.menu .tile span{color:var(--mut);font-size:15px}
+.menu .tile.rec{border-color:var(--accent);background:var(--soft)}
+.sub{color:var(--mut);font-size:16px}
+.qwrap{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:760px){.qwrap{grid-template-columns:1.05fr 1fr;align-items:start}}
+.prompt{font-size:20px;text-align:center;margin-bottom:8px}
+.expr{font-family:var(--head);font-weight:700;font-size:44px;letter-spacing:.02em;text-align:center;line-height:1.2}
+.vis{min-height:150px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;background:var(--frame-bg);border:1px dashed var(--line);border-radius:14px;padding:10px}
+.vis:empty{display:none}
+.veil{font-family:var(--head);font-size:56px;color:var(--mut);opacity:.5;min-height:130px;display:flex;align-items:center}
+.ready{font-family:var(--head);font-size:28px;color:var(--mut);min-height:130px;display:flex;align-items:center}
+.scene{width:100%;height:auto;display:block;margin:0 auto}
+.scene .rodA{fill:var(--rod)}.scene .rodB{fill:var(--rod2)}
+.scene .rod line{stroke:var(--frame-bg);stroke-width:1.2;opacity:.75}
+.scene .rod line.mid{stroke-width:3;opacity:1}
+.scene .fbox{fill:var(--card);stroke:var(--frame);stroke-width:2}
+.scene .fgrid{stroke:var(--frame);stroke-width:1;opacity:.55}
+.scene .dA{fill:var(--dA)}.scene .dB{fill:var(--dB)}.scene .dC{fill:var(--dC)}
+.scene text{fill:var(--mut);font-family:var(--body);font-size:14px;text-anchor:middle}
+.scene text.plus{font-size:26px;font-weight:700}
+.scene .tap{cursor:pointer}
+.scene .tap .fbox{stroke:var(--accent);stroke-width:4}
+.scene .pulse{animation:pulse 1.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.scene .gather .dot{animation:gather .7s ease-in forwards;transform-box:fill-box;transform-origin:center}
+.scene .pop{animation:pop .5s ease-out;transform-box:fill-box;transform-origin:bottom}
+.fadein{animation:fadein .45s ease-out}
+@keyframes pulse{50%{opacity:.55}}
+@keyframes gather{to{transform:translate(var(--dx),var(--dy)) scale(.5);opacity:.35}}
+@keyframes pop{from{transform:scale(.2);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.scene .pulse,.scene .gather .dot,.scene .pop,.fadein{animation:none!important}}
+.live{font-family:var(--head);font-size:22px;text-align:center}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.ctrls:empty{display:none}
+.rows{display:grid;gap:10px;justify-items:center;margin:4px 0 10px}
+.row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;font-family:var(--head);font-size:28px;font-weight:500}
+.row .tx{color:var(--ink)}
+.row .ref{min-width:2.2ch;text-align:center;border-bottom:2px solid var(--line);color:var(--mut)}
+.fld{display:inline-flex;align-items:center;justify-content:center;min-width:3.2ch;height:52px;padding:0 10px;border:2px solid var(--line);border-radius:12px;background:var(--card);font-weight:700;cursor:pointer}
+.fld.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+.fld.bad{border-color:var(--warn-ink)}
+.fld::after{content:"";display:inline-block;width:2px;height:1.1em;margin-left:1px;background:transparent}
+.fld.on::after{background:var(--accent);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{background:transparent}}
+@media (prefers-reduced-motion:reduce){.fld.on::after{animation:none;background:var(--accent)}}
+.msg{min-height:0;margin:6px 0}
+.msg .box{border-radius:14px;padding:12px 14px;font-size:18px}
+.msg .note{background:var(--note-bg);color:var(--note-ink)}
+.msg .ok{background:var(--ok-bg);color:var(--ok-ink)}
+.msg .warn{background:var(--warn-bg);color:var(--warn-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:8px 0}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:320px;margin:8px auto 0}
+.keypad button{min-height:52px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:24px;font-family:var(--head);font-weight:500;cursor:pointer}
+.keypad button:active{background:var(--soft)}
+.keypad.off{opacity:.35;pointer-events:none}
+.choices{display:grid;gap:10px;margin:6px 0}
+.opt{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border-radius:14px;border:2px solid var(--line);background:var(--card);text-align:left;cursor:pointer;font-size:20px;width:100%}
+.opt .lab{font-family:var(--head);font-weight:700;color:var(--mut);min-width:1.4em}
+.opt.sel{border-color:var(--accent);background:var(--soft)}
+.opt:disabled{opacity:.55}
+.bond{width:100%;max-width:240px;height:auto}
+.bond line{stroke:var(--frame);stroke-width:3}
+.bond circle{fill:var(--card);stroke:var(--accent);stroke-width:3}
+.bond circle.empty{stroke-dasharray:6 5;stroke:var(--frame)}
+.bond text{fill:var(--ink);font-family:var(--head);font-size:24px;font-weight:700;text-anchor:middle}
+.bond text.lb{font-family:var(--body);font-size:14px;font-weight:400;fill:var(--mut)}
+.sol-rows{font-family:var(--head);font-size:22px;text-align:center;margin-top:6px}
+.rule{font-family:var(--head);font-size:26px;text-align:center;line-height:1.5;padding:10px 0}
+.pad{padding:12px 0}
+.dots{display:flex;gap:8px;justify-content:center;margin:6px 0}
+.dots i{width:10px;height:10px;border-radius:50%;background:var(--line)}
+.dots i.on{background:var(--accent)}
+details.dad{margin-top:22px;border:1px dashed var(--line);border-radius:14px;padding:6px 14px;background:var(--card)}
+details.dad summary{cursor:pointer;color:var(--mut);padding:10px 0;font-size:15px;min-height:48px;display:flex;align-items:center}
+details.dad h3{font-size:18px;margin-top:16px}
+details.dad table{border-collapse:collapse;width:100%;font-size:15px}
+details.dad td,details.dad th{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left}
+details.dad .small{font-size:14px;color:var(--mut)}
+textarea{width:100%;min-height:80px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:10px;font:inherit}
+.talk h3{margin-top:14px}
+.talk ul{margin:.3em 0 .6em 1.2em;padding:0}
+.hint{color:var(--mut);font-size:16px}
+.err{background:var(--warn-bg);color:var(--warn-ink);padding:14px;border-radius:12px}
+@media (max-width:420px){body{font-size:17px}.expr{font-size:38px}.row{font-size:24px}h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <button class="link" id="homeBtn" type="button" hidden>&larr; หน้าแรก</button>
+    <div class="crumb" id="crumb"></div>
+    <button class="skip" id="skipBtn" type="button" hidden>ข้าม</button>
+  </header>
+  <main id="stage"></main>
+</div>
+<noscript><p style="padding:16px">หน้านี้ต้องเปิดใช้ JavaScript</p></noscript>
+<script>
+'use strict';
+/* ============================================================
+   แยกสิบ แยกหน่วย (ADD-05)  ·  บวก ขั้น 6
+   หน้าเดียว ไม่ใช้ library ภายนอก ภาพทั้งหมดเป็น SVG ที่วาดเอง
+   ผลการเรียนเก็บใน localStorage ของเครื่องนี้เท่านั้น
+   ============================================================ */
+const LESSON_ID='ADD-05', LESSON_VERSION=1, STORE_KEY='lp:addition:01';
+const $=(s,r=document)=>r.querySelector(s);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const reduced=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const rnd=n=>Math.floor(Math.random()*n);
+const pick=a=>a[rnd(a.length)];
+const between=(lo,hi)=>lo+rnd(hi-lo+1);
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]];}return a;};
+const median=a=>{if(!a.length)return null;const s=a.slice().sort((x,y)=>x-y),m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+const SKIP=Symbol('skip'), HOME=Symbol('home');
+const stage=$('#stage'), crumb=$('#crumb'), homeBtn=$('#homeBtn'), skipBtn=$('#skipBtn');
+const DEBUG=/[?&]debug\b/.test(location.search);
+const todayStr=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+const thaiDate=s=>new Date(s+'T12:00:00').toLocaleDateString('th-TH',{day:'numeric',month:'long',year:'numeric'});
+
+/* ---------------- เก็บข้อมูลในเครื่อง ---------------- */
+function freshDB(){return {lessonId:LESSON_ID,lessonVersion:LESSON_VERSION,createdAt:new Date().toISOString(),sessions:[],practiceSets:[],kumon:[],review:{part1:{stage:0,next:null},part2:{stage:0,next:null}},plan:null,settings:{kumonHidden:false}};}
+let memoryOnly=false;
+function loadDB(){try{const r=localStorage.getItem(STORE_KEY);if(r){const d=JSON.parse(r);if(d&&d.sessions){d.review=d.review||freshDB().review;d.settings=d.settings||{};d.kumon=d.kumon||[];d.practiceSets=d.practiceSets||[];return d;}}}catch(e){memoryOnly=true;}return freshDB();}
+let DB=loadDB();
+function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(DB));}catch(e){memoryOnly=true;}}
+let S=null; // session ปัจจุบัน
+function beginSession(part,route){
+  S={sessionId:'s'+Date.now().toString(36)+rnd(1e4).toString(36),startedAt:new Date().toISOString(),endedAt:null,part,route:route||'normal',completed:false,reached:'',prep:null,numberTalk:null,activities:[],items:[],sets:[],skips:[],precheckAdvice:null,precheckChoice:null};
+  DB.sessions.push(S);save();return S;
+}
+function touch(reached){if(!S)return;S.endedAt=new Date().toISOString();if(reached)S.reached=reached;save();}
+function ensureSession(part,route){if(!S||S.part!==part||S.completed)beginSession(part,route);}
+
+/* ---------------- ภาพ: แท่ง กล่อง 10 ช่อง แผนผังแยกเลข ---------------- */
+const dotsOf=(c,n)=>Array(Math.max(0,n)).fill(c);
+function chunk10(d){const o=[];for(let i=0;i<d.length;i+=10)o.push(d.slice(i,i+10));return o.length?o:[[]];}
+/* o: rods[] (กลุ่มแท่ง), frames[][] (กล่อง แต่ละกล่องคือรายการสีของเม็ด), swap, tapFull, pending[], plus */
+function scene(o){
+  const R=22,RG=7,RH=110,CELL=22,FW=110,FH=44,FG=20,PAD=8,GAP=44;
+  const groups=(o.rods||[]).filter(n=>n>0);
+  let rodsW=0;groups.forEach((n,i)=>{rodsW+=n*R+(n-1)*RG+(i?GAP:0);});
+  const frames=o.frames&&o.frames.length?o.frames:[[]];
+  const pend=o.pending||[];
+  const trayH=pend.length?Math.ceil(pend.length/5)*CELL+22:0;
+  const framesH=frames.length*FH+(frames.length-1)*FG;
+  const zoneH=framesH+trayH;
+  const hasRods=groups.length>0;
+  const H=Math.max(hasRods?RH:0,zoneH)+PAD*2+22;
+  const gapZ=hasRods?46:0;
+  const W=PAD*2+rodsW+gapZ+FW;
+  let rodsX=PAD,framesX=PAD+rodsW+gapZ;
+  if(o.swap&&hasRods){framesX=PAD;rodsX=PAD+FW+gapZ;}
+  if(!hasRods)framesX=PAD;
+  let s=`<svg class="scene${o.cls?' '+o.cls:''}" viewBox="0 0 ${W} ${H}" style="max-width:${Math.round(W*1.5)}px" role="img" aria-label="${o.aria||'แท่งและกล่องเม็ด'}">`;
+  // แท่ง
+  let x=rodsX;
+  groups.forEach((n,gi)=>{
+    if(gi){s+=`<text class="plus" x="${x+GAP/2-2}" y="${PAD+RH/2+9}">+</text>`;x+=GAP;}
+    for(let i=0;i<n;i++){
+      s+=`<g class="rod${o.popLast&&gi===groups.length-1&&i===n-1?' pop':''}" transform="translate(${x},${PAD})"><rect class="rodA" x="0" y="0" width="${R}" height="${RH/2}" rx="4"/><rect class="rodB" x="0" y="${RH/2}" width="${R}" height="${RH/2}" rx="4"/>`;
+      for(let k=1;k<10;k++)s+=`<line ${k===5?'class="mid" ':''}x1="1" x2="${R-1}" y1="${k*11}" y2="${k*11}"/>`;
+      s+='</g>';x+=R+RG;
+    }
+    x+=-RG;
+  });
+  if(hasRods)s+=`<text x="${rodsX+rodsW/2}" y="${H-6}">แท่ง</text>`;
+  // กล่อง
+  frames.forEach((dots,fi)=>{
+    const fy=PAD+fi*(FH+FG);
+    const full=dots.length===10;
+    const tap=o.tapFull&&fi===0&&full;
+    const gather=o.gatherFirst&&fi===0;
+    if(fi)s+=`<text class="plus" x="${framesX+FW/2}" y="${fy-FG/2+9}">${o.plus?'+':''}</text>`;
+    s+=`<g${tap?' class="tap" data-act="exch" role="button" aria-label="แตะกล่องเต็มเพื่อแลก"':''}><g class="${gather?'gather':''}${tap?' pulse':''}" transform="translate(${framesX},${fy})"><rect class="fbox" x="0" y="0" width="${FW}" height="${FH}" rx="6"/>`;
+    for(let k=1;k<5;k++)s+=`<line class="fgrid" x1="${k*CELL}" x2="${k*CELL}" y1="0" y2="${FH}"/>`;
+    s+=`<line class="fgrid" x1="0" x2="${FW}" y1="${CELL}" y2="${CELL}"/>`;
+    dots.forEach((c,i)=>{const cx=CELL/2+(i%5)*CELL,cy=CELL/2+(i>=5?1:0)*CELL;
+      s+=`<circle class="dot d${c.toUpperCase()}" cx="${cx}" cy="${cy}" r="8.5" style="--dx:${FW/2-cx}px;--dy:${FH/2-cy}px"/>`;});
+    s+='</g></g>';
+  });
+  if(pend.length){
+    const ty=PAD+framesH+8;
+    s+=`<g class="tap" data-act="pour" role="button" aria-label="แตะเพื่อเติมเม็ดลงกล่อง"><rect x="${framesX-2}" y="${ty-2}" width="${FW+4}" height="${Math.ceil(pend.length/5)*CELL+4}" rx="8" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="5 4"/>`;
+    pend.forEach((c,i)=>{s+=`<circle class="dot d${c.toUpperCase()}" cx="${framesX+CELL/2+(i%5)*CELL}" cy="${ty+CELL/2+Math.floor(i/5)*CELL}" r="8.5"/>`;});
+    s+='</g>';
+  }
+  s+=`<text x="${framesX+FW/2}" y="${H-6}">กล่อง 10 ช่อง</text></svg>`;
+  return s;
+}
+function bondSVG(total){
+  return `<svg class="bond" viewBox="0 0 220 160" role="img" aria-label="แผนผังแยกเลข"><line x1="110" y1="52" x2="55" y2="96"/><line x1="110" y1="52" x2="165" y2="96"/><circle cx="110" cy="30" r="28"/><text x="110" y="39">${total}</text><circle class="empty" cx="55" cy="118" r="26"/><circle class="empty" cx="165" cy="118" r="26"/><text class="lb" x="55" y="157">สิบ</text><text class="lb" x="165" y="157">หน่วย</text></svg>`;
+}
+/* ภาพของโจทย์ a + b พร้อมสถานะการรวม */
+function parts(a,b){const ta=a-a%10,tb=b-b%10,oa=a%10,ob=b%10,ts=(ta+tb)/10,os=oa+ob;return {a,b,ta,tb,oa,ob,ts,os,c:a+b,regroup:os>=10};}
+function sumScene(P,st){
+  st=st||{};
+  let rods=st.mT||st.ex?[P.ts+(st.ex?1:0)]:[P.ta/10,P.tb/10];
+  let frames,plus=false;
+  const A=dotsOf('a',P.oa),B=dotsOf('b',P.ob);
+  if(!st.mO){
+    frames=[];if(P.oa>0)frames.push(A);if(P.ob>0)frames.push(B);
+    if(!frames.length)frames=[[]];
+    plus=frames.length>1;
+  }else{
+    let all=A.concat(B);
+    let ch=chunk10(all);
+    if(st.ex)ch=ch.slice(1);
+    frames=ch.length?ch:[[]];
+  }
+  const canEx=st.mO&&!st.ex&&P.regroup;
+  return scene({rods,frames,plus,tapFull:canEx&&st.tapEx,gatherFirst:st.gather,popLast:st.popRod,aria:`${P.a} บวก ${P.b}`});
+}
+function blocksScene(t,o,cls,swap){return scene({rods:[t],frames:[dotsOf(cls||'a',o)],swap,aria:`${t} แท่ง ${o} เม็ด`});}
+
+/* ---------------- ความเข้าใจผิดและข้อความตอบกลับ ---------------- */
+function classify(a,b,ans){
+  const P=parts(a,b),c=P.c;
+  if(ans===c)return null;
+  const s=String(ans);
+  if(P.regroup&&ans===c-10)return 'M10';
+  if(P.regroup&&ans===c+10)return 'M15';
+  if([`${P.ts}${P.os}`,`${P.ts*10}${P.os}`,`${a}${b}`].includes(s))return 'M11';
+  if((a<10||b<10)&&ans===Math.max(a,b)+Math.min(a,b)*10)return 'M14';
+  if(a%10===0||b%10===0){
+    const cand=[];
+    if(a%10===0&&b%10===0)cand.push(c/10,a+b/10,b+a/10);
+    else if(a%10===0)cand.push(b+a/10);else cand.push(a+b/10);
+    if(cand.includes(ans))return 'M9';
+  }
+  const dsum=String(a).split('').concat(String(b).split('')).reduce((x,y)=>x+Number(y),0);
+  if(ans===dsum)return 'M13';
+  if(c>=10&&c<100&&c%10!==0&&ans===(c%10)*10+Math.floor(c/10))return 'M16';
+  if(Math.abs(ans-c)===1)return 'M5';
+  return 'MX';
+}
+function classifyBlocks(t,o,ans){ // t แท่ง o เม็ด (o อาจ ≥ 10)
+  const c=t*10+o;if(ans===c)return null;
+  if(o>=10&&ans===c-10)return 'M10';if(o>=10&&ans===c+10)return 'M15';
+  if([`${t}${o}`,`${t*10}${o}`].includes(String(ans)))return 'M11';
+  if(o<10&&ans===o*10+t&&o!==t)return 'M16';
+  return 'MX';
+}
+function msgFor(code,P,ctx){
+  const lone=P.a<10?P.a:(P.b<10?P.b:null);
+  switch(code){
+    case 'M9':{const m=P.a%10===0&&P.b%10!==0?P.a:(P.b%10===0?P.b:P.a);return `${m} คือ ${m/10} แท่ง ไม่ใช่ ${m/10} เม็ด แท่งต้องไปรวมกับแท่ง`;}
+    case 'M13':{const big=P.a>=10?P.a:P.b;return `เลข ${Math.floor(big/10)} ใน ${big} ไม่ใช่ ${Math.floor(big/10)} เม็ด มันคือ ${Math.floor(big/10)} แท่ง = ${big-big%10}`;}
+    case 'M11':
+      if(P.regroup)return P.os===10?`เม็ดรวมกันได้ 10 เม็ดพอดี เต็มกล่องพอดี กล่องเต็มแลกเป็นแท่งได้`:`${P.os} เม็ดไม่อยู่ในกล่องเดียว มี 1 กล่องเต็มกับอีก ${P.os-10} เม็ด กล่องเต็มแลกเป็นแท่งได้`;
+      return `${P.ts*10} กับ ${P.os} ต้องเอามารวมกัน ไม่ใช่เขียนต่อกัน ${P.ts*10} + ${P.os} = ${P.ts} แท่งกับ ${P.os} เม็ด เป็นเลขอะไร`;
+    case 'M14':return `${lone} เป็นเม็ด ต้องไปอยู่ในกล่องเม็ด ไม่ได้กลายเป็น ${lone} แท่ง`;
+    case 'M10':return 'เม็ด 10 เม็ดที่เต็มกล่องหายไปไหน ลองแลกเป็นแท่งดู';
+    case 'M15':return 'แลกแล้ว 10 เม็ดกลายเป็นแท่ง ไม่อยู่ในกล่องแล้ว อย่านับซ้ำ';
+    case 'M16':return 'เลขตัวหน้าบอกว่ามีกี่แท่ง ตัวหลังบอกกี่เม็ด';
+    case 'M5':return ctx==='tens'?'เกือบแล้ว ดูแท่งอีกที บวกสิบเม็ดไม่เปลี่ยนนะ':'ดูกล่องเม็ดอีกที แถวบนเต็ม 5 แล้ว แถวล่างมีกี่เม็ด';
+    default:return null;
+  }
+}
+const PRAISE_SUM=['แยกสิบกับหน่วยได้ชัด','แยกสิบกับหน่วยออกมาก่อน ทำให้รวมง่ายขึ้น','แท่งรวมกับแท่ง เม็ดรวมกับเม็ด ทำได้ตรงจังหวะ'];
+let praiseN=0;
+const nextPraise=()=>PRAISE_SUM[praiseN++%PRAISE_SUM.length];
+const NEUTRAL=['รับแล้ว!','โอเค ไปต่อ!'];let neutralN=0;
+
+/* ---------------- ตัวช่วยหน้าจอ ---------------- */
+let CUR=null; // งานที่รออยู่ตอนนี้ (ask หรือ screen)
+function setCrumb(t){crumb.textContent=t||'';}
+let inAct=false;
+function showChrome(inLesson){homeBtn.hidden=!inLesson;skipBtn.hidden=!(inLesson&&inAct);resetSkip();}
+let skipArm=0;
+function resetSkip(){skipBtn.classList.remove('arm');skipBtn.textContent='ข้าม';skipArm=0;}
+homeBtn.addEventListener('click',()=>{if(CUR)CUR.reject(HOME);});
+skipBtn.addEventListener('click',()=>{
+  if(!skipArm){skipArm=1;skipBtn.classList.add('arm');skipBtn.textContent='ข้ามกิจกรรมนี้?';setTimeout(resetSkip,3000);return;}
+  resetSkip();if(CUR)CUR.reject(SKIP);
+});
+function screen(o){ // {html, buttons:[{id,label,primary}], after:(root)=>void}
+  return new Promise((resolve,reject)=>{
+    CUR={reject:e=>{CUR=null;reject(e);}};
+    skipBtn.hidden=!inAct||homeBtn.hidden;
+    stage.innerHTML=`<div class="card fadein">${o.html}<div class="row-btns" id="scrBtns" style="justify-content:${o.center===false?'flex-start':'center'}">${(o.buttons||[]).map(b=>`<button type="button" class="btn${b.primary?' primary':''}${b.small?' small':''}" data-id="${b.id}">${b.label}</button>`).join('')}</div></div>`;
+    window.scrollTo(0,0);
+    const lockUntil=performance.now()+400;
+    stage.querySelectorAll('#scrBtns button').forEach(btn=>btn.addEventListener('click',()=>{
+      if(performance.now()<lockUntil)return;
+      const val=o.collect?o.collect(stage):null;CUR=null;resolve({id:btn.dataset.id,val});
+    }));
+    if(o.after)o.after(stage);
+  });
+}
+const card=(title,html,btn)=>screen({html:`${title?`<h2>${title}</h2>`:''}${html}`,buttons:[{id:'ok',label:btn||'ต่อไป',primary:true}]});
+const ruleCard=(txt)=>card('',`<div class="rule">${txt}</div>`,'ต่อไป');
+
+/* ---------------- ถามทีละข้อ (หัวใจของหน้านี้) ---------------- */
+/* q: {id,section,activity,stage,mode:'quiet'|'learn'|'free'|'record', kind:'fields'|'choice'|'think'|'build',
+       prompt, draw(st), st, flash(ms), replay, rows|rowsFn(show), fields[], rowInit, helpBtn, options[],
+       classify(vals), feedback(vals,code,attempt)->string|{msg,openRow}, fbVis(), solution(box), controls(st), act(name,st),
+       ready(st), evaluate(st)->{correct,msg,code}, cta, max, praise, afterOk, meta, expected, quietMsg} */
+function ask(q){
+  return new Promise((resolve,reject)=>{
+    const mode=q.mode||'learn', st=q.st||{};
+    const rec=Object.assign({itemId:q.id,section:q.section||'understand',activity:q.activity||null,stage:q.stage||'',kind:q.kind||'fields',prompt:q.promptText||null,a:q.a??null,b:q.b??null,expected:q.expected??null,tensSum:q.tensSum??null,onesSum:q.onesSum??null,regroup:q.regroup??null,attempts:[],firstCorrect:null,secondCorrect:null,solutionShown:false,misconceptions:[],silentMs:null,timeValid:true,replays:0,rowRequested:false,rowOpenedBySystem:false,hintLevel:null,startedAt:new Date().toISOString()},q.meta||{});
+    const maxAtt=q.max||(mode==='free'?99:(mode==='quiet'||mode==='record'?1:2));
+    let phase='answer',badKeys=[],vals={},active=null,rowShow=!!q.rowInit,replays=0,attempt=0,selOpt=null,tStart=performance.now(),hidden=false,done=false,flashTok=0;
+    skipBtn.hidden=!inAct;
+    const lockUntil=performance.now()+400;
+    const opts=q.kind==='choice'?(q.shuffle===false?q.options.slice():shuffle(q.options)):null;
+    const getRows=()=>q.rowsFn?q.rowsFn(rowShow):(q.rows||[]);
+    const visKeys=()=>{const k=[];getRows().forEach(r=>r.forEach(p=>{if(p&&p.f)k.push(p.f);}));return k;};
+    stage.innerHTML=`<div class="qwrap fadein"><div class="card"><div class="prompt" id="prompt"></div><div class="vis" id="vis"></div><div class="ctrls" id="ctrls"></div></div>
+      <div class="card"><div class="rows" id="rows"></div><div class="choices" id="choices"></div><div class="msg" id="msg" aria-live="polite"></div><div class="actions" id="actions"></div><div class="keypad" id="keypad"></div></div></div>`;
+    const E={prompt:$('#prompt'),vis:$('#vis'),ctrls:$('#ctrls'),rows:$('#rows'),choices:$('#choices'),msg:$('#msg'),actions:$('#actions'),keypad:$('#keypad')};
+    window.scrollTo(0,0);
+    E.prompt.innerHTML=typeof q.prompt==='function'?q.prompt():(q.prompt||'');
+    const finish=(extra)=>{if(done)return;done=true;CUR=null;document.removeEventListener('visibilitychange',onVis);document.removeEventListener('keydown',onKey);
+      if(extra)Object.assign(rec,extra);
+      if(q.collect)Object.assign(rec,q.collect(st));
+      rec.timeValid=rec.timeValid&&!hidden;delete rec._t0;S&&S.items.push(rec);touch(q.id);resolve(rec);};
+    CUR={reject:e=>{if(done)return;done=true;document.removeEventListener('visibilitychange',onVis);document.removeEventListener('keydown',onKey);CUR=null;rec.interrupted=e===SKIP?'skip':'home';delete rec._t0;if(rec.attempts.length||rec.replays||rec.rowRequested){if(q.collect)Object.assign(rec,q.collect(st));S&&S.items.push(rec);touch(q.id);}reject(e);}};
+    if(DEBUG)window.__q={q,rec,vals,st,fill:o=>{Object.assign(vals,o);drawRows();},submit:()=>submit(),opts};
+    function onVis(){if(document.hidden)hidden=true;}
+    document.addEventListener('visibilitychange',onVis);
+    const T=()=>performance.now();
+    function drawVis(){
+      if(phase==='flashing'||phase==='prelude')return;
+      if(q.draw){E.vis.innerHTML=(q.flash&&phase==='answer'&&!q.revealed)?'<div class="veil" aria-label="ภาพถูกซ่อนไว้">?</div>':q.draw(st);}
+    }
+    function drawCtrls(){
+      if(!q.controls||phase==='flashing'||phase==='prelude'){E.ctrls.innerHTML='';return;}
+      E.ctrls.innerHTML=q.controls(st,phase).map(c=>`<button type="button" class="btn small${c.primary?' primary':''}" data-ctl="${c.act}"${c.disabled?' disabled':''}>${c.label}</button>`).join('');
+    }
+    function drawRows(){
+      const rows=getRows();
+      if(active==null||!visKeys().includes(active))active=visKeys()[0]||null;
+      E.rows.innerHTML=rows.map(r=>`<div class="row">${r.map(p=>{
+        if(p&&typeof p==='object'){
+          if(p.f)return `<span class="fld${active===p.f?' on':''}${badKeys.includes(p.f)?' bad':''}" data-f="${p.f}" tabindex="0" role="button" aria-label="${p.aria||'ช่องตอบ'}">${vals[p.f]??''}</span>`;
+          if(p.ref)return `<span class="ref">${vals[p.ref]||'&nbsp;&nbsp;&nbsp;'}</span>`;
+          return `<span class="tx">${p.t}</span>`;}
+        return `<span class="tx">${p}</span>`;}).join('')}</div>`).join('');
+    }
+    function drawChoices(){
+      if(!opts)return;
+      E.choices.innerHTML=opts.map((o,i)=>`<button type="button" class="opt${selOpt===o.id?' sel':''}" data-opt="${o.id}"${phase!=='answer'?' disabled':''}><span class="lab">${q.noLetters?'':'กขคงจฉ'[i]}</span><span>${o.text}${o.sub?`<br><small class="hint">${o.sub}</small>`:''}</span></button>`).join('');
+    }
+    function drawKeypad(){
+      if(q.kind!=='fields'){E.keypad.style.display='none';return;}
+      const multi=visKeys().length>1;
+      E.keypad.className='keypad'+(phase==='answer'?'':' off');
+      E.keypad.innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<button type="button" data-k="${n}">${n}</button>`).join('')+`<button type="button" data-k="bk" aria-label="ลบ">&#9003;</button><button type="button" data-k="0">0</button>${multi?'<button type="button" data-k="next" aria-label="ช่องถัดไป">&#9656;</button>':'<button type="button" disabled style="opacity:.0"></button>'}`;
+    }
+    function drawActions(){
+      let h='';
+      if(phase==='answer'||phase==='feedback-retry'){
+        if(q.kind==='fields'&&q.helpBtn&&!rowShow)h+=`<button type="button" class="btn ghost small" data-do="row">ขอแถวแยกหลัก</button>`;
+        if(q.flash&&q.replay&&replays<1)h+=`<button type="button" class="btn ghost small" data-do="replay">ขอดูอีกที</button>`;
+        const ready=q.ready?q.ready(st):true;
+        h+=`<button type="button" class="btn primary" data-do="submit"${ready?'':' disabled'}>${q.cta||(mode==='quiet'?'ตอบ':(q.kind==='think'?'ต่อไป':'เช็ค'))}</button>`;
+      }else if(phase==='next'){h+=`<button type="button" class="btn primary" data-do="next">ต่อไป</button>`;}
+      E.actions.innerHTML=h;
+    }
+    function redraw(){drawVis();drawCtrls();drawRows();drawChoices();drawKeypad();drawActions();}
+    function setMsg(html,kind){E.msg.innerHTML=html?`<div class="box ${kind||'note'}">${html}</div>`:'';}
+    async function playFlash(prelude){
+      const tok=++flashTok;const ms=q.flash;
+      if(prelude){phase='prelude';E.vis.innerHTML='<div class="ready">พร้อมนะ...</div>';E.keypad.className='keypad off';await sleep(reduced()?900:900);if(tok!==flashTok||done)return;}
+      phase='flashing';E.vis.innerHTML=q.draw(st);E.actions.innerHTML='';E.ctrls.innerHTML='';
+      await sleep(ms);if(tok!==flashTok||done)return;
+      phase='answer';q.revealed=false;redraw();
+      if(!rec._t0){tStart=T();rec._t0=1;}
+    }
+    if(q.flash){q.revealed=false;playFlash(true);}else{redraw();}
+    /* ---- เหตุการณ์ ---- */
+    E.rows.addEventListener('click',e=>{const f=e.target.closest('[data-f]');if(f&&(phase==='answer')){active=f.dataset.f;drawRows();}});
+    E.keypad.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b)press(b.dataset.k);});
+    E.choices.addEventListener('click',e=>{const b=e.target.closest('[data-opt]');if(!b||phase!=='answer'||T()<lockUntil)return;selOpt=b.dataset.opt;drawChoices();});
+    E.ctrls.addEventListener('click',e=>{const b=e.target.closest('[data-ctl]');if(!b||T()<lockUntil)return;doAct(b.dataset.ctl);});
+    E.vis.addEventListener('click',e=>{const g=e.target.closest('[data-act],[data-ctl]');if(!g||T()<lockUntil)return;doAct(g.dataset.act||g.dataset.ctl);});
+    E.actions.addEventListener('click',e=>{const b=e.target.closest('[data-do]');if(!b||T()<lockUntil)return;
+      const d=b.dataset.do;
+      if(d==='submit')submit();else if(d==='next')finish();
+      else if(d==='row'){rowShow=true;rec.rowRequested=true;redraw();}
+      else if(d==='replay'){replays++;rec.replays=replays;q.revealed=false;playFlash(false);}
+    });
+    function onKey(e){
+      if(done||phase!=='answer')return;
+      if(/^[0-9]$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('bk');else if(e.key==='Enter'){const rd=q.ready?q.ready(st):true;if(rd)submit();}else if(e.key==='Tab'&&visKeys().length>1){e.preventDefault();press('next');}
+    }
+    document.addEventListener('keydown',onKey);
+    function doAct(name){if(phase!=='answer'&&phase!=='feedback-retry')return;if(q.act)q.act(name,st,{redraw,rec});redraw();}
+    function press(k){
+      if(phase!=='answer'||T()<lockUntil||q.kind!=='fields'||!active)return;
+      let v=vals[active]||'';
+      if(k==='bk')v=v.slice(0,-1);
+      else if(k==='next'){const ks=visKeys();active=ks[(ks.indexOf(active)+1)%ks.length];drawRows();return;}
+      else{if(v==='0')v='';if(v.length<4)v+=k;}
+      vals[active]=v;drawRows();
+    }
+    /* ---- ตรวจคำตอบ ---- */
+    function submit(){
+      if(T()<lockUntil)return;
+      if(phase!=='answer')return;
+      let res={correct:true,msg:null,code:null,record:null,openRow:false};
+      const firstSubmit=attempt===0;
+      if(firstSubmit)rec.silentMs=Math.round(T()-tStart);
+      if(q.kind==='fields'){
+        const ks=visKeys();
+        if(ks.some(k=>vals[k]===undefined||vals[k]==='')){setMsg('ใส่ตัวเลขให้ครบทุกช่องก่อนนะ','warn');return;}
+        const bad=ks.filter(k=>Number(vals[k])!==q.fields.find(f=>f.k===k).ans);
+        res.correct=bad.length===0;
+        res.record={values:Object.assign({},vals),rowVisible:rowShow};
+        if(!res.correct){
+          res.code=q.classify?q.classify(vals,bad):null;
+          const fb=q.feedback?q.feedback(vals,res.code,attempt+1,bad):null;
+          if(fb&&typeof fb==='object'){res.msg=fb.msg;res.openRow=!!fb.openRow;}else res.msg=fb;
+          res.bad=bad;
+        }
+      }else if(q.kind==='choice'){
+        if(!selOpt){setMsg('เลือกคำตอบก่อนนะ','warn');return;}
+        const o=opts.find(x=>x.id===selOpt);
+        res.record={choice:o.id,text:o.text,position:opts.indexOf(o)};
+        if(mode==='record'||q.noJudge){res.correct=null;}
+        else{res.correct=!!o.correct;if(!res.correct){res.code=o.m||null;res.msg=q.feedback?q.feedback({choice:o.id},o.m,attempt+1):null;}}
+      }else if(q.kind==='think'){res.correct=null;res.record={ack:true};}
+      else if(q.kind==='build'){
+        const ev=q.evaluate?q.evaluate(st):{correct:true};
+        res.correct=ev.correct;res.code=ev.code||null;res.msg=ev.msg||null;res.record={state:JSON.parse(JSON.stringify(st))};
+      }
+      attempt++;
+      const att=Object.assign({n:attempt,at:new Date().toISOString(),correct:res.correct,misconception:res.code||null},res.record);
+      rec.attempts.push(att);
+      if(res.code)rec.misconceptions.push(res.code);
+      if(attempt===1)rec.firstCorrect=res.correct;
+      if(attempt===2)rec.secondCorrect=res.correct;
+      // โหมดเงียบ: ไม่บอกถูกผิด
+      if(mode==='quiet'||mode==='record'||res.correct===null){
+        phase='locked';drawActions();E.keypad.className='keypad off';
+        const m=q.quietMsg===false?null:(q.quietMsg||NEUTRAL[neutralN++%NEUTRAL.length]);
+        if(m)setMsg(m,'note');
+        const wait=q.kind==='think'?0:(m?650:0);
+        setTimeout(()=>finish(),wait);
+        return;
+      }
+      if(res.correct){
+        if(q.autoNext){finish();return;}
+        phase='next';q.revealed=true;
+        rec.solved=true;
+        const noHelp=!rec.rowRequested&&!rowShow&&q.noRowIsMind;
+        const pr=q.praise?q.praise(rec,noHelp):'ดูภาพแล้วคิดได้ตรงเลย';
+        setMsg((pr?pr:'')+(q.afterOk?`<div class="pad">${typeof q.afterOk==='function'?q.afterOk():q.afterOk}</div>`:''),'ok');
+        E.keypad.className='keypad off';redraw();
+        if(q.kind==='fields')markBad([]);
+        return;
+      }
+      // ผิด
+      if(res.openRow&&!rowShow){rowShow=true;rec.rowOpenedBySystem=true;}
+      if(q.kind==='fields')markBad(res.bad||[]);
+      if(attempt>=maxAtt&&mode!=='free'){
+        phase='next';rec.solutionShown=true;q.revealed=true;
+        setMsg((res.msg&&!res.openRow?res.msg+'<div class="pad"></div>':'')+'มาดูวิธีทำด้วยกันนะ','note');
+        E.keypad.className='keypad off';
+        drawCtrls();drawRows();drawChoices();drawActions();
+        E.ctrls.innerHTML='';
+        E.vis.innerHTML='<div class="sol" style="width:100%"></div>';
+        if(q.solution)q.solution($('.sol',E.vis),vals);
+        return;
+      }
+      phase='answer';
+      setMsg(res.msg||'ลองดูภาพอีกที แล้วคิดอีกครั้งนะ','note');
+      if(q.flash||(!q.draw&&q.fbVis)){q.revealed=true;E.vis.innerHTML=q.fbVis?q.fbVis(vals,res.code):q.draw(st);}
+      else if(q.fbVis&&mode!=='free'){E.vis.innerHTML=q.fbVis(vals,res.code);}
+      if(q.kind==='fields'){const keep=!q.keepVals;if(keep){vals={};if(DEBUG&&window.__q)window.__q.vals=vals;active=null;}}
+      if(q.kind==='choice'){selOpt=null;}
+      redraw();
+    }
+    function markBad(bad){badKeys=bad.slice();drawRows();}
+  });
+}
+
+/* ---------------- กิจกรรม ---------------- */
+async function act(id,title,fn){
+  if(S){S.activities.push({id,title,startedAt:new Date().toISOString(),skipped:false});touch(id);}
+  setCrumb(title);inAct=true;showChrome(true);
+  try{await fn();}
+  catch(e){
+    if(e===SKIP){const a=S.activities[S.activities.length-1];a.skipped=true;S.skips.push({activity:id,at:new Date().toISOString()});touch(id);}
+    else{inAct=false;throw e;}
+  }
+  inAct=false;
+  if(S){const a=S.activities[S.activities.length-1];a.endedAt=new Date().toISOString();touch(id);}
+}
+const stg=(s)=>({see:'ระยะเห็น',fade:'ระยะภาพจาง',imagine:'ระยะนึกเอง'}[s]||s);
+
+/* ----- ข้อแบบบวก a+b มีแถวแยกหลัก ----- */
+function splitRows(P){
+  return [['สิบ:',P.ta,'+',P.tb,'=',{f:'tens',aria:'สิบรวมสิบ'}],['หน่วย:',P.oa,'+',P.ob,'=',{f:'ones',aria:'หน่วยรวมหน่วย'}],['รวม:',{ref:'tens'},'+',{ref:'ones'},'=',{f:'total',aria:'ผลรวม'}]];
+}
+async function playSolution(box,P){
+  const st={};const rowsHTML=(n)=>{const L=[`สิบ: ${P.ta} + ${P.tb} = ${P.ts*10}`,`หน่วย: ${P.oa} + ${P.ob} = ${P.os}`,`รวม: ${P.ts*10} + ${P.os} = ${P.c}`];return L.slice(0,n).map(x=>`<div>${x}</div>`).join('');};
+  box.innerHTML='<div class="sv"></div><div class="sol-rows"></div>';
+  const sv=$('.sv',box),sr=$('.sol-rows',box);const d=reduced()?0:850;
+  const draw=()=>{if(box.isConnected)sv.innerHTML=sumScene(P,st);};
+  draw();if(d)await sleep(d);if(!box.isConnected)return;
+  st.mT=true;draw();sr.innerHTML=rowsHTML(1);if(d)await sleep(d);if(!box.isConnected)return;
+  st.mO=true;draw();sr.innerHTML=rowsHTML(2);if(d)await sleep(d);if(!box.isConnected)return;
+  if(P.regroup){st.gather=true;draw();if(d)await sleep(750);if(!box.isConnected)return;st.gather=false;st.ex=true;st.popRod=true;draw();if(d)await sleep(d);}
+  sr.innerHTML=rowsHTML(3);
+}
+function sumQ(o){
+  const P=parts(o.a,o.b);
+  const ctx=o.ctx||(P.regroup?'sum':'sum');
+  const st={mT:false,mO:false,ex:false,tapEx:!!o.interactive};
+  const tensOnly=P.tb>0&&P.ob===0&&P.oa>=0&&o.tensCtx;
+  const q={
+    id:o.id,section:o.section||'understand',activity:o.activity,stage:o.stage,kind:'fields',mode:o.mode||'learn',
+    a:o.a,b:o.b,promptText:`${o.a} + ${o.b}`,expected:P.c,tensSum:P.ts*10,onesSum:P.os,regroup:P.regroup,st,
+    prompt:`<div class="expr">${o.a} + ${o.b}</div>${o.promptSub?`<div class="sub">${o.promptSub}</div>`:''}`,
+    fields:[{k:'tens',ans:P.ts*10},{k:'ones',ans:P.os},{k:'total',ans:P.c}],
+    rowInit:o.row,helpBtn:o.help,flash:o.flash,replay:!!o.flash,
+    rowsFn:show=>show?splitRows(P):[[`${o.a} + ${o.b} =`,{f:'total',aria:'ผลรวม'}]],
+    classify:(v,bad)=>{const t=Number(v.total);if(v.total===undefined)return null;return Number(v.total)===P.c?null:classify(o.a,o.b,t);},
+    feedback:(v,code,n,bad)=>{
+      if(code){
+        const m=msgFor(code,P,tensOnly?'tens':'sum');
+        if(code==='MX'||!m)return {msg:'ลองทำทีละช่องในแถวแยกหลักดู',openRow:true};
+        return {msg:m,openRow:code==='M11'||code==='M10'||code==='M15'?false:false};
+      }
+      const names={tens:'สิบ',ones:'หน่วย',total:'รวม'};
+      return `ดูช่อง ${bad.map(k=>names[k]).join(' กับ ')} อีกที แท่งรวมกับแท่ง เม็ดรวมกับเม็ด`;
+    },
+    fbVis:()=>sumScene(P,{}),
+    solution:box=>playSolution(box,P),
+    praise:()=>nextPraise(),
+    noRowIsMind:true
+  };
+  if(o.scene){
+    q.draw=s=>sumScene(P,s);
+    if(o.interactive){
+      q.controls=s=>{
+        const c=[{label:'รวมแท่ง',act:'mT',disabled:s.mT,primary:!s.mT},{label:'รวมเม็ด',act:'mO',disabled:s.mO,primary:s.mT&&!s.mO}];
+        if(P.regroup)c.push({label:'แลก 10 เม็ดเป็นแท่ง',act:'exch',disabled:!(s.mO&&!s.ex),primary:s.mO&&!s.ex});
+        return c;
+      };
+      q.act=(name,s,h)=>{
+        if(name==='mT')s.mT=true;else if(name==='mO')s.mO=true;
+        else if(name==='exch'&&s.mO&&!s.ex){s.exchangedByChild=true;s.ex=true;s.popRod=true;}
+        s.placed=(s.placed||0)+1;
+      };
+      q.collect=s=>({placeCount:s.placed||0,exchangedByChild:!!s.exchangedByChild});
+    }
+  }
+  if(o.after)q.afterOk=o.after;
+  return q;
+}
+
+/* ============ เช็คก่อน (Eedi) ============ */
+const STRAT=[
+  {id:'count-by-one',text:'นับทีละ 1'},
+  {id:'column',text:'ตั้งบวกในใจ',sub:'หน่วยบวกหน่วย แล้วทด'},
+  {id:'split-place',text:'แยกสิบกับหน่วย',sub:'23+14 = 30+7'},
+  {id:'jump-tens',text:'กระโดดทีละสิบ',sub:'23 → 33 → 37'},
+  {id:'round',text:'ปัดเลขให้กลม',sub:'29+5 = 30+4'},
+  {id:'unsure',text:'บอกไม่ถูก'}
+];
+const PRE=[
+  {id:'P1',text:'60 + 30',opts:[['9','M9'],['90',1],['6030','M11'],['63','M9']]},
+  {id:'P2',text:'ข้อไหนเท่ากับ 58',opts:[['5 + 8','M13'],['50 + 8',1],['80 + 5','M16']],ask:'ข้อไหนเท่ากับ <b>58</b>'},
+  {id:'P3',text:'43 + 5',opts:[['93','M14'],['12','M13'],['48',1],['47','M5']]},
+  {id:'P4',text:'34 + 25',opts:[['14','M13'],['59',1],['509','M11'],['58','M5']]},
+  {id:'P5',text:'27 + 15',opts:[['32','M10'],['312','M11'],['42',1],['52','M15']],strat:true},
+  {id:'P6',text:'38 + 26',opts:[['54','M10'],['74','M15'],['64',1],['514','M11']],strat:true}
+];
+async function runPrecheck(){
+  beginSession('precheck','precheck');
+  const res={};
+  await act('PRE','เช็คก่อน',async()=>{
+    await card('เช็คก่อน','<p style="text-align:center">6 ข้อสั้นๆ ก่อนเริ่ม ตอบตามที่หนูคิดได้เลย ข้อนี้ยังไม่บอกว่าถูกหรือไม่ เพราะแค่อยากรู้ว่าหนูคิดยังไง</p>','เริ่ม');
+    for(let i=0;i<PRE.length;i++){
+      const p=PRE[i];setCrumb(`เช็คก่อน · ข้อ ${i+1}/6`);
+      const rec=await ask({
+        id:p.id,section:'precheck',activity:'PRE',stage:'',kind:'choice',mode:'quiet',
+        promptText:p.text,
+        prompt:p.ask?`<div class="prompt">${p.ask}</div>`:`<div class="expr">${p.text}</div>`,
+        options:p.opts.map(([t,m])=>({id:t,text:t,correct:m===1,m:m===1?null:m})),
+        meta:{expectedChoice:p.opts.find(o=>o[1]===1)[0],optionCodes:Object.fromEntries(p.opts.map(([t,m])=>[t,m===1?null:m]))}
+      });
+      res[p.id]={correct:rec.attempts[0]&&rec.attempts[0].correct,code:rec.attempts[0]&&rec.attempts[0].misconception};
+      if(p.strat){
+        const r2=await ask({id:p.id+'-how',section:'precheck',activity:'PRE',kind:'choice',mode:'record',noLetters:true,
+          prompt:`<div class="prompt">หนูคิดข้อนี้ยังไง?</div><div class="sub" style="text-align:center">${p.text}</div>`,
+          options:STRAT.map(s=>({id:s.id,text:s.text,sub:s.sub})),shuffle:false,quietMsg:false,cta:'ตอบ'});
+        res[p.id].strategy=r2.attempts[0]&&r2.attempts[0].choice;
+      }
+    }
+  });
+  // สรุปคำแนะนำ
+  const ok=k=>res[k]&&res[k].correct;
+  const codes=new Set(Object.values(res).map(r=>r.code).filter(Boolean));
+  const emph=[];
+  ['M9','M13','M16'].forEach(c=>{if(codes.has(c))emph.push('A1');});
+  if(codes.has('M14')){emph.push('A1','A3-add-43+5');}
+  if(codes.has('M10')||codes.has('M15'))emph.push('B1');
+  if(codes.has('M11'))emph.push('row-total');
+  const uniq=[...new Set(emph)];
+  let route='normal',advice='เรียนตามปกติ เริ่มจากตอน 1';
+  const noCount=!(res.P5&&res.P5.strategy==='count-by-one')&&!(res.P6&&res.P6.strategy==='count-by-one');
+  if(['P1','P2','P3','P4','P5','P6'].every(ok)&&noCount){route='part2-B2-fade';advice='เริ่มตอน 2 ที่ "ภาพจาง" ของแยกแล้วรวม (ข้ามตอน 1 และเม็ดล้นกล่อง)';}
+  else if(['P1','P2','P3','P4'].every(ok)){route='part1-skipA1A2';advice='ตอน 1 ข้ามสองกิจกรรมแรก ไปเริ่มที่ "แยกแล้วรวม" ระยะนึกเอง แล้วฝึก 5 ข้อ';}
+  const labels={'A1':'ต่อเลขด้วยแท่งและเม็ด','B1':'เม็ดล้นกล่อง','row-total':'ช่อง "รวม" ในแถวแยกหลัก','A3-add-43+5':'เพิ่มข้อ 43 + 5'};
+  DB.plan={at:new Date().toISOString(),results:res,route,advice,emphasis:uniq,advised:route};
+  S.precheckAdvice={route,emphasis:uniq,results:res};save();
+  const r=await screen({html:`<h2>เช็คก่อนเสร็จแล้ว</h2><p style="text-align:center">คำแนะนำ: <b>${advice}</b></p>${uniq.length?`<p class="sub" style="text-align:center">จะเน้น: ${uniq.map(k=>labels[k]||k).join(', ')}</p>`:''}`,
+    buttons:route==='normal'?[{id:'normal',label:'เริ่มเรียน',primary:true}]:[{id:'advised',label:'ไปตามที่แนะนำ',primary:true},{id:'normal',label:'เรียนตามปกติ'}]});
+  DB.plan.chosen=r.id==='advised'?'followAdvice':'normal';
+  DB.plan.activeRoute=r.id==='advised'?route:'normal';
+  S.precheckChoice=DB.plan.chosen;S.completed=true;touch('PRE-done');save();
+}
+
+/* ============ ตอน 1 ============ */
+const PREP_HTML=(part)=>part===1
+ ?`<p>ก่อนเริ่ม (5 นาที) พ่อวางเหรียญ 10 บาท 4 เหรียญ กับเหรียญ 1 บาท 7 เหรียญ แล้วถามว่า "หนูมีกี่บาท รู้ได้ยังไงโดยไม่ต้องนับทีละบาท"</p><p class="hint">เตรียมเหรียญ 10 บาท 9 เหรียญ และเหรียญ 1 บาท 20 เหรียญ (หรือไม้ไอติมมัดหนังยางมัดละ 10 อัน + ไม้เดี่ยว) กับกล่องไข่ 10 ช่อง หรือกระดาษวาดตาราง 2×5</p>`
+ :`<p>ก่อนเริ่มตอน 2 พ่อถามว่า "เหรียญบาทเต็มกล่องแล้ว เอาไปแลกเป็นเหรียญอะไรได้"</p><p class="hint">ใช้เหรียญ 10 บาท 9 เหรียญ เหรียญ 1 บาท 20 เหรียญ และกล่องไข่ 10 ช่อง</p>`;
+async function prepCard(part){
+  const r=await screen({html:`<h2>พ่อเตรียมของจริง</h2>${PREP_HTML(part)}`,buttons:[{id:'done',label:'ทำแล้ว',primary:true},{id:'skipped',label:'ข้าม',small:true}]});
+  S.prep=r.id;touch('prep');
+}
+
+const A1_TARGETS=[47,63,58,90];
+function buildQ(target,i){
+  const tt=Math.floor(target/10),to=target%10;
+  const st={t:0,o:0,place:0};
+  return {
+    id:`A1-S${i+1}`,section:'understand',activity:'A1',stage:'see',kind:'build',mode:'free',st,
+    promptText:`ต่อเลข ${target}`,expected:target,
+    prompt:`<div class="expr">${target}</div><div class="sub">ต่อแท่งกับเม็ดให้ได้เลขนี้ แล้วกด "เช็ค"</div>`,
+    draw:s=>blocksScene(s.t,s.o)+`<div class="live">ตอนนี้ต่อได้ <b>${s.t*10+s.o}</b></div>`,
+    controls:s=>[{label:'+ แท่ง',act:'t+',disabled:s.t>=9},{label:'− แท่ง',act:'t-',disabled:s.t<=0},{label:'+ เม็ด',act:'o+',disabled:s.o>=9},{label:'− เม็ด',act:'o-',disabled:s.o<=0}],
+    act:(n,s)=>{s.place++;if(n==='t+'&&s.t<9)s.t++;if(n==='t-'&&s.t>0)s.t--;if(n==='o+'&&s.o<9)s.o++;if(n==='o-'&&s.o>0)s.o--;},
+    evaluate:s=>{
+      const n=s.t*10+s.o;if(n===target)return {correct:true};
+      if(s.t===to&&s.o===tt&&tt!==to)return {correct:false,code:'M16',msg:`ตอนนี้ได้ ${n} นะ เลขตัวหน้าบอกว่ามีกี่แท่ง ตัวหลังบอกกี่เม็ด`};
+      const d=Math.abs(target-n),where=s.t!==tt?'แท่ง':'เม็ด';
+      return {correct:false,code:'MX',msg:`ตอนนี้ได้ ${n} ยัง${n<target?'ขาด':'เกิน'}อีก ${d} ลองดูที่${where}`};
+    },
+    collect:s=>({placeCount:s.place}),
+    praise:()=>'ต่อได้ตรงเลยนะ แท่งกับเม็ดครบ'
+  };
+}
+async function runA1(){
+  await act('A1','ต่อเลขด้วยแท่งและเม็ด',async()=>{
+    // ระยะเห็น
+    setCrumb('ต่อเลขด้วยแท่งและเม็ด · ระยะเห็น');
+    for(let i=0;i<A1_TARGETS.length;i++){
+      const target=A1_TARGETS[i];
+      await ask(buildQ(target,i));
+      const tt=Math.floor(target/10),to=target%10;
+      if(target===47){
+        await ask({id:'A1-S1-q1',section:'understand',activity:'A1',stage:'see',kind:'fields',mode:'learn',
+          promptText:'47 มีแท่งกี่แท่ง เม็ดกี่เม็ด',expected:47,prompt:'<div class="prompt">47 มีแท่งกี่แท่ง เม็ดกี่เม็ด</div>',
+          draw:()=>blocksScene(4,7),fields:[{k:'t',ans:4},{k:'o',ans:7}],
+          rowsFn:()=>[['แท่ง',{f:'t'}],['เม็ด',{f:'o'}]],
+          feedback:()=>'นับเป็นก้อน 4 แท่ง แล้วดูกล่องเม็ดอีกที แถวบนเต็ม 5 แถวล่างมีกี่เม็ด',
+          solution:box=>{box.innerHTML=blocksScene(4,7)+'<div class="sol-rows">4 แท่ง · 7 เม็ด</div>';}});
+        await ask({id:'A1-S1-q2',section:'understand',activity:'A1',stage:'see',kind:'fields',mode:'learn',
+          promptText:'47 = สิบ + หน่วย',expected:47,prompt:'<div class="prompt">แยก 47 ออกเป็นสิบกับหน่วย</div>',
+          draw:()=>bondSVG(47),fields:[{k:'x',ans:40},{k:'y',ans:7}],
+          rowsFn:()=>[['47 =',{f:'x'},'+',{f:'y'}]],
+          feedback:()=>'4 แท่งคือเท่าไร แล้ว 7 เม็ดคือเท่าไร',
+          solution:box=>{box.innerHTML=bondSVG(47)+'<div class="sol-rows">47 = 40 + 7</div>';}});
+      }
+      if(target===63){
+        await ask({id:'A1-S2-q1',section:'understand',activity:'A1',stage:'see',kind:'choice',mode:'learn',
+          promptText:'เลข 6 ใน 63 คือ 6 อะไร',expected:'6 แท่ง',prompt:'<div class="prompt">เลข <b>6</b> ใน 63 คือ 6 อะไร</div>',draw:()=>blocksScene(6,3),
+          options:[{id:'ones',text:'6 เม็ด',correct:false,m:'M13'},{id:'tens',text:'6 แท่ง (= 60)',correct:true}],shuffle:false,
+          feedback:()=>'เลข 6 ใน 63 ไม่ใช่ 6 เม็ด มันคือ 6 แท่ง = 60',
+          solution:box=>{box.innerHTML=blocksScene(6,3)+'<div class="sol-rows">6 แท่ง = 60 · 3 เม็ด = 3</div>';}});
+      }
+      if(target===90){
+        await ask({id:'A1-S4-q1',section:'understand',activity:'A1',stage:'see',kind:'think',mode:'record',
+          promptText:'ทำไม 90 ไม่มีเม็ดเลย',prompt:'<div class="prompt">ทำไม 90 ไม่มีเม็ดเลย</div><p class="hint" style="text-align:center">คิดในใจสักครู่ หรือบอกพ่อ แล้วกด "ต่อไป"</p>',draw:()=>blocksScene(9,0),quietMsg:false});
+      }
+    }
+    // ปริศนา Brilliant
+    const pz=await ask({id:'A1-PZ-q1',section:'understand',activity:'A1',stage:'see',kind:'fields',mode:'learn',max:3,
+      promptText:'ทำ 34 ด้วยเม็ดอย่างเดียว ต้องใช้กี่เม็ด',expected:34,
+      prompt:'<div class="prompt">แท่งหมดถาดแล้ว! ถ้าจะทำ <b>34</b> ด้วยเม็ดอย่างเดียว ต้องใช้กี่เม็ด</div>',
+      fields:[{k:'v',ans:34}],rowsFn:()=>[[{f:'v'},'เม็ด']],
+      feedback:()=>'คิดดูว่า 3 แท่ง กับ 4 เม็ด ถ้าเปลี่ยนแท่งเป็นเม็ดจะได้กี่เม็ด',
+      solution:box=>{box.innerHTML=scene({frames:chunk10(dotsOf('a',34)).map((d,i)=>d)})+'<div class="sol-rows">34 เม็ด</div>';}});
+    await ask({id:'A1-PZ-q2',section:'understand',activity:'A1',stage:'see',kind:'choice',mode:'learn',
+      promptText:'กล่องเต็ม 1 กล่อง เท่ากับอะไร',expected:'1 แท่ง',
+      prompt:'<div class="prompt">34 เม็ดเรียงเป็นกล่องเต็ม 3 กล่อง กับอีก 4 เม็ด<br>กล่องเต็ม 1 กล่อง เท่ากับอะไร</div>',
+      draw:()=>scene({frames:chunk10(dotsOf('a',34))}),
+      options:[{id:'1o',text:'1 เม็ด',correct:false},{id:'1t',text:'1 แท่ง',correct:true},{id:'10t',text:'10 แท่ง',correct:false}],shuffle:false,
+      feedback:()=>'กล่องเต็มมี 10 เม็ด แล้วแท่ง 1 แท่งมีกี่ช่อง',
+      solution:box=>{box.innerHTML=scene({rods:[1],frames:[dotsOf('a',10)]})+'<div class="sol-rows">กล่องเต็ม 10 เม็ด = 1 แท่ง</div>';}});
+    // ระยะภาพจาง
+    const F=[[3,6,false],[7,4,false],[5,9,false],[8,0,false],[7,4,true]];
+    for(let i=0;i<F.length;i++){
+      const [t,o,sw]=F[i],n=t*10+o;setCrumb('ต่อเลขด้วยแท่งและเม็ด · ระยะภาพจาง');
+      await ask({id:`A1-F${i+1}`,section:'understand',activity:'A1',stage:'fade',kind:'fields',mode:'learn',
+        promptText:`${t} แท่ง ${o} เม็ด${sw?' (สลับตำแหน่ง)':''}`,expected:n,tensSum:t*10,onesSum:o,regroup:false,
+        prompt:'<div class="prompt">เลขอะไร?</div>',flash:2000,replay:true,
+        draw:()=>blocksScene(t,o,'a',sw),fields:[{k:'v',ans:n}],rowsFn:()=>[[{f:'v'}]],
+        classify:v=>classifyBlocks(t,o,Number(v.v)),
+        feedback:(v,code)=>{
+          if(code==='M16'&&sw)return 'แท่งอยู่ทางขวาก็ยังเป็นสิบนะ ดูที่ชนิดชิ้น ไม่ใช่ที่ตำแหน่ง';
+          return `${t} แท่ง = ${t*10}, ${o} เม็ด = ${o} → ${n}`;},
+        fbVis:()=>blocksScene(t,o,'a',sw)+`<div class="sol-rows">${t} แท่ง = ${t*10}, ${o} เม็ด = ${o} → ${n}</div>`,
+        solution:box=>{box.innerHTML=blocksScene(t,o,'a',sw)+`<div class="sol-rows">${t} แท่ง = ${t*10}, ${o} เม็ด = ${o} → ${n}</div>`;}});
+    }
+    // ระยะนึกเอง
+    const I=[62,85,40];
+    for(const n of I){
+      const t=Math.floor(n/10),o=n%10;setCrumb('ต่อเลขด้วยแท่งและเม็ด · ระยะนึกเอง');
+      await ask({id:`A1-I${n}`,section:'understand',activity:'A1',stage:'imagine',kind:'fields',mode:'learn',
+        promptText:`${n} กี่แท่ง กี่เม็ด`,expected:n,tensSum:t*10,onesSum:o,
+        prompt:`<div class="expr">${n}</div><div class="sub">มีกี่แท่ง กี่เม็ด แล้วแยกเป็นกี่บวกกี่</div>`,
+        fields:[{k:'t',ans:t},{k:'o',ans:o},{k:'x',ans:t*10},{k:'y',ans:o}],
+        rowsFn:()=>[['มี',{f:'t',aria:'แท่ง'},'แท่ง',{f:'o',aria:'เม็ด'},'เม็ด'],['แยกเป็น',{f:'x'},'+',{f:'y'}]],
+        feedback:()=>`${t} แท่ง = ${t*10}, ${o} เม็ด = ${o}`,
+        fbVis:()=>blocksScene(t,o),
+        solution:box=>{box.innerHTML=blocksScene(t,o)+`<div class="sol-rows">${n} = ${t*10} + ${o}</div>`;}});
+    }
+    await ask({id:'A1-MIND',section:'understand',activity:'A1',stage:'imagine',kind:'choice',mode:'record',noLetters:true,shuffle:false,
+      promptText:'ตอนคิด 85 ในหัวหนูเห็นอะไร',prompt:'<div class="prompt">ตอนคิด <b>85</b> ในหัวหนูเห็นอะไร</div>',
+      options:[{id:'rods-ones',text:'เห็นแท่งกับเม็ด'},{id:'coins',text:'เห็นเหรียญ'},{id:'digits',text:'เห็นตัวเลขเฉยๆ'},{id:'unsure',text:'บอกไม่ถูก'}],quietMsg:false,cta:'ตอบ'});
+    await ruleCard('เลขสองหลักคือ <b>แท่ง</b> กับ <b>เม็ด</b><br>ตัวหน้าบอกจำนวนแท่ง (สิบ) ตัวหลังบอกจำนวนเม็ด (หน่วย)<br><b>47 = 40 + 7</b>');
+  });
+}
+
+/* ----- A2 บวกสิบ ----- */
+function tensQ(a,b,stg,extra){
+  const P=parts(a,b);
+  const q=sumQ(Object.assign({id:`A2-${stg[0].toUpperCase()}-${a}+${b}`,activity:'A2',stage:stg,a,b,tensCtx:true,row:false},extra||{}));
+  q.fields=[{k:'total',ans:P.c}];q.rowsFn=()=>[[`${a} + ${b} =`,{f:'total'}]];q.helpBtn=false;
+  q.feedback=(v,code)=>{
+    if(code==='M9'||code==='M5')return msgFor(code,P,'tens');
+    return `${P.ta/10} แท่ง + ${P.tb/10} แท่ง = ${P.ts} แท่ง เม็ดยัง ${P.oa} เม็ดเท่าเดิม`;
+  };
+  q.classify=(v)=>classify(a,b,Number(v.total));
+  q.solution=box=>{box.innerHTML=sumScene(P,{mT:true})+`<div class="sol-rows">${P.ts} แท่ง ${P.oa} เม็ด → ${P.c}</div>`;};
+  q.noRowIsMind=false;
+  return q;
+}
+async function runA2(){
+  await act('A2','บวกสิบ',async()=>{
+    setCrumb('บวกสิบ · ระยะเห็น');
+    const see=[[47,30],[25,40]];
+    for(let i=0;i<see.length;i++){
+      const [a,b]=see[i];
+      const q=tensQ(a,b,'see',{scene:true,interactive:true});
+      q.prompt=`<div class="expr">${a} + ${b}</div><div class="sub">แตะ "รวมแท่ง" แล้วพิมพ์ผล</div>`;
+      q.controls=s=>[{label:'รวมแท่ง',act:'mT',disabled:s.mT,primary:!s.mT}];
+      q.draw=s=>sumScene(parts(a,b),s);
+      await ask(q);
+    }
+    await ask({id:'A2-Q-ones',section:'understand',activity:'A2',stage:'see',kind:'choice',mode:'learn',
+      promptText:'เม็ดเปลี่ยนไหม',prompt:'<div class="prompt">ตอนบวกสิบ เม็ดเปลี่ยนไหม</div>',draw:()=>sumScene(parts(25,40),{mT:true}),
+      options:[{id:'yes',text:'ใช่ เปลี่ยน',correct:false},{id:'no',text:'ไม่ ไม่เปลี่ยน',correct:true}],shuffle:false,
+      feedback:()=>'ดูเม็ดก่อนรวมกับหลังรวม มีกี่เม็ดเท่ากันไหม',
+      afterOk:'บวกสิบ เม็ดไม่ขยับเลย เปลี่ยนแค่แท่ง',
+      solution:box=>{box.innerHTML=sumScene(parts(25,40),{mT:true})+'<div class="sol-rows">บวกสิบ เม็ดไม่ขยับเลย เปลี่ยนแค่แท่ง</div>';}});
+    for(const [a,b] of [[36,20],[52,30]]){
+      setCrumb('บวกสิบ · ระยะภาพจาง');
+      await ask(Object.assign(tensQ(a,b,'fade',{scene:true,flash:2000}),{prompt:`<div class="prompt">${a} + ${b} เท่ากับเท่าไร</div>`}));
+    }
+    for(const [a,b] of [[64,30],[18,50]]){
+      setCrumb('บวกสิบ · ระยะนึกเอง');
+      await ask(tensQ(a,b,'imagine'));
+    }
+    await ruleCard('บวกเลขลงตัวสิบ<br><b>เพิ่มแค่แท่ง เม็ดเท่าเดิม</b>');
+  });
+}
+
+/* ----- A3 แยกแล้วรวม ----- */
+async function runA3(only){
+  await act('A3','แยกแล้วรวม',async()=>{
+    const m14=DB.plan&&DB.plan.emphasis&&DB.plan.emphasis.includes('A3-add-43+5');
+    if(only!=='imagine'&&only!=='fade'){
+      setCrumb('แยกแล้วรวม · ระยะเห็น');
+      const seeList=[[34,25],[43,26]];if(m14)seeList.push([43,5]);
+      for(let i=0;i<seeList.length;i++){
+        const [a,b]=seeList[i];
+        const q=sumQ({id:`A3-S${i+1}`,activity:'A3',stage:'see',a,b,scene:true,interactive:true,row:true,
+          promptSub:'แตะ "รวมแท่ง" กับ "รวมเม็ด" แล้วเติมแถวแยกหลัก'});
+        await ask(q);
+        if(i===0){
+          await ask({id:'A3-S1-think',section:'understand',activity:'A3',stage:'see',kind:'think',mode:'record',quietMsg:false,
+            promptText:'ทำไมเราไม่เอาแท่งไปรวมกับเม็ด',prompt:'<div class="prompt">ทำไมเราไม่เอาแท่งไปรวมกับเม็ด</div><p class="hint" style="text-align:center">คิดสักครู่ หรือบอกพ่อ แล้วกด "ต่อไป"</p>',draw:()=>sumScene(parts(34,25),{mT:true,mO:true})});
+          await ask({id:'A3-S1-gap',section:'understand',activity:'A3',stage:'see',kind:'fields',mode:'learn',
+            promptText:'4 + 5 ในกล่อง ขาดอีกกี่ถึงเต็มกล่อง',expected:1,
+            prompt:'<div class="prompt">4 + 5 ในกล่อง เห็น 9 ได้เลยไหม<br>ขาดอีกกี่เม็ดถึงเต็มกล่อง</div>',draw:()=>sumScene(parts(34,25),{mT:true,mO:true}),
+            fields:[{k:'v',ans:1}],rowsFn:()=>[[{f:'v'},'เม็ด']],feedback:()=>'ดูช่องว่างในกล่อง เหลือกี่ช่อง',
+            solution:box=>{box.innerHTML=sumScene(parts(34,25),{mT:true,mO:true})+'<div class="sol-rows">เหลือ 1 ช่องว่าง</div>';}});
+        }
+      }
+    }
+    if(only!=='imagine'){
+      for(const [a,b] of [[52,34],[27,41]]){
+        setCrumb('แยกแล้วรวม · ระยะภาพจาง');
+        await ask(sumQ({id:`A3-F-${a}+${b}`,activity:'A3',stage:'fade',a,b,scene:true,flash:2000,row:true,promptSub:null,
+          after:null}));
+      }
+    }
+    setCrumb('แยกแล้วรวม · ระยะนึกเอง');
+    await ask(sumQ({id:'A3-I-45+32',activity:'A3',stage:'imagine',a:45,b:32,row:true}));
+    await ask(sumQ({id:'A3-I-36+51',activity:'A3',stage:'imagine',a:36,b:51,row:false,help:true}));
+    await ruleCard('<b>แท่งรวมกับแท่ง เม็ดรวมกับเม็ด</b><br>แล้วค่อยเอา 2 ส่วนมารวมกัน');
+  });
+}
+
+/* ----- การ์ดคุยกัน (Number Talks) ----- */
+async function numberTalk(part){
+  const T1=`<div class="talk"><p>ใช้เวลา 5–10 นาที ไม่ใช้จอ</p><h3>โจทย์: 53 + 26 (= 79)</h3><h3>คำถามเปิด</h3><ul><li>"หนูคิดยังไง"</li><li>"ถ้าใช้เหรียญสิบกับเหรียญบาท จะวางยังไง"</li><li>"40 + 30 กับ 4 + 3 เหมือนหรือต่างกันยังไง"</li></ul><h3>วิธีที่อาจได้ยิน</h3><ul><li>แยกหลัก 70 + 9</li><li>บวกสิบก่อน 53 → 73 → 79</li><li>นับต่อทีละ 1 (ไม่ห้าม ถามว่า "มีทางที่เร็วกว่าไหม")</li></ul><h3>วิธีบันทึก</h3><p>วาดแผนผังแยกเลข 53 → 50 | 3, 26 → 20 | 6 แล้วโยงเส้นสิบกับสิบ หน่วยกับหน่วย</p></div>`;
+  const T2=`<div class="talk"><p>ใช้เวลา 5–10 นาที ไม่ใช้จอ</p><h3>โจทย์: 38 + 25 (= 63)</h3><p>ใช้เหรียญจริง (3 เหรียญสิบ + 8 เหรียญบาท และ 2 เหรียญสิบ + 5 เหรียญบาท)</p><h3>คำถามเปิด</h3><ul><li>"หนูคิดยังไง"</li><li>"เหรียญบาทเต็มกล่องแล้วทำยังไงดี"</li><li>"มีวิธีอื่นไหม"</li></ul><h3>วิธีที่อาจได้ยิน (ทุกวิธีถูก ห้ามตัดสินว่าวิธีไหนดีกว่า)</h3><ul><li>แยกหลัก: 50 + 13 = 63</li><li>เติม 38 ให้ครบ 40: 38 + 2 = 40, 40 + 23 = 63</li><li>บวกสิบก่อน: 38 → 58 → 63</li></ul><h3>คำถามต่อ (ถ้าเวลาเหลือ)</h3><p>"27 + 15 กับ 25 + 17 ผลเท่ากันไหม ทำไม" (ทั้งคู่ = 42 เพราะแท่งรวมเท่ากัน 3 แท่ง เม็ดรวมเท่ากัน 12 เม็ด)</p><h3>วิธีบันทึก</h3><p>วาดกล่อง 10 ช่องของเหรียญบาท 8 + 5 ให้ลูกเห็นว่าเติม 2 เต็ม เหลือ 3</p></div>`;
+  const NO=`<h3>สิ่งที่ไม่ควรพูด</h3><ul><li>"ทด 1 ไว้ข้างบน" เป็นกฎให้ท่อง (ให้พูดว่า "แลกเป็นแท่ง/เหรียญสิบ" ก่อน)</li><li>"ง่ายนิดเดียว" "เก่งมาก" ให้ชมที่วิธีคิด เช่น "แยกสิบกับหน่วยออกมาก่อน ทำให้ไม่ต้องนับเยอะ"</li><li>อย่าบอกให้ "ตั้งบวก" ในบทนี้</li></ul>`;
+  const r=await screen({center:false,html:`<h2>คุยกัน (สำหรับพ่อ)</h2>${part===1?T1:T2}${NO}<h3>วิธีที่ลูกเล่า (พิมพ์สั้นๆ ไม่บังคับ)</h3><textarea id="talkNote" rows="3" placeholder="เช่น ลูกแยก 50 กับ 3 ก่อน"></textarea>`,
+    buttons:[{id:'done',label:'คุยแล้ว',primary:true},{id:'skipped',label:'ข้ามวันนี้',small:true}],collect:root=>$('#talkNote',root).value.trim()});
+  S.numberTalk={status:r.id,note:r.val||'',at:new Date().toISOString()};touch('numberTalk');
+}
+
+/* ============ ชุดฝึก ============ */
+function gen1(kind){
+  for(let k=0;k<500;k++){
+    let a,b;
+    if(kind==='std'){a=between(12,89);b=between(12,89);if(a%10<1||a%10>8||b%10<1||b%10>8||a%10+b%10>9||Math.floor(a/10)+Math.floor(b/10)>9)continue;}
+    else if(kind==='tens'){a=between(12,89);b=between(2,8)*10;if(a%10<1||a%10>8)continue;if(rnd(2)){[a,b]=[b,a];}}
+    else{a=between(41,89);b=between(2,8);if(a%10<1||a%10+b>9)continue;}
+    const c=a+b;if(kind!=='single'&&(c<50||c>99))continue;
+    if(kind==='single'&&c>99)continue;
+    return [a,b];
+  }
+  return [34,25];
+}
+function gen2(kind){
+  for(let k=0;k<800;k++){
+    let a,b;
+    if(kind==='std'){a=between(12,89);b=between(12,89);const os=a%10+b%10;if(os<11||os>18)continue;if(a+b<40||a+b>99)continue;}
+    else if(kind==='ten'){a=between(12,89);b=between(12,89);if(a%10+b%10!==10||a%10===0)continue;if(a+b<40||a+b>99)continue;}
+    else{a=between(12,89);b=between(3,9);const os=a%10+b;if(os<10||os>18||a%10===0)continue;if(a+b>99)continue;}
+    return [a,b];
+  }
+  return [27,15];
+}
+function makePracticeSet(part,n){
+  for(let tries=0;tries<300;tries++){
+    let kinds;
+    if(part===1)kinds=n===10?[...Array(8).fill('std'),'tens','single']:['std','std','std','tens','single'].slice(0,n);
+    else kinds=n===10?[...Array(7).fill('std'),'ten','single','noreg']:['std','std','std','ten','single'].slice(0,n);
+    const list=[];
+    for(const k of kinds){
+      if(part===1)list.push(gen1(k));
+      else list.push(k==='noreg'?gen1('std'):gen2(k));
+    }
+    const keys=new Set(list.map(([a,b])=>Math.min(a,b)+'|'+Math.max(a,b)));
+    if(keys.size!==list.length)continue;
+    const rc={};let bad=false;list.forEach(([a,b])=>{rc[a+b]=(rc[a+b]||0)+1;if(rc[a+b]>2)bad=true;});
+    if(bad)continue;
+    return shuffle(list);
+  }
+  return [[34,25],[42,36],[53,24],[61,27],[45,31]].slice(0,n);
+}
+function practiceStatsOf(items,part){
+  const first=items.filter(r=>r.firstCorrect).length;
+  const helped=items.filter((r,i)=>i>=3&&r.rowRequested).length;
+  const mind=items.filter((r,i)=>i>=3&&r.firstCorrect&&!r.rowRequested).length;
+  const times=items.filter(r=>r.timeValid&&r.silentMs!=null).map(r=>r.silentMs);
+  const med=median(times);
+  const codes={};items.forEach(r=>r.misconceptions.forEach(c=>{codes[c]=(codes[c]||0)+1;}));
+  const limit=part===1?12000:20000;
+  const fluent=items.length>=10&&first>=9&&helped<=2&&med!=null&&med<=limit;
+  return {correctFirst:first,helped,mindCount:mind,medianSilentMs:med,misconceptions:codes,fluent};
+}
+function updateReview(part,set){
+  const key='part'+part,r=DB.review[key]||(DB.review[key]={stage:0,next:null}),t=todayStr();
+  const INT=[1,3,7,14];
+  if(r.next&&t>=r.next){
+    if(set.correctFirst<8||set.helped>=4){r.stage=1;r.next=addDays(t,INT[0]);}
+    else{const idx=Math.min(r.stage,3);r.stage=Math.min(r.stage+1,4);r.next=addDays(t,INT[idx]);}
+  }else if(set.fluent&&r.stage===0){r.stage=1;r.next=addDays(t,INT[0]);}
+  return r.next;
+}
+async function runPractice(part,n){
+  n=n||10;
+  const todaySets=DB.practiceSets.filter(s=>s.date===todayStr()).length;
+  if(todaySets>=3){
+    const r=await screen({html:'<h2>พักก่อนไหม</h2><p style="text-align:center">วันนี้ทำชุดฝึกไปหลายชุดแล้ว พักสักหน่อยแล้วมาต่อวันหลังก็ได้นะ</p>',buttons:[{id:'go',label:'ทำต่ออีกชุด'},{id:'rest',label:'พักก่อน',primary:true}]});
+    if(r.id==='rest')throw HOME;
+  }
+  const label=part===1?'ฝึกให้คล่อง · ตอน 1':'ฝึกให้คล่อง · ตอน 2';
+  const setRec={setId:'PR'+part+'-'+Date.now().toString(36),part:'part'+part,date:todayStr(),startedAt:new Date().toISOString(),size:n,items:[]};
+  await act('PR'+part,label,async()=>{
+    await card('ฝึกให้คล่อง',`<p style="text-align:center">${n} ข้อ ตอบด้วยแป้นตัวเลข ${n===10?'3 ข้อแรกมีแถวแยกหลักให้ ข้อหลังๆ ถ้าอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้':'ข้อไหนอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้'}</p>`,'เริ่ม');
+    const list=makePracticeSet(part,n);
+    for(let i=0;i<list.length;i++){
+      const [a,b]=list[i];setCrumb(`${label} · ข้อ ${i+1}/${list.length}`);
+      const withRow=n===10?i<3:false;
+      const P=parts(a,b);
+      const q=sumQ({id:`PR${part}-${String(i+1).padStart(2,'0')}`,section:'practice',activity:'PR'+part,stage:'',a,b,row:withRow,help:!withRow});
+      q.meta={setId:setRec.setId,part:'part'+part,givenRow:withRow};
+      q.praise=(rec)=>!rec.rowRequested&&!withRow&&!rec.rowOpenedBySystem?'คิดในหัวได้ ไม่ต้องใช้ภาพ':(P.regroup?'แลกเม็ดเป็นแท่งได้ถูกจังหวะ':nextPraise());
+      q.afterOk=null;
+      const rec=await ask(q);
+      setRec.items.push(rec);
+    }
+    const stats=practiceStatsOf(setRec.items,part);
+    Object.assign(setRec,stats);
+    setRec.endedAt=new Date().toISOString();
+    setRec.itemIds=setRec.items.map(r=>r.itemId);
+    const prev=DB.practiceSets.filter(s=>s.part==='part'+part&&s.size===10).slice(-1)[0];
+    setRec.nextReview=updateReview(part,stats);
+    delete setRec.items;
+    DB.practiceSets.push(setRec);S.sets.push(setRec);save();
+    const prevTxt=prev&&n===10?`<br>ครั้งก่อน ${prev.mindCount} ข้อ`:'';
+    const msg=`<div class="rule">ถูก ${stats.correctFirst} จาก ${n}</div><p style="text-align:center">ครั้งนี้คิดในหัวได้ ${stats.mindCount} ข้อโดยไม่ขอตัวช่วย${prevTxt}</p>`;
+    await card('จบชุดนี้',msg,'จบ');
+    setRec.summaryShown=true;
+  });
+  return setRec;
+}
+
+/* ============ ตอน 1 ทั้งหมด ============ */
+async function runPart1(route){
+  beginSession('part1',route||'normal');
+  const skipEarly=route==='part1-skipA1A2';
+  await prepCard(1);
+  if(!skipEarly){await runA1();await runA2();}
+  await runA3(skipEarly?'imagine':undefined);
+  if(!skipEarly)await numberTalk(1);
+  const set=await runPractice(1,skipEarly?5:10);
+  S.completed=true;touch('part1-end');if(DB.plan&&DB.plan.activeRoute==='part1-skipA1A2'){DB.plan.activeRoute='normal';save();}
+  const good=set.correctFirst>=(skipEarly?4:9);
+  const dad=skipEarly&&!good?'<p class="hint" style="text-align:center">ถ้าถูกน้อยกว่า 4 ข้อ ลองกลับไปเรียนตอน 1 ตามปกติ</p>':'';
+  const r=await screen({html:`<h2>จบตอน 1</h2><p style="text-align:center">แท่งรวมกับแท่ง เม็ดรวมกับเม็ด แล้วค่อยรวม 2 ส่วนเข้าด้วยกัน</p>${dad}`,buttons:[{id:'p2',label:'ไปตอน 2',primary:true},{id:'again',label:'ฝึกอีกชุด'},{id:'home',label:'กลับหน้าแรก'}]});
+  return r.id;
+}
+
+/* ============ ตอน 2 ============ */
+const B1_ITEMS=[
+  {key:'B1-S1',rods:3,base:7,add:5,gap:3,over:2,result:42,tens:4,ones:2},
+  {key:'B1-S2',rods:5,base:8,add:7,gap:2,over:5,result:65,tens:6,ones:5},
+  {key:'B1-S3',rods:2,base:6,add:4,gap:4,over:0,result:30,tens:3,ones:0,why:true}
+];
+function b1Dots(it,s){return dotsOf('a',it.base).concat(dotsOf('b',s.poured));}
+function b1Scene(it,s){
+  let ch=chunk10(b1Dots(it,s));
+  if(s.ex)ch=ch.slice(1);
+  if(!ch.length)ch=[[]];
+  const rem=dotsOf('b',it.add-s.poured);
+  return scene({rods:[it.rods+(s.ex?1:0)],frames:ch,pending:s.poured<it.add?rem:null,tapFull:s.canEx&&s.poured>=it.add&&!s.ex&&b1Dots(it,s).length>=10,gatherFirst:s.gather,popLast:s.popRod,aria:'เม็ดล้นกล่อง'});
+}
+async function runB1(){
+  await act('B1','เม็ดล้นกล่อง',async()=>{
+    setCrumb('เม็ดล้นกล่อง · ระยะเห็น');
+    for(const it of B1_ITEMS){
+      const s={poured:0,ex:false,place:0,gather:false,popRod:false};
+      const first=it.key==='B1-S1';
+      const drawIt=st=>b1Scene(it,st);
+      const common={section:'understand',activity:'B1',stage:'see',st:s,draw:drawIt,collect:st=>({placeCount:st.place,exchangedByChild:!!st.exchangedByChild})};
+      await ask(Object.assign({},common,{id:it.key+'-pour',kind:'build',mode:'free',
+        promptText:`${it.rods} แท่ง + เม็ด ${it.base} กับ ${it.add}`,
+        prompt:first?`<div class="prompt">เทเม็ดสีส้มลงกล่องให้หมด เกิดอะไรขึ้น?</div><div class="sub" style="text-align:center">แตะเม็ดสีส้ม หรือกดปุ่มเพื่อเติมทีละเม็ด</div>`:`<div class="prompt">${it.rods} แท่ง กับเม็ด ${it.base} และ ${it.add}<br>เทเม็ดสีส้มลงกล่องให้หมด</div>`,
+        controls:st=>[{label:'เติม 1 เม็ด',act:'pour',disabled:st.poured>=it.add,primary:st.poured<it.add}],
+        act:(n,st)=>{if(n==='pour'&&st.poured<it.add){st.poured++;st.place++;}},
+        ready:st=>st.poured>=it.add,cta:'ต่อไป',autoNext:true,evaluate:()=>({correct:true}),quietMsg:false}));
+      await ask(Object.assign({},common,{id:it.key+'-q1',kind:'fields',mode:'learn',
+        promptText:'ต้องเติมกี่เม็ดถึงกล่องเต็ม',expected:it.gap,prompt:'<div class="prompt">ต้องเติมกี่เม็ดถึงกล่องเต็ม</div>',
+        fields:[{k:'v',ans:it.gap}],rowsFn:()=>[[{f:'v'},'เม็ด']],
+        feedback:()=>'ลองดูกล่อง ช่องว่างเหลือกี่ช่อง',
+        fbVis:()=>scene({frames:[dotsOf('a',it.base)]}),
+        solution:box=>{box.innerHTML=scene({frames:[dotsOf('a',it.base)]})+`<div class="sol-rows">ช่องว่างเหลือ ${it.gap} ช่อง</div>`;}}));
+      await ask(Object.assign({},common,{id:it.key+'-q2',kind:'fields',mode:'learn',
+        promptText:'เหลือล้นออกมากี่เม็ด',expected:it.over,prompt:'<div class="prompt">เหลือล้นออกมากี่เม็ด</div>',
+        fields:[{k:'v',ans:it.over}],rowsFn:()=>[[{f:'v'},'เม็ด']],
+        feedback:()=>'ลองดูกล่อง เม็ดสีส้มที่เหลือนอกกล่องเต็มมีกี่เม็ด',
+        solution:box=>{box.innerHTML=b1Scene(it,s)+`<div class="sol-rows">ล้นออกมา ${it.over} เม็ด</div>`;}}));
+      s.canEx=true;
+      await ask(Object.assign({},common,{id:it.key+'-exch',kind:'build',mode:'free',autoNext:true,
+        promptText:'กล่องเต็ม 10 เม็ด เท่ากับชิ้นอะไร',
+        prompt:'<div class="prompt">กล่องเต็ม 10 เม็ด เท่ากับชิ้นอะไร<br><span class="sub">แตะกล่องเต็มเพื่อ <b>แลก</b></span></div>',
+        controls:st=>[{label:'แลก',act:'exch',disabled:st.ex,primary:!st.ex}],
+        act:async(n,st,h)=>{if(n==='exch'&&!st.ex){st.exchangedByChild=true;st.place++;st.gather=true;h.redraw();await sleep(reduced()?0:750);st.gather=false;st.ex=true;st.popRod=true;h.redraw();}},
+        ready:st=>st.ex,cta:'ต่อไป',evaluate:()=>({correct:true}),quietMsg:false}));
+      await ask(Object.assign({},common,{id:it.key+'-q4',kind:'fields',mode:'learn',
+        promptText:'ตอนนี้มีกี่แท่ง กี่เม็ด เป็นเลขอะไร',expected:it.result,tensSum:it.tens*10,onesSum:it.ones,regroup:true,
+        prompt:'<div class="prompt">ตอนนี้มีกี่แท่ง กี่เม็ด เป็นเลขอะไร</div>',
+        fields:[{k:'t',ans:it.tens},{k:'o',ans:it.ones},{k:'n',ans:it.result}],
+        rowsFn:()=>[['มี',{f:'t',aria:'แท่ง'},'แท่ง',{f:'o',aria:'เม็ด'},'เม็ด'],['เป็นเลข',{f:'n'}]],
+        feedback:()=>'นับแท่งก่อน แล้วนับเม็ดที่เหลืออยู่ในกล่อง',
+        solution:box=>{box.innerHTML=b1Scene(it,s)+`<div class="sol-rows">${it.tens} แท่ง ${it.ones} เม็ด = ${it.result}</div>`;}}));
+      if(it.why)await ask(Object.assign({},common,{id:it.key+'-why',kind:'think',mode:'record',quietMsg:false,promptText:'ทำไมไม่มีเม็ดเหลือเลย',
+        prompt:'<div class="prompt">ทำไมไม่มีเม็ดเหลือเลย</div><p class="hint" style="text-align:center">คิดสักครู่ หรือบอกพ่อ แล้วกด "ต่อไป"</p>'}));
+    }
+    // ภาพจาง
+    for(const [t,o] of [[4,13],[6,11]]){
+      setCrumb('เม็ดล้นกล่อง · ระยะภาพจาง');
+      const n=t*10+o,fr=chunk10(dotsOf('a',o));
+      await ask({id:`B1-F-${t}-${o}`,section:'understand',activity:'B1',stage:'fade',kind:'fields',mode:'learn',
+        promptText:`${t} แท่ง + ${o} เม็ด`,expected:n,tensSum:t*10,onesSum:o,regroup:true,prompt:'<div class="prompt">เลขอะไร?</div>',flash:2000,replay:true,
+        draw:()=>scene({rods:[t],frames:fr}),fields:[{k:'v',ans:n}],rowsFn:()=>[[{f:'v'}]],
+        classify:v=>classifyBlocks(t,o,Number(v.v)),
+        feedback:(v,code)=>{
+          if(code==='M11')return `${o} เม็ดไม่อยู่ในกล่องเดียว มี 1 กล่องเต็มกับอีก ${o-10} เม็ด กล่องเต็มแลกเป็นแท่งได้`;
+          if(code==='M10')return 'เม็ด 10 เม็ดที่เต็มกล่องหายไปไหน ลองแลกเป็นแท่งดู';
+          if(code==='M15')return 'แลกแล้ว 10 เม็ดกลายเป็นแท่ง ไม่อยู่ในกล่องแล้ว อย่านับซ้ำ';
+          return 'กล่องเต็ม 1 กล่องแลกเป็น 1 แท่งได้';},
+        fbVis:()=>scene({rods:[t],frames:fr}),
+        solution:box=>{box.innerHTML=scene({rods:[t+1],frames:[dotsOf('a',o-10)]})+`<div class="sol-rows">${t+1} แท่ง ${o-10} เม็ด = ${n}</div>`;}});
+    }
+    // นึกเอง
+    setCrumb('เม็ดล้นกล่อง · ระยะนึกเอง');
+    await ask({id:'B1-I-3-15',section:'understand',activity:'B1',stage:'imagine',kind:'fields',mode:'learn',
+      promptText:'3 แท่ง กับ 15 เม็ด',expected:45,tensSum:30,onesSum:15,regroup:true,
+      prompt:'<div class="prompt"><b>3 แท่ง</b> กับ <b>15 เม็ด</b> เป็นเลขอะไร</div>',fields:[{k:'v',ans:45}],rowsFn:()=>[[{f:'v'}]],
+      classify:v=>classifyBlocks(3,15,Number(v.v)),
+      feedback:(v,code)=>code==='M11'?'15 เม็ดไม่อยู่ในกล่องเดียว มี 1 กล่องเต็มกับอีก 5 เม็ด กล่องเต็มแลกเป็นแท่งได้':(code==='M10'?'เม็ด 10 เม็ดที่เต็มกล่องหายไปไหน ลองแลกเป็นแท่งดู':(code==='M15'?'แลกแล้ว 10 เม็ดกลายเป็นแท่ง ไม่อยู่ในกล่องแล้ว อย่านับซ้ำ':'กล่องเต็ม 1 กล่องแลกเป็น 1 แท่งได้')),
+      fbVis:()=>scene({rods:[3],frames:chunk10(dotsOf('a',15))}),
+      solution:box=>{box.innerHTML=scene({rods:[4],frames:[dotsOf('a',5)]})+'<div class="sol-rows">4 แท่ง 5 เม็ด = 45</div>';}});
+    await ask({id:'B1-I-7+6',section:'understand',activity:'B1',stage:'imagine',kind:'fields',mode:'learn',
+      promptText:'7 + 6 ในกล่อง',expected:13,tensSum:10,onesSum:13,regroup:true,
+      prompt:'<div class="prompt"><b>7 + 6</b> ในกล่อง<br>เติมเต็มกล่องใช้กี่เม็ด เหลือกี่เม็ด</div>',
+      fields:[{k:'u',ans:3},{k:'l',ans:3},{k:'n',ans:13}],
+      rowsFn:()=>[['ใช้',{f:'u'},'เม็ด เหลือ',{f:'l'},'เม็ด'],['7 + 6 =',{f:'n'}]],
+      feedback:()=>'ลองดูกล่อง ช่องว่างเหลือกี่ช่อง',
+      fbVis:()=>scene({frames:[dotsOf('a',7)]}),
+      solution:box=>{box.innerHTML=scene({frames:[dotsOf('a',7).concat(dotsOf('b',3)),dotsOf('b',3)]})+'<div class="sol-rows">ใช้ 3 เหลือ 3 → 13</div>';}});
+    await ruleCard('<b>เม็ดครบ 10 เมื่อไร แลกเป็นแท่ง 1 แท่ง</b><br>(ที่โรงเรียนเรียกว่า "ทด")<br>รวมเม็ดให้เติมกล่องให้เต็มก่อน ที่ล้นคือเม็ดที่เหลือ');
+  });
+}
+
+/* ----- ท่องซ้ำ: เติมให้เต็มกล่อง ----- */
+function kumonHidden(){
+  if(DB.settings.kumonHidden)return true;
+  const last=DB.kumon.slice(-3);
+  if(last.length<3)return false;
+  if(DB.settings.kumonRestoredAt&&DB.kumon.length<=DB.settings.kumonRestoredCount)return false;
+  const days=new Set(last.map(k=>k.date));
+  return last.every(k=>k.correct===9)&&days.size===3;
+}
+async function runKumon(){
+  const rec={date:todayStr(),at:new Date().toISOString(),correct:0,total:9,items:[]};
+  await act('K','เติมให้เต็มกล่อง',async()=>{
+    await card('เติมให้เต็มกล่อง','<p style="text-align:center">กล่องจะโผล่แป๊บเดียว ดูให้ดี แล้วบอกว่าขาดอีกกี่เม็ดถึงเต็ม</p>','เริ่ม');
+    let streak=0;const prevBest=Math.max(0,...DB.kumon.map(k=>k.bestStreak||0));let best=0;
+    const ns=shuffle([1,2,3,4,5,6,7,8,9]);
+    for(let i=0;i<ns.length;i++){
+      const n=ns[i];setCrumb(`เติมให้เต็มกล่อง · ข้อ ${i+1}/9`);
+      const dots=dotsOf('a',Math.min(5,n)).concat(dotsOf('b',Math.max(0,n-5)));
+      const r=await ask({id:'K-'+(i+1),section:'kumon',activity:'K',stage:'',kind:'fields',mode:'learn',max:1,
+        promptText:`กล่องมี ${n} เม็ด ขาดอีกกี่เม็ด`,expected:10-n,
+        prompt:'<div class="prompt">ขาดอีกกี่เม็ดถึงเต็มกล่อง</div>',flash:1500,replay:false,
+        draw:()=>scene({frames:[dots]}),fields:[{k:'v',ans:10-n}],rowsFn:()=>[[{f:'v'},'เม็ด']],
+        praise:()=>`ถูกติดกัน ${streak+1} ข้อ`,
+        feedback:()=>'ดูช่องว่างในกล่อง เหลือกี่ช่อง',
+        fbVis:()=>scene({frames:[dots]}),
+        solution:box=>{box.innerHTML=scene({frames:[dots]})+`<div class="sol-rows">ช่องว่างเหลือ ${10-n} ช่อง</div>`;},
+        meta:{n}});
+      if(r.firstCorrect){streak++;rec.correct++;}else streak=0;
+      best=Math.max(best,streak);rec.items.push({n,correct:!!r.firstCorrect,silentMs:r.silentMs,timeValid:r.timeValid});
+    }
+    rec.bestStreak=best;DB.kumon.push(rec);save();
+    await card('จบรอบนี้',`<div class="rule">ถูก ${rec.correct} จาก 9</div><p style="text-align:center">ถูกติดกันมากสุดรอบนี้ ${best} ข้อ · สถิติดีที่สุดของหนู ${Math.max(prevBest,best)} ข้อ</p>`,'จบ');
+  });
+}
+
+/* ----- B2 ----- */
+async function runB2(from){
+  await act('B2','แยกแล้วรวม แบบมีการแลก',async()=>{
+    if(from!=='fade'){
+      setCrumb('แยกแล้วรวม แบบมีการแลก · ระยะเห็น');
+      for(const [a,b] of [[27,15],[46,38]]){
+        await ask(sumQ({id:`B2-S-${a}+${b}`,activity:'B2',stage:'see',a,b,scene:true,interactive:true,row:true,promptSub:'แตะ "รวมแท่ง" "รวมเม็ด" แล้วแลกกล่องเต็ม แล้วเติมแถวแยกหลัก'}));
+        if(a===27)await ask({id:'B2-S-q',section:'understand',activity:'B2',stage:'see',kind:'fields',mode:'learn',
+          promptText:'หน่วยได้ 12 แปลว่ามีแท่งเพิ่มอีกกี่แท่ง',expected:1,
+          prompt:'<div class="prompt">หน่วยได้ 12 แปลว่ามีแท่งเพิ่มอีกกี่แท่ง</div>',draw:()=>sumScene(parts(27,15),{mT:true,mO:true,ex:true}),
+          fields:[{k:'v',ans:1}],rowsFn:()=>[[{f:'v'},'แท่ง']],feedback:()=>'12 เม็ด มีกล่องเต็มกี่กล่อง กล่องเต็มแลกเป็นแท่งได้กี่แท่ง',
+          solution:box=>{box.innerHTML=sumScene(parts(27,15),{mT:true,mO:true,ex:true})+'<div class="sol-rows">12 เม็ด = กล่องเต็ม 1 กล่อง กับ 2 เม็ด → เพิ่ม 1 แท่ง</div>';}});
+      }
+    }
+    for(const [a,b] of [[29,34],[57,25]]){
+      setCrumb('แยกแล้วรวม แบบมีการแลก · ระยะภาพจาง');
+      await ask(sumQ({id:`B2-F-${a}+${b}`,activity:'B2',stage:'fade',a,b,scene:true,flash:2000,row:true}));
+    }
+    setCrumb('แยกแล้วรวม แบบมีการแลก · ระยะนึกเอง');
+    await ask(sumQ({id:'B2-I-48+27',activity:'B2',stage:'imagine',a:48,b:27,row:true}));
+    await ask(sumQ({id:'B2-I-35+46',activity:'B2',stage:'imagine',a:35,b:46,row:false,help:true}));
+    await ask(sumQ({id:'B2-I-18+37',activity:'B2',stage:'imagine',a:18,b:37,row:false,help:true}));
+    await ask({id:'B2-MIND',section:'understand',activity:'B2',stage:'imagine',kind:'choice',mode:'record',noLetters:true,shuffle:false,
+      promptText:'ตอนรวมหน่วย ในหัวหนูเห็นอะไร',prompt:'<div class="prompt">ตอนรวมหน่วย ในหัวหนูเห็นอะไร</div>',
+      options:[{id:'full-box',text:'กล่องเต็มแล้วล้น'},{id:'rods-ones',text:'แท่งกับเม็ด'},{id:'fingers',text:'นับนิ้ว'},{id:'unsure',text:'บอกไม่ถูก'}],quietMsg:false,cta:'ตอบ'});
+    await ruleCard('แท่งรวมแท่ง เม็ดรวมเม็ด <b>ถ้าเม็ดเกิน 10 แลกเป็นแท่ง</b><br>แล้วรวม 2 ส่วน<br>27 + 15 → 30 + 12 → 42');
+  });
+}
+
+/* ----- ท้าทาย ----- */
+async function runChallenge(){
+  await act('C1','ปริศนา: เลขหาย',async()=>{
+    const H=['เริ่มจากหลักหน่วย □ + 5 ต้องลงท้ายด้วย 2','□ + 5 ได้ 2 ไม่ได้ ต้องได้ 12 แปลว่ามีการแลก 1 แท่ง','□ = 7 แล้วหลักสิบ: 3 แท่ง + □ แท่ง + 1 แท่งที่แลกมา = 7 แท่ง'];
+    const st={hint:0};
+    await ask({id:'C1',section:'challenge',activity:'C1',stage:'',kind:'fields',mode:'free',st,
+      promptText:'3□ + □5 = 72',expected:'37 + 35',
+      prompt:'<div class="prompt">หาเลขที่หายไปทั้ง 2 ช่อง</div><div class="expr">3<span style="opacity:.5">□</span> + <span style="opacity:.5">□</span>5 = 72</div>',
+      fields:[{k:'x',ans:7},{k:'y',ans:3}],
+      rowsFn:()=>[['3',{f:'x',aria:'ช่องหน่วยของตัวแรก'},'+',{f:'y',aria:'ช่องสิบของตัวที่สอง'},'5 = 72']],
+      feedback:()=>'ยังไม่ตรง ลองคิดต่อ หรือกดคำใบ้ได้',
+      controls:s=>[{label:s.hint?`ขอคำใบ้ถัดไป (${s.hint}/3)`:'ขอคำใบ้',act:'hint',disabled:s.hint>=3}],
+      draw:s=>s.hint?`<div class="live" style="font-size:20px">${H.slice(0,s.hint).map((h,i)=>`<div class="pad">คำใบ้ ${i+1}: ${h}</div>`).join('')}</div>`:'<div class="hint">ลองคิดดู ถ้าติดขอคำใบ้ได้</div>',
+      act:(n,s)=>{if(n==='hint'&&s.hint<3)s.hint++;},
+      collect:s=>({hintLevel:s.hint}),
+      praise:()=>'หน่วยลงท้าย 2 ต้องแลกกล่องเต็ม แล้วหลักสิบครบพอดี',
+      afterOk:'37 + 35 = 72 · หน่วย 7 + 5 = 12 แลก 1 แท่ง เหลือ 2 เม็ด · สิบ 3 + 3 + 1 = 7'});
+  });
+  await act('C2','ปริศนา: บัตร 4 ใบ',async()=>{
+    const H=['บัตรในหลักสิบ มีค่ามากกว่าในหลักหน่วยกี่เท่า','อยากให้ผลน้อย ต้องเอาบัตรเล็กไปไว้หลักไหน','ลองใส่ 2 กับ 4 ในหลักสิบ'];
+    const st={slots:[null,null,null,null],sel:null,hint:0,best:null,tries:0};
+    const sumOf=s=>(s.slots[0]*10+s.slots[1])+(s.slots[2]*10+s.slots[3]);
+    await ask({id:'C2',section:'challenge',activity:'C2',stage:'',kind:'build',mode:'free',st,cta:'เช็ค',
+      promptText:'บัตร 2 4 5 7 ผลบวกน้อยที่สุด',expected:72,
+      prompt:'<div class="prompt">มีบัตรตัวเลข <b>2, 4, 5, 7</b> ใช้ครบทุกใบ ทำเลขสองหลัก 2 ตัว ให้<b>ผลบวกน้อยที่สุด</b><br><span class="sub">แตะบัตร แล้วแตะช่องที่จะวาง (แตะบัตรในช่องอีกครั้งเพื่อเอาออก)</span></div>',
+      draw:s=>{
+        const used=s.slots.filter(v=>v!=null);
+        const cards=[2,4,5,7].map(n=>`<button type="button" class="btn small${s.sel===n?' primary':''}" data-ctl="card${n}"${used.includes(n)?' disabled':''} style="min-width:56px">${n}</button>`).join(' ');
+        const slot=i=>`<button type="button" class="btn small${s.slots[i]==null?' ghost':''}" data-ctl="slot${i}" style="min-width:56px;font-size:24px">${s.slots[i]==null?'□':s.slots[i]}</button>`;
+        const full=s.slots.every(v=>v!=null);
+        return `<div class="live">${cards}</div><div class="row" style="margin:10px 0">${slot(0)}${slot(1)} + ${slot(2)}${slot(3)} ${full?`= <b>${sumOf(s)}</b>`:''}</div><div class="hint">${s.best!=null?`ผลน้อยสุดที่หนูเคยได้: <b>${s.best}</b>`:'ยังไม่มีผลที่เคยได้'}</div>${s.hint?`<div class="pad" style="font-size:18px">${H.slice(0,s.hint).map((h,i)=>`<div>คำใบ้ ${i+1}: ${h}</div>`).join('')}</div>`:''}`;
+      },
+      controls:s=>[{label:s.hint?`ขอคำใบ้ถัดไป (${s.hint}/3)`:'ขอคำใบ้',act:'hint',disabled:s.hint>=3}],
+      act:(n,s)=>{
+        if(n==='hint'&&s.hint<3)s.hint++;
+        else if(n.startsWith('card'))s.sel=Number(n.slice(4));
+        else if(n.startsWith('slot')){
+          const i=Number(n.slice(4));
+          if(s.slots[i]!=null){s.slots[i]=null;}
+          else if(s.sel!=null&&!s.slots.includes(s.sel)){s.slots[i]=s.sel;s.sel=null;s.tries++;
+            if(s.slots.every(v=>v!=null)){const v=sumOf(s);if(s.best==null||v<s.best)s.best=v;}}
+        }
+      },
+      evaluate:s=>{
+        if(!s.slots.every(v=>v!=null))return {correct:false,msg:'วางบัตรให้ครบ 4 ใบก่อนนะ'};
+        const v=sumOf(s);
+        if(v===72)return {correct:true};
+        return {correct:false,msg:`ตอนนี้ได้ ${v} ลองสลับบัตรดู มีทางที่ได้น้อยกว่านี้ไหม`};
+      },
+      collect:s=>({hintLevel:s.hint,bestSum:s.best,placeCount:s.tries}),
+      praise:()=>'สลับบัตรจนเจอผลน้อยสุดแล้ว',
+      afterOk:'25 + 47 = 72 และ 27 + 45 = 72 · สิบ 20 + 40 = 60, หน่วย 5 + 7 = 12, รวม 72'});
+    // บัตรและช่องอยู่ใน vis ใช้ data-ctl ต้องรับผ่าน vis ด้วย (ดู handler ด้านล่าง)
+    await ask({id:'C2-close',section:'challenge',activity:'C2',stage:'',kind:'think',mode:'record',quietMsg:false,
+      promptText:'25 + 47 กับ 27 + 45 ได้เท่ากัน ทำไม',
+      prompt:'<div class="prompt">25 + 47 กับ 27 + 45 ได้เท่ากัน ทำไม</div><p class="hint" style="text-align:center">คิดสักครู่ หรือบอกพ่อ แล้วกด "ต่อไป"</p>'});
+  });
+}
+
+/* ============ ตอน 2 ทั้งหมด ============ */
+async function runPart2(route){
+  beginSession('part2',route||'normal');
+  await prepCard(2);
+  // อุ่นเครื่อง
+  let wrong=0;
+  await act('WU','อุ่นเครื่อง',async()=>{
+    await card('อุ่นเครื่อง','<p style="text-align:center">4 ข้อสั้นๆ ก่อนเริ่มตอน 2 ตอบตามที่คิดได้เลย</p>','เริ่ม');
+    for(const [a,b] of [[53,24],[60,30],[41,37],[26,50]]){
+      setCrumb('อุ่นเครื่อง');
+      const q=sumQ({id:`WU-${a}+${b}`,section:'warmup',activity:'WU',stage:'imagine',a,b,mode:'quiet'});
+      q.fields=[{k:'total',ans:a+b}];q.rowsFn=()=>[[`${a} + ${b} =`,{f:'total'}]];q.helpBtn=false;
+      const r=await ask(q);if(!r.firstCorrect)wrong++;
+    }
+  });
+  if(wrong>=2){
+    const r=await screen({html:'<h2>อุ่นเครื่อง</h2><p style="text-align:center">แนะนำให้กลับไปทำ "แยกแล้วรวม" ระยะภาพจางอีกรอบก่อน</p>',buttons:[{id:'back',label:'กลับไปทำตามที่แนะนำ',primary:true},{id:'go',label:'ไปต่อเลย'}]});
+    S.warmupAdvice={wrong,chosen:r.id};
+    if(r.id==='back')await runA3('fade');
+  }
+  if(route!=='part2-B2-fade')await runB1();
+  if(!kumonHidden())await runKumon();
+  await runB2(route==='part2-B2-fade'?'fade':undefined);
+  await numberTalk(2);
+  await runPractice(2,10);
+  let doneChallenge=false;
+  const r=await screen({html:'<h2>ท้าทาย</h2><p style="text-align:center">ปริศนา 2 ข้อ ข้ามได้ ทำเล่นๆ ก็ได้</p>',buttons:[{id:'go',label:'ลองปริศนา',primary:true},{id:'skip',label:'ข้าม'}]});
+  if(r.id==='go'){await runChallenge();doneChallenge=true;}
+  S.challengeDone=doneChallenge;S.completed=true;touch('part2-end');if(DB.plan&&DB.plan.activeRoute==='part2-B2-fade'){DB.plan.activeRoute='normal';save();}
+  const r2=await screen({html:'<h2>จบตอน 2</h2><p style="text-align:center">แท่งรวมแท่ง เม็ดรวมเม็ด ถ้าเม็ดเกิน 10 แลกเป็นแท่ง แล้วรวม 2 ส่วน</p>',buttons:[{id:'home',label:'กลับหน้าแรก',primary:true},{id:'again',label:'ฝึกอีกชุด'}]});
+  return r2.id;
+}
+
+/* ============ หน้าแรก + ส่วนของพ่อ ============ */
+function computeStatus(){
+  const out={};
+  const sets=(p)=>DB.practiceSets.filter(s=>s.part==='part'+p);
+  const l1=sets(1).slice(-1)[0],l2=sets(2).slice(-1)[0];
+  const a3free=DB.sessions.some(s=>s.items.some(r=>r.itemId==='A3-I-36+51'&&r.firstCorrect&&!r.rowRequested));
+  out.part1=!!(l1&&l1.size===10&&l1.fluent&&a3free);
+  const lastTalk=n=>DB.sessions.filter(s=>s.part==='part'+n&&s.numberTalk&&s.numberTalk.status==='done').length>0;
+  out.part2=!!(l2&&l2.fluent&&!(l2.misconceptions&&(l2.misconceptions.M10||l2.misconceptions.M15))&&lastTalk(2));
+  out.l1=l1;out.l2=l2;return out;
+}
+function deviceInfo(){return {screen:{w:screen.width,h:screen.height,dpr:window.devicePixelRatio||1},viewport:{w:innerWidth,h:innerHeight},userAgent:navigator.userAgent,language:navigator.language};}
+function buildExport(){
+  return {topic:'addition',page:'01-split-tens-ones',lessonId:LESSON_ID,lessonVersion:LESSON_VERSION,exportedAt:new Date().toISOString(),device:deviceInfo(),
+    plan:DB.plan,review:DB.review,settings:DB.settings,sessions:DB.sessions,practiceSets:DB.practiceSets,kumon:DB.kumon,memoryOnly};
+}
+function doExport(){
+  const data=buildExport();const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const name=`ADD-05-results-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(url);a.remove();},800);
+  return name;
+}
+function dadPanel(){
+  const st=computeStatus();
+  const nItems=DB.sessions.reduce((n,s)=>n+s.items.length,0);
+  const codes={};DB.practiceSets.forEach(s=>Object.entries(s.misconceptions||{}).forEach(([k,v])=>codes[k]=(codes[k]||0)+v));
+  const rv=k=>DB.review[k]&&DB.review[k].next?thaiDate(DB.review[k].next):'ยังไม่มี';
+  const hist=DB.practiceSets.slice(-6).map(s=>`<tr><td>${s.date}</td><td>${s.part==='part1'?'ตอน 1':'ตอน 2'}</td><td>${s.correctFirst}/${s.size}</td><td>${s.helped}</td><td>${s.medianSilentMs!=null?(s.medianSilentMs/1000).toFixed(1)+' วิ':'-'}</td><td>${s.fluent?'คล่อง':'-'}</td></tr>`).join('');
+  const jump=[['A1','ต่อเลขด้วยแท่งและเม็ด'],['A2','บวกสิบ'],['A3','แยกแล้วรวม'],['B1','เม็ดล้นกล่อง'],['K','เติมให้เต็มกล่อง'],['B2','แยกแล้วรวม แบบมีการแลก'],['C','ปริศนาท้าทาย'],['NT1','คุยกัน ตอน 1'],['NT2','คุยกัน ตอน 2']];
+  return `<details class="dad" id="dad"><summary>สำหรับพ่อ</summary>
+    <p class="small">ผลการเรียนเก็บในเครื่องนี้เท่านั้น (localStorage) ไม่ส่งออกไปไหน ${memoryOnly?'<b>บันทึกลงเครื่องไม่ได้ ข้อมูลจะหายเมื่อปิดหน้านี้</b>':''}</p>
+    <div class="row-btns" style="margin-top:4px"><button class="btn small" id="exportBtn" type="button">ส่งออกผล (JSON)</button><span class="small" id="exportMsg">บันทึกแล้ว ${DB.sessions.length} ครั้งที่เรียน, ${nItems} ข้อ</span></div>
+    <p class="small">ส่งไฟล์ให้ Learning Designer วิเคราะห์ ห้าม commit ลง repo (public)</p>
+    <h3>สถานะ</h3>
+    <table><tr><th>ตอน 1 ผ่านเกณฑ์</th><td>${st.part1?'ผ่าน':'ยัง'}</td></tr><tr><th>ตอน 2 (ผ่านบท)</th><td>${st.part2?'ผ่าน':'ยัง'}</td></tr>
+    <tr><th>ทบทวนครั้งถัดไป ตอน 1</th><td>${rv('part1')}</td></tr><tr><th>ทบทวนครั้งถัดไป ตอน 2</th><td>${rv('part2')}</td></tr>
+    <tr><th>ความเข้าใจผิดที่พบในชุดฝึก</th><td>${Object.keys(codes).length?Object.entries(codes).map(([k,v])=>`${k}×${v}`).join(' '):'-'}</td></tr></table>
+    ${hist?`<h3>ชุดฝึกล่าสุด</h3><table><tr><th>วันที่</th><th>ตอน</th><th>ถูกครั้งแรก</th><th>ขอตัวช่วย</th><th>เวลากลาง</th><th></th></tr>${hist}</table>`:''}
+    <h3>ไปที่กิจกรรม (ข้ามการเรียงลำดับ)</h3>
+    <div class="row-btns" style="margin-top:4px">${jump.map(([k,t])=>`<button class="btn small ghost" type="button" data-jump="${k}">${t}</button>`).join('')}</div>
+    <h3>ตั้งค่า</h3>
+    <label class="small"><input type="checkbox" id="kumonToggle" ${kumonHidden()?'':'checked'}> แสดงช่วง "เติมให้เต็มกล่อง" ในตอน 2</label>
+    <p class="small">ปุ่ม "ข้าม" เล็กๆ อยู่มุมขวาบนของทุกกิจกรรม (กด 2 ครั้ง)</p>
+  </details>`;
+}
+async function home(){
+  S=null;setCrumb('');showChrome(false);CUR=null;
+  const plan=DB.plan,done=!!plan;
+  const rec=(k)=>{
+    if(!plan)return k==='pre';
+    if(plan.activeRoute==='part2-B2-fade')return k==='p2';
+    return k==='p1';
+  };
+  const r=await screen({center:false,html:`
+    <h1>แยกสิบ แยกหน่วย</h1>
+    <p class="sub">เลขสองหลักประกอบขึ้นจากแท่งกับเม็ด มาดูกันว่าแยกแล้วบวกง่ายขึ้นยังไง</p>
+    <div class="menu">
+      <button type="button" class="tile${rec('pre')?' rec':''}" data-go="pre"><b>เช็คก่อน</b><span>6 ข้อสั้นๆ ก่อนเริ่ม${done?' (ทำแล้ว ทำซ้ำได้)':''}</span></button>
+      <button type="button" class="tile${rec('p1')?' rec':''}" data-go="p1"><b>ตอน 1: แท่งกับเม็ด</b><span>แยกสิบกับหน่วย แล้วบวกโดยไม่ต้องแลก</span></button>
+      <button type="button" class="tile${rec('p2')?' rec':''}" data-go="p2"><b>ตอน 2: เม็ดล้นกล่อง</b><span>เม็ดครบ 10 ทำยังไงต่อ</span></button>
+      <button type="button" class="tile" data-go="pr1"><b>ฝึกให้คล่อง ตอน 1</b><span>10 ข้อ ไม่มีแลก</span></button>
+      <button type="button" class="tile" data-go="pr2"><b>ฝึกให้คล่อง ตอน 2</b><span>10 ข้อ มีแลก</span></button>
+    </div>
+    ${plan&&plan.advice?`<p class="hint" style="margin-top:14px">ผลเช็คก่อนแนะนำ: ${plan.advice}</p>`:''}
+    ${dadPanel()}`,buttons:[],
+    after:root=>{
+      root.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{go(b.dataset.go);}));
+      root.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click',()=>{go('jump:'+b.dataset.jump);}));
+      const eb=$('#exportBtn',root);if(eb)eb.addEventListener('click',()=>{const n=doExport();$('#exportMsg',root).textContent='ส่งออกแล้ว: '+n;});
+      const kt=$('#kumonToggle',root);if(kt)kt.addEventListener('change',()=>{
+        if(kt.checked){DB.settings.kumonHidden=false;DB.settings.kumonRestoredAt=new Date().toISOString();DB.settings.kumonRestoredCount=DB.kumon.length;}
+        else DB.settings.kumonHidden=true;save();});
+      if(DEBUG)window.__home={go};
+    }});
+  return r;
+}
+let goResolve=null;
+function go(what){if(CUR){const rej=CUR.reject;CUR=null;goResolve=what;rej(HOME);}}
+async function runJump(k){
+  ensureSession(k.startsWith('NT')?'part'+k.slice(2):(k==='A1'||k==='A2'||k==='A3'?'part1':'part2'),'jump');
+  if(k==='A1')await runA1();else if(k==='A2')await runA2();else if(k==='A3')await runA3();
+  else if(k==='B1')await runB1();else if(k==='K')await runKumon();else if(k==='B2')await runB2();
+  else if(k==='C')await runChallenge();else if(k==='NT1')await numberTalk(1);else if(k==='NT2')await numberTalk(2);
+  S.completed=true;touch('jump-'+k);
+}
+async function main(){
+  let next=null;
+  for(;;){
+    try{
+      goResolve=null;
+      if(!next){
+        try{await home();}catch(e){if(e!==HOME)throw e;}
+        next=goResolve;if(!next)continue;
+      }
+      const w=next;next=null;
+      const route=DB.plan&&DB.plan.activeRoute;
+      if(w==='pre')await runPrecheck();
+      else if(w==='p1'){
+        const r=await runPart1(route==='part1-skipA1A2'?route:'normal');
+        if(r==='p2')next='p2';else if(r==='again')next='pr1';
+      }
+      else if(w==='p2'){
+        const r=await runPart2(route==='part2-B2-fade'?route:'normal');
+        if(r==='again')next='pr2';
+      }
+      else if(w==='pr1'||w==='pr2'){const p=w==='pr1'?1:2;ensureSession('part'+p,'practice');await runPractice(p,10);S.completed=true;touch('practice-end');}
+      else if(w.startsWith('jump:'))await runJump(w.slice(5));
+    }catch(e){
+      if(e===HOME){next=goResolve;goResolve=null;continue;}
+      if(e===SKIP)continue;
+      console.error(e);
+      stage.innerHTML=`<div class="card"><div class="err">มีบางอย่างติดขัด ผลที่ทำไว้ยังอยู่ในเครื่อง กลับหน้าแรกแล้วลองใหม่ได้</div><div class="row-btns"><button class="btn primary" onclick="location.reload()">กลับหน้าแรก</button></div></div>`;
+      return;
+    }
+  }
+}
+main();
+if(DEBUG)window.__lp={get DB(){return DB;},get S(){return S;},parts,classify,sumScene,makePracticeSet,kumonHidden};
+</script>
+</body>
+</html>
