@@ -941,13 +941,14 @@ async function runPractice(part,n){
   const label=part===1?'ฝึกให้คล่อง · ตอน 1':'ฝึกให้คล่อง · ตอน 2';
   const setRec={setId:'PR'+part+'-'+Date.now().toString(36),part:'part'+part,date:todayStr(),startedAt:new Date().toISOString(),size:n,items:[]};
   await act('PR'+part,label,async()=>{
-    await card('ฝึกให้คล่อง',`<p style="text-align:center">${n} ข้อ ตอบด้วยแป้นตัวเลข ${n===10?'3 ข้อแรกมีแถวแยกหลักให้ ข้อหลังๆ ถ้าอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้':'ข้อไหนอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้'}</p>`,'เริ่ม');
+    await card('ฝึกให้คล่อง',`<p style="text-align:center">${n} ข้อ ตอบด้วยแป้นตัวเลข ${n===10?'3 ข้อแรกมีแถวแยกหลัก (แฟลช 1.5 วินาที) ข้อหลังๆ ถ้าอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้':'ข้อไหนอยากได้ตัวช่วย กด "ขอแถวแยกหลัก" ได้'}</p>`,'เริ่ม');
     const list=makePracticeSet(part,n);
     for(let i=0;i<list.length;i++){
       const [a,b]=list[i];setCrumb(`${label} · ข้อ ${i+1}/${list.length}`);
       const withRow=n===10?i<3:false;
+      const hasFlash=n===10&&i<3;
       const P=parts(a,b);
-      const q=sumQ({id:`PR${part}-${String(i+1).padStart(2,'0')}`,section:'practice',activity:'PR'+part,stage:'',a,b,row:withRow,help:!withRow});
+      const q=sumQ({id:`PR${part}-${String(i+1).padStart(2,'0')}`,section:'practice',activity:'PR'+part,stage:'',a,b,row:withRow,help:!withRow,flash:hasFlash?1500:null});
       q.meta={setId:setRec.setId,part:'part'+part,givenRow:withRow};
       q.praise=(rec)=>!rec.rowRequested&&!withRow&&!rec.rowOpenedBySystem?'คิดในหัวได้ ไม่ต้องใช้ภาพ':(P.regroup?'แลกเม็ดเป็นแท่งได้ถูกจังหวะ':nextPraise());
       q.afterOk=null;

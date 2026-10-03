@@ -8,8 +8,11 @@
 
 ## สถานะตอนนี้
 
-**เสร็จ (รอพ่อทดสอบ):** Builder สร้างหน้า HTML ADD-05 "แยกสิบ แยกหน่วย" เสร็จแล้วที่ `public/topics/addition/01-split-tens-ones.html` (Lesson Spec ได้รับอนุมัติ 2026-10-02)
-**รอ:** พ่อทดสอบ → ลูกเรียน → พ่อกด "ส่งออกผล (JSON)" ในส่วน "สำหรับพ่อ" ของหน้า ส่งให้ Learning Designer วิเคราะห์ (ห้าม commit ไฟล์ผล)
+**กำลังทำ:** Builder แก้หน้า HTML ADD-05 ตามปรับแล้ง Lesson Spec (Learning Designer เสร็จแล้ว)
+- เอาปุ่มเลือกวิธีคิด ออก
+- Demonstration: แสดง CPA ทีละขั้น → Practice
+- ข้อ 1–3: เพิ่ม flash แท่งเม็ด 1.5–2 วินาที
+- บันทึก: คำตอบ + misconception เท่านั้น
 
 ## Milestones
 
