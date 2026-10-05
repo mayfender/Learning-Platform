@@ -10,9 +10,10 @@
 
 **เพิ่งเสร็จ:** ADD-05 "แยกสิบ แยกหน่วย" (2026-10-05)
 - ✅ Learning Designer เขียน Lesson Spec ครบ (90 ข้อ, ชุด 1-9, ตรวจเฉลยแล้ว)
-- ✅ Builder สร้าง HTML complete (Canvas 2D วาด แท่ง+เม็ด, Anime.js จาก CDN, localStorage ตาม §10, 90 ข้อ ทั้ง 9 ชุด, set navigation, JSON export)
-- ✅ Push เข้า main (commit b1be493) lint ผ่าน CI รันเรื่องดำเนิน
-- 🔄 ถัดไป: พ่อทดสอบหน้า → ลูกเรียน → ส่งออกผล JSON → Designer วิเคราะห์
+- ✅ Builder สร้าง HTML complete (Canvas 2D วาด แท่ง+เม็ด, Anime.js จาก CDN, 90 ข้อ ทั้ง 9 ชุด, set navigation)
+- ✅ Data storage: Google Sheet ผ่าน Apps Script webhook (ข้อมูลบันทึกจริงแล้ว)
+- ✅ Deploy: https://mayfender.github.io/Learning-Platform/topics/addition/05-split-tens-ones.html
+- 🔄 ถัดไป: ลูกเรียน → ข้อมูลไปยัง Google Sheet → Designer วิเคราะห์
 
 ## Milestones
 
@@ -105,6 +106,6 @@
 | 2026-10-02 | พ่อสั่งยกเลิก ADD-04: ปิด PR 1, ลบ branch feature/ADD-04-make-ten และลบ Lesson Spec/Tech Spec ของ ADD-04 ออกจาก main (โค้ดรอบ 1 อยู่แค่บน branch จึงไม่เคยเข้า main) |
 | 2026-10-02 | พ่อวางระบบ role ใหม่: ปิดทุก role ยกเว้น Learning Designer และเพิ่ม Builder (UX/UI + Developer) รับงานต่อจาก Learning Designer, ล้างงานค้างทั้งหมด (ลบ branch ADD-05 และรายการค้างใน STATUS) เริ่มใหม่ |
 | 2026-10-02 | พ่อกำหนดวิธีทำงานของ Builder: งานเป็น "เรื่อง" (เช่น ฝึกการบวก) Builder รับ requirement จาก Learning Designer แล้วออกแบบและสร้าง HTML single page เลย (ไม่มี mockup) ชื่อไฟล์ขึ้นต้นด้วยเลขลำดับ ที่ `public/topics/<เรื่อง>/` import JS library จาก CDN ได้ ไม่เขียนเทสต์ พ่อทดสอบเอง ทำบน `main` ตรงๆ ไม่แยก branch/PR |
-| 2026-10-05 | พ่อสั่งให้เปลี่ยนเก็บข้อมูลจาก localStorage เป็น Google Sheet (URL: https://docs.google.com/spreadsheets/d/1Wzn0sicPQHo6FgFLU3ub63-uNF4P8Cv2fVfBEOsRfjw/edit) |
+| 2026-10-05 | พ่อสั่งให้เปลี่ยนเก็บข้อมูลจาก localStorage เป็น Google Sheet Builder integrate Google Apps Script webhook (3068420) ข้อมูลเข้า Sheet เรียบร้อย ✅ |
 | 2026-10-02 | Builder ทำหน้า HTML ADD-05 เสร็จ (`public/topics/addition/01-split-tens-ones.html`): เช็คก่อน, ตอน 1 (A1–A3), ตอน 2 (B1, เติมให้เต็มกล่อง, B2), Number Talks, ชุดฝึก, ปริศนา C1/C2, บันทึกผลใน localStorage (`lp:addition:01`) และปุ่มส่งออก JSON ในส่วน "สำหรับพ่อ" ตรวจเองในเบราว์เซอร์แล้ว รอพ่อทดสอบ |
 | 2026-10-02 | พ่อสรุป workflow: พ่อแจ้งหัวข้อให้ Learning Designer → Designer ออกแบบบทเรียนและสไตล์ แล้วส่ง requirement ให้ Builder → Builder สร้าง SPA (HTML single page) → พ่อทดสอบ → ลูกเรียนและทำแบบฝึกหัด → เก็บผลไว้ในเครื่องแล้วส่งออกเป็น JSON ให้ Designer วิเคราะห์ (Builder ทำปุ่มส่งออกผลต่อเรื่อง) |
