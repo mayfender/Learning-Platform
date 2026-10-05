@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>แยกสิบ แยกหน่วย</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --color-bg: #F2F7F3;
+      --color-accent: #FF7A45;
+      --color-success: #2F9E8F;
+      --color-warning: #FFC857;
+      --color-text: #333;
+      --color-text-light: #666;
+      --color-border: #ddd;
+      --font-heading: 'Kodchasan', sans-serif;
+      --font-body: 'Noto Sans Thai', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1a1a1a;
+        --color-text: #f0f0f0;
+        --color-text-light: #ccc;
+        --color-border: #444;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+    }
+
+    h1 {
+      font-size: 28px;
+      margin: 0 0 8px 0;
+      color: var(--color-accent);
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .section {
+      display: none;
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    button {
+      min-width: 48px;
+      min-height: 48px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-family: var(--font-body);
+      border: 2px solid var(--color-accent);
+      background-color: var(--color-accent);
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background-color: #ff6b2a;
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background-color: transparent;
+      color: var(--color-accent);
+      border-color: var(--color-accent);
+    }
+
+    button.secondary:hover {
+      background-color: rgba(255, 122, 69, 0.1);
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      min-height: 48px;
+      padding: 12px;
+      font-size: 16px;
+      font-family: var(--font-body);
+      border: 2px solid var(--color-border);
+      border-radius: 8px;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 12px 0;
+    }
+
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background-color: rgba(255, 122, 69, 0.05);
+      border: 2px solid rgba(255, 122, 69, 0.2);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .question {
+      background-color: rgba(47, 158, 143, 0.05);
+      border-left: 4px solid var(--color-success);
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .option-button {
+      text-align: left;
+      background-color: transparent;
+      color: var(--color-text);
+      border: 2px solid var(--color-border);
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+
+    .option-button:hover {
+      border-color: var(--color-accent);
+      background-color: rgba(255, 122, 69, 0.1);
+    }
+
+    .option-button.selected {
+      background-color: var(--color-accent);
+      color: white;
+      border-color: var(--color-accent);
+    }
+
+    canvas {
+      border: 1px solid var(--color-border);
+      border-radius: 4px;
+      display: block;
+      margin: 12px 0;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .text-input-group {
+      display: flex;
+      gap: 8px;
+      margin: 12px 0;
+    }
+
+    .text-input-group input {
+      flex: 1;
+    }
+
+    .hint {
+      font-size: 14px;
+      color: var(--color-text-light);
+      margin-top: 8px;
+      font-style: italic;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    .status-message {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-weight: 500;
+    }
+
+    .status-message.good {
+      background-color: rgba(47, 158, 143, 0.2);
+      color: var(--color-success);
+    }
+
+    .status-message.info {
+      background-color: rgba(255, 198, 87, 0.2);
+      color: #cc9900;
+    }
+
+    .tab-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .tab-button {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .tab-button:not(.active) {
+      background-color: transparent;
+      color: var(--color-accent);
+    }
+
+    .tab-button.active {
+      background-color: var(--color-accent);
+      color: white;
+    }
+
+    .intro-text {
+      font-size: 16px;
+      line-height: 1.8;
+      margin: 16px 0;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+
+    .button-group button {
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .flex-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .flex-row > * {
+      flex: 1;
+      min-width: 200px;
+    }
+
+    @media (max-width: 480px) {
+      .flex-row > * {
+        min-width: 100%;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+
+      button {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>แยกสิบ แยกหน่วย</h1>
+    <p class="intro-text">บทนี้ลูกจะเรียนรู้การบวกเลขสองหลัก โดยแยกสิบกับหน่วยแล้วรวมกัน</p>
+
+    <!-- Precheck Section -->
+    <div id="precheck-section" class="section active">
+      <h2>เช็คก่อน (6 ข้อ)</h2>
+      <p class="hint">ลองตอบดูเพื่อให้รู้ว่าหนูเข้าใจตรงไหน</p>
+      <div id="precheck-content"></div>
+    </div>
+
+    <!-- Part 1 Section -->
+    <div id="part1-section" class="section">
+      <h2>ตอน 1: ไม่มีการแลก</h2>
+
+      <!-- Part 1 Intro -->
+      <div id="part1-intro" style="display: none;">
+        <div class="card">
+          <h3>เตรียมของจริง</h3>
+          <p>ก่อนเริ่มตอน 1 ให้พ่อจัดเตรียม:</p>
+          <ul>
+            <li><strong>เหรียญ 10 บาท 9 เหรียญ</strong> และ <strong>เหรียญ 1 บาท 20 เหรียญ</strong></li>
+            <li><strong>กล่องไข่ 10 ช่อง</strong> (หรือตารางวาดบนกระดาษ)</li>
+            <li>ใช้ 5 นาที: วางเหรียญแล้วถาม "มีกี่บาท รู้ได้ยังไง"</li>
+          </ul>
+          <button id="part1-intro-done" class="secondary">ทำแล้ว / ข้าม</button>
+        </div>
+      </div>
+
+      <!-- A1: Joining -->
+      <div id="activity-a1" style="display: none;">
+        <h3>A1: ต่อเลขด้วยแท่งและเม็ด</h3>
+        <p id="a1-instruction"></p>
+        <canvas id="a1-canvas" width="400" height="300"></canvas>
+        <div id="a1-controls"></div>
+        <div id="a1-feedback"></div>
+      </div>
+
+      <!-- A2: Adding Tens -->
+      <div id="activity-a2" style="display: none;">
+        <h3>A2: บวกสิบ</h3>
+        <p id="a2-instruction"></p>
+        <canvas id="a2-canvas" width="400" height="300"></canvas>
+        <div id="a2-controls"></div>
+        <div id="a2-feedback"></div>
+      </div>
+
+      <!-- A3: Split and Combine -->
+      <div id="activity-a3" style="display: none;">
+        <h3>A3: แยกแล้วรวม</h3>
+        <p id="a3-instruction"></p>
+        <canvas id="a3-canvas" width="400" height="300"></canvas>
+        <div id="a3-controls"></div>
+        <div id="a3-feedback"></div>
+      </div>
+    </div>
+
+    <!-- Part 2 Section -->
+    <div id="part2-section" class="section">
+      <h2>ตอน 2: มีการแลก</h2>
+      <p class="hint">ตอนนี้หน่วยรวมกันแล้วเกิน 10 ต้องแลกเป็นสิบ</p>
+
+      <!-- Warmup Part 2 -->
+      <div id="part2-warmup" style="display: none;">
+        <h3>อุ่นเครื่อง (4 ข้อ)</h3>
+        <div id="part2-warmup-content"></div>
+      </div>
+
+      <!-- B1: Overflowing beads -->
+      <div id="activity-b1" style="display: none;">
+        <h3>B1: เม็ดล้นกล่อง</h3>
+        <p id="b1-instruction"></p>
+        <canvas id="b1-canvas" width="400" height="300"></canvas>
+        <div id="b1-controls"></div>
+        <div id="b1-feedback"></div>
+      </div>
+
+      <!-- B2: Split and Combine with Exchange -->
+      <div id="activity-b2" style="display: none;">
+        <h3>B2: แยกแล้วรวม (มีการแลก)</h3>
+        <p id="b2-instruction"></p>
+        <canvas id="b2-canvas" width="400" height="300"></canvas>
+        <div id="b2-controls"></div>
+        <div id="b2-feedback"></div>
+      </div>
+    </div>
+
+    <!-- Number Talks Section -->
+    <div id="number-talks-section" class="section">
+      <h2>คุยกัน (Number Talks)</h2>
+      <div id="number-talks-content"></div>
+    </div>
+
+    <!-- Math Academy (Practice) -->
+    <div id="practice-section" class="section">
+      <h2>ฝึกให้คล่อง (ชุด 1 ตอน 1)</h2>
+      <div id="practice-intro"></div>
+      <div id="practice-content"></div>
+    </div>
+
+    <!-- Beast Academy (Challenges) -->
+    <div id="challenge-section" class="section">
+      <h2>ท้าทาย</h2>
+      <div id="challenge-content"></div>
+    </div>
+
+    <!-- Kumon (Flash) -->
+    <div id="kumon-section" class="section">
+      <h2>ท่องซ้ำ: เติมให้เต็มกล่อง</h2>
+      <div id="kumon-content"></div>
+    </div>
+
+    <!-- Navigation -->
+    <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center;">
+      <button id="prev-btn" class="secondary">← ย้อนกลับ</button>
+      <button id="next-btn">ต่อไป →</button>
+      <button id="export-btn" class="secondary">ส่งออกผล</button>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // Global State Management
+    // ============================================
+    const APP_STATE = {
+      currentSection: 0,
+      sessionData: {
+        startTime: Date.now(),
+        answers: []
+      }
+    };
+
+    const SECTIONS = [
+      'precheck', 'part1', 'part2', 'number-talks', 'practice', 'challenge', 'kumon'
+    ];
+
+    const PRACTICE_SET_1 = [
+      { a: 34, b: 25, answer: 59, tensSum: 50, onesSum: 9 },
+      { a: 42, b: 36, answer: 78, tensSum: 70, onesSum: 8 },
+      { a: 53, b: 24, answer: 77, tensSum: 70, onesSum: 7 },
+      { a: 61, b: 27, answer: 88, tensSum: 80, onesSum: 8 },
+      { a: 45, b: 31, answer: 76, tensSum: 70, onesSum: 6 },
+      { a: 26, b: 43, answer: 69, tensSum: 60, onesSum: 9 },
+      { a: 72, b: 15, answer: 87, tensSum: 80, onesSum: 7 },
+      { a: 38, b: 41, answer: 79, tensSum: 70, onesSum: 9 },
+      { a: 54, b: 4, answer: 58, tensSum: 50, onesSum: 8 },
+      { a: 63, b: 35, answer: 98, tensSum: 90, onesSum: 8 }
+    ];
+
+    const PRECHECK_QUESTIONS = [
+      {
+        id: 'P1',
+        text: '60 + 30 = ?',
+        options: [
+          { text: 'ก) 9', value: 9, mistaken: 'M9' },
+          { text: 'ข) 90', value: 90, correct: true },
+          { text: 'ค) 6030', value: 6030, mistaken: 'M11' },
+          { text: 'ง) 63', value: 63, mistaken: 'M9' }
+        ]
+      },
+      {
+        id: 'P2',
+        text: 'ข้อไหนเท่ากับ 58?',
+        options: [
+          { text: 'ก) 5 + 8', value: 13, mistaken: 'M13' },
+          { text: 'ข) 50 + 8', value: 58, correct: true },
+          { text: 'ค) 80 + 5', value: 85, mistaken: 'M16' }
+        ]
+      },
+      {
+        id: 'P3',
+        text: '43 + 5 = ?',
+        options: [
+          { text: 'ก) 93', value: 93, mistaken: 'M14' },
+          { text: 'ข) 12', value: 12, mistaken: 'M13' },
+          { text: 'ค) 48', value: 48, correct: true },
+          { text: 'ง) 47', value: 47, mistaken: 'M5' }
+        ]
+      },
+      {
+        id: 'P4',
+        text: '34 + 25 = ?',
+        options: [
+          { text: 'ก) 14', value: 14, mistaken: 'M13' },
+          { text: 'ข) 59', value: 59, correct: true },
+          { text: 'ค) 509', value: 509, mistaken: 'M11' },
+          { text: 'ง) 58', value: 58, mistaken: 'M5' }
+        ]
+      },
+      {
+        id: 'P5',
+        text: '27 + 15 = ?',
+        options: [
+          { text: 'ก) 32', value: 32, mistaken: 'M10' },
+          { text: 'ข) 312', value: 312, mistaken: 'M11' },
+          { text: 'ค) 42', value: 42, correct: true },
+          { text: 'ง) 52', value: 52, mistaken: 'M15' }
+        ]
+      },
+      {
+        id: 'P6',
+        text: '38 + 26 = ?',
+        options: [
+          { text: 'ก) 54', value: 54, mistaken: 'M10' },
+          { text: 'ข) 74', value: 74, mistaken: 'M15' },
+          { text: 'ค) 64', value: 64, correct: true },
+          { text: 'ง) 514', value: 514, mistaken: 'M11' }
+        ]
+      }
+    ];
+
+    // ============================================
+    // Utility Functions
+    // ============================================
+    function showSection(index) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      if (index >= 0 && index < SECTIONS.length) {
+        document.getElementById(`${SECTIONS[index]}-section`).classList.add('active');
+        APP_STATE.currentSection = index;
+        updateNavButtons();
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById('prev-btn').disabled = APP_STATE.currentSection === 0;
+      document.getElementById('next-btn').disabled = APP_STATE.currentSection === SECTIONS.length - 1;
+    }
+
+    function saveToLocalStorage(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
+
+    function loadFromLocalStorage(key, defaultValue = null) {
+      try {
+        const item = localStorage.getItem(key);
+        return item ? JSON.parse(item) : defaultValue;
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e);
+        return defaultValue;
+      }
+    }
+
+    // ============================================
+    // Precheck Section
+    // ============================================
+    function initPrecheck() {
+      const container = document.getElementById('precheck-content');
+      container.innerHTML = '';
+
+      PRECHECK_QUESTIONS.forEach((q, idx) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        div.innerHTML = `<h4>${q.text}</h4>`;
+
+        const optionsDiv = document.createElement('div');
+        optionsDiv.className = 'options';
+
+        q.options.forEach(opt => {
+          const btn = document.createElement('button');
+          btn.className = 'option-button';
+          btn.textContent = opt.text;
+          btn.onclick = () => {
+            recordAnswer('precheck', q.id, opt.value, opt.correct || false);
+            btn.classList.add('selected');
+          };
+          optionsDiv.appendChild(btn);
+        });
+
+        div.appendChild(optionsDiv);
+        container.appendChild(div);
+      });
+
+      // Add button to continue
+      const continueBtn = document.createElement('button');
+      continueBtn.textContent = 'เรียนตามปกติ';
+      continueBtn.onclick = () => showSection(1);
+      container.appendChild(continueBtn);
+    }
+
+    // ============================================
+    // Part 1 Section
+    // ============================================
+    function initPart1() {
+      document.getElementById('part1-intro').style.display = 'block';
+      document.getElementById('part1-intro-done').onclick = () => {
+        document.getElementById('part1-intro').style.display = 'none';
+        startPart1Activity('a1');
+      };
+    }
+
+    function startPart1Activity(activity) {
+      const activities = ['a1', 'a2', 'a3'];
+      activities.forEach(act => {
+        document.getElementById(`activity-${act}`).style.display =
+          act === activity ? 'block' : 'none';
+      });
+
+      if (activity === 'a1') {
+        initA1();
+      } else if (activity === 'a2') {
+        initA2();
+      } else if (activity === 'a3') {
+        initA3();
+      }
+    }
+
+    function initA1() {
+      const container = document.getElementById('a1-controls');
+      container.innerHTML = `
+        <p>เป้าหมาย: ต่อให้ได้เลข <strong>47</strong></p>
+        <div class="button-group">
+          <button onclick="addRod()">+ แท่ง</button>
+          <button onclick="removeRod()">- แท่ง</button>
+          <button onclick="addBead()">+ เม็ด</button>
+          <button onclick="removeBead()">- เม็ด</button>
+        </div>
+        <div id="a1-current">ตอนนี้: 0 แท่ง 0 เม็ด = 0</div>
+        <button onclick="checkA1()">เช็ค</button>
+      `;
+      drawA1();
+    }
+
+    function drawA1() {
+      // Simple placeholder for A1 canvas
+      const canvas = document.getElementById('a1-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#333';
+      ctx.font = '16px Arial';
+      ctx.fillText('[A1 Canvas Placeholder]', 20, 30);
+    }
+
+    function initA2() {
+      drawA2();
+    }
+
+    function drawA2() {
+      const canvas = document.getElementById('a2-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#333';
+      ctx.font = '16px Arial';
+      ctx.fillText('[A2 Canvas Placeholder]', 20, 30);
+    }
+
+    function initA3() {
+      drawA3();
+    }
+
+    function drawA3() {
+      const canvas = document.getElementById('a3-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#f0f0f0';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#333';
+      ctx.font = '16px Arial';
+      ctx.fillText('[A3 Canvas Placeholder]', 20, 30);
+    }
+
+    // ============================================
+    // Part 2 Section
+    // ============================================
+    function initPart2() {
+      // Placeholder for Part 2 initialization
+    }
+
+    // ============================================
+    // Practice Section
+    // ============================================
+    function initPractice() {
+      const intro = document.getElementById('practice-intro');
+      intro.innerHTML = `
+        <div class="card">
+          <h3>Demonstration: 34 + 25</h3>
+          <p><strong>สิบ:</strong> 30 + 20 = 50</p>
+          <p><strong>หน่วย:</strong> 4 + 5 = 9</p>
+          <p><strong>รวม:</strong> 50 + 9 = 59</p>
+        </div>
+      `;
+
+      const content = document.getElementById('practice-content');
+      content.innerHTML = '<h3>ชุดฝึก 10 ข้อ</h3>';
+
+      PRACTICE_SET_1.forEach((item, idx) => {
+        const q = document.createElement('div');
+        q.className = 'card';
+        q.innerHTML = `
+          <h4>ข้อที่ ${idx + 1}</h4>
+          <p><strong>${item.a} + ${item.b} = ?</strong></p>
+          <input type="number" placeholder="ตอบ" id="practice-${idx}" min="0" max="999">
+          <div id="feedback-${idx}"></div>
+        `;
+        content.appendChild(q);
+
+        const input = q.querySelector(`#practice-${idx}`);
+        input.onchange = () => {
+          const answer = parseInt(input.value, 10);
+          const feedback = q.querySelector(`#feedback-${idx}`);
+          if (answer === item.answer) {
+            feedback.textContent = '✓ ถูก!';
+            feedback.className = 'status-message good';
+            recordAnswer('practice', `Practice-${idx + 1}`, answer, true);
+          } else {
+            feedback.textContent = `✗ ตอบ ${answer} ไม่ถูกนะ`;
+            feedback.className = 'status-message info';
+            recordAnswer('practice', `Practice-${idx + 1}`, answer, false);
+          }
+        };
+      });
+    }
+
+    // ============================================
+    // Record Answer
+    // ============================================
+    function recordAnswer(section, questionId, answer, isCorrect) {
+      APP_STATE.sessionData.answers.push({
+        timestamp: Date.now(),
+        section,
+        questionId,
+        answer,
+        isCorrect
+      });
+      saveToLocalStorage('lp:addition:05', APP_STATE.sessionData);
+    }
+
+    // ============================================
+    // Export Results
+    // ============================================
+    document.getElementById('export-btn').onclick = () => {
+      const data = loadFromLocalStorage('lp:addition:05', {});
+      const exportData = {
+        topic: 'addition',
+        lesson: 'ADD-05',
+        exportedAt: new Date().toISOString(),
+        ...data
+      };
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ADD-05-results-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
+    // ============================================
+    // Navigation
+    // ============================================
+    document.getElementById('prev-btn').onclick = () => showSection(APP_STATE.currentSection - 1);
+    document.getElementById('next-btn').onclick = () => showSection(APP_STATE.currentSection + 1);
+
+    // ============================================
+    // Initialize
+    // ============================================
+    function init() {
+      initPrecheck();
+      initPart1();
+      initPart2();
+      initPractice();
+      showSection(0);
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
