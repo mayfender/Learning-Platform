@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>หัวข้อบวก - แพลตฟอร์มเรียนรู้คณิตศาสตร์</title>
+  <link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --color-bg: #F2F7F3;
+      --color-accent: #FF7A45;
+      --color-success: #2F9E8F;
+      --color-text: #333;
+      --color-border: #ddd;
+      --font-heading: 'Kodchasan', sans-serif;
+      --font-body: 'Noto Sans Thai', sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #1a1a1a;
+        --color-text: #f0f0f0;
+        --color-border: #444;
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      line-height: 1.6;
+    }
+
+    body {
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-family: var(--font-heading);
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: var(--color-accent);
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    .lessons-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .lesson-card {
+      display: block;
+      background-color: rgba(255, 122, 69, 0.05);
+      border: 2px solid rgba(255, 122, 69, 0.2);
+      border-radius: 8px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .lesson-card:hover {
+      border-color: var(--color-accent);
+      background-color: rgba(255, 122, 69, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .lesson-card h2 {
+      font-family: var(--font-heading);
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: var(--color-accent);
+    }
+
+    .lesson-card p {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .lesson-number {
+      display: inline-block;
+      background-color: var(--color-accent);
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 32px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-right: 8px;
+    }
+
+    .admin-section {
+      margin-top: 48px;
+      padding-top: 32px;
+      border-top: 2px solid var(--color-border);
+    }
+
+    .admin-section h2 {
+      font-family: var(--font-heading);
+      font-size: 18px;
+      margin-top: 0;
+    }
+
+    .admin-button {
+      padding: 12px 20px;
+      min-height: 48px;
+      font-size: 14px;
+      font-family: var(--font-body);
+      border: 2px solid var(--color-accent);
+      background-color: transparent;
+      color: var(--color-accent);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .admin-button:hover {
+      background-color: rgba(255, 122, 69, 0.1);
+    }
+
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 24px;
+      }
+
+      .lessons-list {
+        gap: 12px;
+      }
+
+      .lesson-card {
+        padding: 16px;
+      }
+
+      .lesson-card h2 {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>บวก</h1>
+    <p class="subtitle">หัวข้อการบวก - เรียนรู้จากการแยกหลักสิบและหลักหน่วย</p>
+
+    <div class="lessons-list">
+      <a href="01-split-tens-ones.html" class="lesson-card">
+        <h2><span class="lesson-number">01</span>แยกสิบ แยกหน่วย (ตัวอย่าง)</h2>
+        <p>ตัวอย่างเดิมสำหรับทดสอบ</p>
+      </a>
+
+      <a href="05-split-tens-ones.html" class="lesson-card">
+        <h2><span class="lesson-number">05</span>แยกสิบ แยกหน่วย</h2>
+        <p>บวกเลขสองหลักโดยแยกสิบกับหน่วย - ชุดฝึก 1 (ไม่มีการแลก)</p>
+      </a>
+    </div>
+
+    <div class="admin-section">
+      <h2>สำหรับพ่อ</h2>
+      <p>กดปุ่มด้านล่างเพื่อส่งออกผลการเรียนของลูกไป Learning Designer วิเคราะห์</p>
+      <button class="admin-button" onclick="exportResults()">ส่งออกผล</button>
+    </div>
+  </div>
+
+  <script>
+    function exportResults() {
+      // Collect results from all lessons stored in localStorage
+      const topicData = {
+        topic: 'addition',
+        exportedAt: new Date().toISOString(),
+        lessons: {}
+      };
+
+      // Try to load all lesson data from localStorage
+      const lessonKeys = [
+        'lp:addition:01',
+        'lp:addition:05'
+      ];
+
+      lessonKeys.forEach(key => {
+        try {
+          const data = localStorage.getItem(key);
+          if (data) {
+            topicData.lessons[key] = JSON.parse(data);
+          }
+        } catch (e) {
+          console.error(`Failed to load ${key}:`, e);
+        }
+      });
+
+      // Export as JSON file
+      const json = JSON.stringify(topicData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `addition-results-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      alert('ส่งออกผลเรียบร้อยแล้ว');
+    }
+  </script>
+</body>
+</html>
