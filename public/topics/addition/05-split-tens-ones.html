@@ -607,13 +607,14 @@
       }
 
       const record = {
+        timestamp: new Date().toISOString(),
+        section: itemType,
         itemId: itemId,
-        type: itemType,
-        a: a,
-        b: b,
-        answer: a + b,
-        userAnswer: userAnswer,
+        question: a !== null && b !== null ? `${a} + ${b}` : null,
+        answer: userAnswer,
         isCorrect: isCorrect,
+        expected: a !== null && b !== null ? a + b : null,
+        regroup: regroup,
         mistakeCode: isCorrect ? '-' : determineMistakeCode(a, b, userAnswer, regroup),
         silentTime: silentTime,
         attempts: 1
@@ -621,6 +622,36 @@
 
       APP_STATE.sessionData.items.push(record);
       saveToLocalStorage();
+
+      // Send to Google Sheet via Apps Script webhook
+      sendToGoogleSheet(record);
+    }
+
+    function sendToGoogleSheet(record) {
+      const WEBHOOK_URL = window.GOOGLE_SHEETS_WEBHOOK_URL || localStorage.getItem('GOOGLE_SHEETS_WEBHOOK_URL');
+
+      if (!WEBHOOK_URL) {
+        console.warn('Google Sheets webhook URL not configured. Data saved locally only.');
+        return;
+      }
+
+      const payload = {
+        lessonId: LESSON_ID,
+        lessonVersion: LESSON_VERSION,
+        ...record
+      };
+
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      }).catch(err => {
+        console.error('Failed to send data to Google Sheet:', err);
+        // Data is still saved locally, so no error shown to user
+      });
     }
 
     function determineMistakeCode(a, b, userAnswer, regroup) {
