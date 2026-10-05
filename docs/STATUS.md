@@ -8,11 +8,10 @@
 
 ## สถานะตอนนี้
 
-**กำลังทำ:** Builder แก้หน้า HTML ADD-05 ตามปรับแล้ง Lesson Spec (Learning Designer เสร็จแล้ว)
-- เอาปุ่มเลือกวิธีคิด ออก
-- Demonstration: แสดง CPA ทีละขั้น → Practice
-- ข้อ 1–3: เพิ่ม flash แท่งเม็ด 1.5–2 วินาที
-- บันทึก: คำตอบ + misconception เท่านั้น
+**เพิ่งเสร็จ:** ADD-05 "แยกสิบ แยกหน่วย" (2026-10-05)
+- ✅ Learning Designer เขียน Lesson Spec ครบ (90 ข้อ, ชุด 1-9, ตรวจเฉลยแล้ว)
+- ✅ Builder สร้าง HTML complete (Canvas 2D วาด แท่ง+เม็ด, Anime.js จาก CDN, localStorage ตาม §10, 90 ข้อ ทั้ง 9 ชุด, set navigation, JSON export)
+- 🔄 ถัดไป: พ่อทดสอบหน้า → ลูกเรียน → ส่งออกผล JSON → Designer วิเคราะห์
 
 ## Milestones
 

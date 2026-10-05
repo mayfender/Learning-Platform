@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>แยกสิบ แยกหน่วย</title>
   <link href="https://fonts.googleapis.com/css2?family=Kodchasan:wght@400;600;700&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/anime@3.2.1/lib/anime.min.js"></script>
 
   <style>
     :root {
@@ -15,6 +16,10 @@
       --color-text: #333;
       --color-text-light: #666;
       --color-border: #ddd;
+      --color-rod: #FF7A45;
+      --color-rod-alt: #FF6B2A;
+      --color-bead-a: #FF7A45;
+      --color-bead-b: #2F9E8F;
       --font-heading: 'Kodchasan', sans-serif;
       --font-body: 'Noto Sans Thai', sans-serif;
     }
@@ -99,6 +104,11 @@
       transform: translateY(0);
     }
 
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     button.secondary {
       background-color: transparent;
       color: var(--color-accent);
@@ -119,19 +129,6 @@
       border-radius: 8px;
       background-color: var(--color-bg);
       color: var(--color-text);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin: 12px 0;
-    }
-
-    @media (max-width: 480px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
     }
 
     .card {
@@ -183,6 +180,15 @@
       display: block;
       margin: 12px 0;
       background-color: rgba(255, 255, 255, 0.05);
+      max-width: 100%;
+      height: auto;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+      margin: 12px auto;
     }
 
     .text-input-group {
@@ -227,28 +233,6 @@
       color: #cc9900;
     }
 
-    .tab-buttons {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin: 16px 0;
-    }
-
-    .tab-button {
-      flex: 1;
-      min-width: 100px;
-    }
-
-    .tab-button:not(.active) {
-      background-color: transparent;
-      color: var(--color-accent);
-    }
-
-    .tab-button.active {
-      background-color: var(--color-accent);
-      color: white;
-    }
-
     .intro-text {
       font-size: 16px;
       line-height: 1.8;
@@ -264,42 +248,95 @@
 
     .button-group button {
       flex: 1;
-      min-width: 100px;
+      min-width: 80px;
     }
 
-    .flex-row {
+    .practice-item {
+      background: rgba(255, 122, 69, 0.05);
+      border: 1px solid rgba(255, 122, 69, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px 0;
+    }
+
+    .practice-item h4 {
+      margin: 0 0 8px 0;
+      font-size: 18px;
+    }
+
+    .practice-item .feedback {
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .set-navigation {
       display: flex;
-      gap: 12px;
-      align-items: flex-start;
+      gap: 8px;
+      justify-content: center;
+      margin: 16px 0;
       flex-wrap: wrap;
     }
 
-    .flex-row > * {
-      flex: 1;
-      min-width: 200px;
+    .set-nav-btn {
+      min-width: 60px;
+      padding: 8px 12px;
+      font-size: 14px;
     }
 
-    @media (max-width: 480px) {
-      .flex-row > * {
-        min-width: 100%;
-      }
+    .set-nav-btn.active {
+      background-color: var(--color-accent);
+      color: white;
+    }
 
-      h1 {
-        font-size: 24px;
-      }
+    .page-navigation {
+      margin-top: 32px;
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
 
-      button {
-        min-height: 44px;
-        padding: 10px 16px;
-        font-size: 14px;
-      }
+    .practice-question {
+      background-color: rgba(255, 122, 69, 0.08);
+      border: 2px solid rgba(255, 122, 69, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 8px 0;
+    }
+
+    .practice-question h4 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      color: var(--color-accent);
+    }
+
+    .practice-question .canvas-container {
+      margin: 8px 0;
+    }
+
+    .practice-controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .practice-controls input {
+      flex: 1;
+      min-width: 80px;
+    }
+
+    .practice-controls button {
+      padding: 8px 16px;
+      font-size: 14px;
+      min-width: auto;
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>แยกสิบ แยกหน่วย</h1>
-    <p class="intro-text">บทนี้ลูกจะเรียนรู้การบวกเลขสองหลัก โดยแยกสิบกับหน่วยแล้วรวมกัน</p>
+    <p class="intro-text">บทเรียนการบวกเลขสองหลัก โดยแยกสิบกับหน่วยแล้วรวมกัน</p>
 
     <!-- Precheck Section -->
     <div id="precheck-section" class="section active">
@@ -308,142 +345,140 @@
       <div id="precheck-content"></div>
     </div>
 
-    <!-- Part 1 Section -->
-    <div id="part1-section" class="section">
-      <h2>ตอน 1: ไม่มีการแลก</h2>
-
-      <!-- Part 1 Intro -->
-      <div id="part1-intro" style="display: none;">
-        <div class="card">
-          <h3>เตรียมของจริง</h3>
-          <p>ก่อนเริ่มตอน 1 ให้พ่อจัดเตรียม:</p>
-          <ul>
-            <li><strong>เหรียญ 10 บาท 9 เหรียญ</strong> และ <strong>เหรียญ 1 บาท 20 เหรียญ</strong></li>
-            <li><strong>กล่องไข่ 10 ช่อง</strong> (หรือตารางวาดบนกระดาษ)</li>
-            <li>ใช้ 5 นาที: วางเหรียญแล้วถาม "มีกี่บาท รู้ได้ยังไง"</li>
-          </ul>
-          <button id="part1-intro-done" class="secondary">ทำแล้ว / ข้าม</button>
-        </div>
-      </div>
-
-      <!-- A1: Joining -->
-      <div id="activity-a1" style="display: none;">
-        <h3>A1: ต่อเลขด้วยแท่งและเม็ด</h3>
-        <p id="a1-instruction"></p>
-        <canvas id="a1-canvas" width="400" height="300"></canvas>
-        <div id="a1-controls"></div>
-        <div id="a1-feedback"></div>
-      </div>
-
-      <!-- A2: Adding Tens -->
-      <div id="activity-a2" style="display: none;">
-        <h3>A2: บวกสิบ</h3>
-        <p id="a2-instruction"></p>
-        <canvas id="a2-canvas" width="400" height="300"></canvas>
-        <div id="a2-controls"></div>
-        <div id="a2-feedback"></div>
-      </div>
-
-      <!-- A3: Split and Combine -->
-      <div id="activity-a3" style="display: none;">
-        <h3>A3: แยกแล้วรวม</h3>
-        <p id="a3-instruction"></p>
-        <canvas id="a3-canvas" width="400" height="300"></canvas>
-        <div id="a3-controls"></div>
-        <div id="a3-feedback"></div>
-      </div>
-    </div>
-
-    <!-- Part 2 Section -->
-    <div id="part2-section" class="section">
-      <h2>ตอน 2: มีการแลก</h2>
-      <p class="hint">ตอนนี้หน่วยรวมกันแล้วเกิน 10 ต้องแลกเป็นสิบ</p>
-
-      <!-- Warmup Part 2 -->
-      <div id="part2-warmup" style="display: none;">
-        <h3>อุ่นเครื่อง (4 ข้อ)</h3>
-        <div id="part2-warmup-content"></div>
-      </div>
-
-      <!-- B1: Overflowing beads -->
-      <div id="activity-b1" style="display: none;">
-        <h3>B1: เม็ดล้นกล่อง</h3>
-        <p id="b1-instruction"></p>
-        <canvas id="b1-canvas" width="400" height="300"></canvas>
-        <div id="b1-controls"></div>
-        <div id="b1-feedback"></div>
-      </div>
-
-      <!-- B2: Split and Combine with Exchange -->
-      <div id="activity-b2" style="display: none;">
-        <h3>B2: แยกแล้วรวม (มีการแลก)</h3>
-        <p id="b2-instruction"></p>
-        <canvas id="b2-canvas" width="400" height="300"></canvas>
-        <div id="b2-controls"></div>
-        <div id="b2-feedback"></div>
-      </div>
-    </div>
-
-    <!-- Number Talks Section -->
-    <div id="number-talks-section" class="section">
-      <h2>คุยกัน (Number Talks)</h2>
-      <div id="number-talks-content"></div>
-    </div>
-
-    <!-- Math Academy (Practice) -->
+    <!-- Practice Section -->
     <div id="practice-section" class="section">
-      <h2>ฝึกให้คล่อง (ชุด 1 ตอน 1)</h2>
-      <div id="practice-intro"></div>
+      <h2>ฝึกให้คล่อง</h2>
+      <div class="set-navigation" id="set-nav"></div>
       <div id="practice-content"></div>
     </div>
 
-    <!-- Beast Academy (Challenges) -->
-    <div id="challenge-section" class="section">
-      <h2>ท้าทาย</h2>
-      <div id="challenge-content"></div>
-    </div>
-
-    <!-- Kumon (Flash) -->
-    <div id="kumon-section" class="section">
-      <h2>ท่องซ้ำ: เติมให้เต็มกล่อง</h2>
-      <div id="kumon-content"></div>
-    </div>
-
     <!-- Navigation -->
-    <div style="margin-top: 32px; display: flex; gap: 8px; justify-content: center;">
+    <div class="page-navigation">
       <button id="prev-btn" class="secondary">← ย้อนกลับ</button>
       <button id="next-btn">ต่อไป →</button>
-      <button id="export-btn" class="secondary">ส่งออกผล</button>
+      <button id="export-btn" class="secondary" style="display:none;">ส่งออกผล</button>
     </div>
   </div>
 
   <script>
     // ============================================
-    // Global State Management
+    // Lesson Configuration
     // ============================================
-    const APP_STATE = {
-      currentSection: 0,
-      sessionData: {
-        startTime: Date.now(),
-        answers: []
-      }
-    };
+    const LESSON_ID = 'ADD-05';
+    const LESSON_VERSION = 1;
+    const STORAGE_KEY = 'lp:addition:05';
 
-    const SECTIONS = [
-      'precheck', 'part1', 'part2', 'number-talks', 'practice', 'challenge', 'kumon'
-    ];
+    // ============================================
+    // Practice Data (90 items from Lesson Spec table 6.3)
+    // ============================================
+    const PRACTICE_ITEMS = [
+      // Set 1 (Part 1 - no regrouping, rows 1-10)
+      { a: 34, b: 25, answer: 59, tensSum: 50, onesSum: 9, regroup: false },
+      { a: 42, b: 36, answer: 78, tensSum: 70, onesSum: 8, regroup: false },
+      { a: 53, b: 24, answer: 77, tensSum: 70, onesSum: 7, regroup: false },
+      { a: 61, b: 27, answer: 88, tensSum: 80, onesSum: 8, regroup: false },
+      { a: 45, b: 31, answer: 76, tensSum: 70, onesSum: 6, regroup: false },
+      { a: 26, b: 43, answer: 69, tensSum: 60, onesSum: 9, regroup: false },
+      { a: 72, b: 15, answer: 87, tensSum: 80, onesSum: 7, regroup: false },
+      { a: 38, b: 41, answer: 79, tensSum: 70, onesSum: 9, regroup: false },
+      { a: 54, b: 4, answer: 58, tensSum: 50, onesSum: 8, regroup: false },
+      { a: 63, b: 35, answer: 98, tensSum: 90, onesSum: 8, regroup: false },
 
-    const PRACTICE_SET_1 = [
-      { a: 34, b: 25, answer: 59, tensSum: 50, onesSum: 9 },
-      { a: 42, b: 36, answer: 78, tensSum: 70, onesSum: 8 },
-      { a: 53, b: 24, answer: 77, tensSum: 70, onesSum: 7 },
-      { a: 61, b: 27, answer: 88, tensSum: 80, onesSum: 8 },
-      { a: 45, b: 31, answer: 76, tensSum: 70, onesSum: 6 },
-      { a: 26, b: 43, answer: 69, tensSum: 60, onesSum: 9 },
-      { a: 72, b: 15, answer: 87, tensSum: 80, onesSum: 7 },
-      { a: 38, b: 41, answer: 79, tensSum: 70, onesSum: 9 },
-      { a: 54, b: 4, answer: 58, tensSum: 50, onesSum: 8 },
-      { a: 63, b: 35, answer: 98, tensSum: 90, onesSum: 8 }
+      // Set 2 (Part 1 additional, rows 11-12 + generated)
+      { a: 56, b: 30, answer: 86, tensSum: 80, onesSum: 6, regroup: false },
+      { a: 25, b: 60, answer: 85, tensSum: 80, onesSum: 5, regroup: false },
+      { a: 23, b: 45, answer: 68, tensSum: 60, onesSum: 8, regroup: false },
+      { a: 34, b: 23, answer: 57, tensSum: 50, onesSum: 7, regroup: false },
+      { a: 23, b: 34, answer: 57, tensSum: 50, onesSum: 7, regroup: false },
+      { a: 45, b: 23, answer: 68, tensSum: 60, onesSum: 8, regroup: false },
+      { a: 33, b: 45, answer: 78, tensSum: 70, onesSum: 8, regroup: false },
+      { a: 43, b: 45, answer: 88, tensSum: 80, onesSum: 8, regroup: false },
+      { a: 24, b: 45, answer: 69, tensSum: 60, onesSum: 9, regroup: false },
+      { a: 54, b: 23, answer: 77, tensSum: 70, onesSum: 7, regroup: false },
+
+      // Set 3 (Part 1 additional)
+      { a: 56, b: 34, answer: 90, tensSum: 80, onesSum: 10, regroup: false },
+      { a: 21, b: 34, answer: 55, tensSum: 50, onesSum: 5, regroup: false },
+      { a: 32, b: 42, answer: 74, tensSum: 70, onesSum: 4, regroup: false },
+      { a: 51, b: 23, answer: 74, tensSum: 70, onesSum: 4, regroup: false },
+      { a: 42, b: 34, answer: 76, tensSum: 70, onesSum: 6, regroup: false },
+      { a: 31, b: 52, answer: 83, tensSum: 80, onesSum: 3, regroup: false },
+      { a: 22, b: 61, answer: 83, tensSum: 80, onesSum: 3, regroup: false },
+      { a: 43, b: 32, answer: 75, tensSum: 70, onesSum: 5, regroup: false },
+      { a: 52, b: 31, answer: 83, tensSum: 80, onesSum: 3, regroup: false },
+      { a: 41, b: 43, answer: 84, tensSum: 80, onesSum: 4, regroup: false },
+
+      // Set 4 (Part 2 - with regrouping, rows 1-10)
+      { a: 27, b: 15, answer: 42, tensSum: 30, onesSum: 12, regroup: true },
+      { a: 38, b: 26, answer: 64, tensSum: 50, onesSum: 14, regroup: true },
+      { a: 46, b: 27, answer: 73, tensSum: 60, onesSum: 13, regroup: true },
+      { a: 19, b: 34, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+      { a: 58, b: 25, answer: 83, tensSum: 70, onesSum: 13, regroup: true },
+      { a: 66, b: 28, answer: 94, tensSum: 80, onesSum: 14, regroup: true },
+      { a: 29, b: 45, answer: 74, tensSum: 60, onesSum: 14, regroup: true },
+      { a: 47, b: 8, answer: 55, tensSum: 40, onesSum: 15, regroup: true },
+      { a: 65, b: 17, answer: 82, tensSum: 70, onesSum: 12, regroup: true },
+      { a: 24, b: 38, answer: 62, tensSum: 50, onesSum: 12, regroup: true },
+
+      // Set 5 (Part 2 additional, rows 11-13 + generated)
+      { a: 37, b: 56, answer: 93, tensSum: 80, onesSum: 13, regroup: true },
+      { a: 48, b: 36, answer: 84, tensSum: 70, onesSum: 14, regroup: true },
+      { a: 26, b: 34, answer: 60, tensSum: 50, onesSum: 10, regroup: true },
+      { a: 35, b: 28, answer: 63, tensSum: 50, onesSum: 13, regroup: true },
+      { a: 44, b: 29, answer: 73, tensSum: 60, onesSum: 13, regroup: true },
+      { a: 57, b: 18, answer: 75, tensSum: 60, onesSum: 15, regroup: true },
+      { a: 36, b: 27, answer: 63, tensSum: 50, onesSum: 13, regroup: true },
+      { a: 28, b: 35, answer: 63, tensSum: 50, onesSum: 13, regroup: true },
+      { a: 49, b: 24, answer: 73, tensSum: 60, onesSum: 13, regroup: true },
+      { a: 39, b: 17, answer: 56, tensSum: 50, onesSum: 16, regroup: true },
+
+      // Set 6 (Part 2 additional)
+      { a: 25, b: 37, answer: 62, tensSum: 50, onesSum: 12, regroup: true },
+      { a: 34, b: 28, answer: 62, tensSum: 50, onesSum: 12, regroup: true },
+      { a: 17, b: 36, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+      { a: 46, b: 19, answer: 65, tensSum: 60, onesSum: 15, regroup: true },
+      { a: 18, b: 25, answer: 43, tensSum: 30, onesSum: 13, regroup: true },
+      { a: 39, b: 24, answer: 63, tensSum: 50, onesSum: 13, regroup: true },
+      { a: 27, b: 26, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+      { a: 48, b: 17, answer: 65, tensSum: 60, onesSum: 15, regroup: true },
+      { a: 16, b: 37, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+      { a: 29, b: 18, answer: 47, tensSum: 40, onesSum: 17, regroup: true },
+
+      // Set 7 (Part 2 additional)
+      { a: 38, b: 19, answer: 57, tensSum: 50, onesSum: 17, regroup: true },
+      { a: 26, b: 27, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+      { a: 47, b: 25, answer: 72, tensSum: 60, onesSum: 12, regroup: true },
+      { a: 19, b: 28, answer: 47, tensSum: 40, onesSum: 17, regroup: true },
+      { a: 35, b: 17, answer: 52, tensSum: 40, onesSum: 12, regroup: true },
+      { a: 28, b: 26, answer: 54, tensSum: 40, onesSum: 14, regroup: true },
+      { a: 36, b: 28, answer: 64, tensSum: 50, onesSum: 14, regroup: true },
+      { a: 27, b: 19, answer: 46, tensSum: 40, onesSum: 16, regroup: true },
+      { a: 45, b: 26, answer: 71, tensSum: 60, onesSum: 11, regroup: true },
+      { a: 17, b: 28, answer: 45, tensSum: 30, onesSum: 15, regroup: true },
+
+      // Set 8 (Mixed variety Part 1 & 2)
+      { a: 39, b: 25, answer: 64, tensSum: 50, onesSum: 14, regroup: true },
+      { a: 48, b: 29, answer: 77, tensSum: 70, onesSum: 17, regroup: true },
+      { a: 23, b: 16, answer: 39, tensSum: 30, onesSum: 9, regroup: false },
+      { a: 34, b: 18, answer: 52, tensSum: 40, onesSum: 12, regroup: true },
+      { a: 62, b: 25, answer: 87, tensSum: 80, onesSum: 7, regroup: false },
+      { a: 19, b: 27, answer: 46, tensSum: 40, onesSum: 16, regroup: true },
+      { a: 35, b: 32, answer: 67, tensSum: 60, onesSum: 7, regroup: false },
+      { a: 28, b: 29, answer: 57, tensSum: 50, onesSum: 17, regroup: true },
+      { a: 42, b: 15, answer: 57, tensSum: 50, onesSum: 7, regroup: false },
+      { a: 36, b: 17, answer: 53, tensSum: 40, onesSum: 13, regroup: true },
+
+      // Set 9 (Mixed variety Part 1 & 2)
+      { a: 51, b: 19, answer: 70, tensSum: 60, onesSum: 10, regroup: true },
+      { a: 43, b: 28, answer: 71, tensSum: 60, onesSum: 11, regroup: true },
+      { a: 24, b: 23, answer: 47, tensSum: 40, onesSum: 7, regroup: false },
+      { a: 37, b: 26, answer: 63, tensSum: 50, onesSum: 13, regroup: true },
+      { a: 55, b: 32, answer: 87, tensSum: 80, onesSum: 7, regroup: false },
+      { a: 18, b: 34, answer: 52, tensSum: 40, onesSum: 12, regroup: true },
+      { a: 33, b: 24, answer: 57, tensSum: 50, onesSum: 7, regroup: false },
+      { a: 29, b: 17, answer: 46, tensSum: 40, onesSum: 16, regroup: true },
+      { a: 46, b: 12, answer: 58, tensSum: 50, onesSum: 8, regroup: false },
+      { a: 39, b: 28, answer: 67, tensSum: 60, onesSum: 17, regroup: true }
     ];
 
     const PRECHECK_QUESTIONS = [
@@ -509,6 +544,22 @@
     ];
 
     // ============================================
+    // Global State
+    // ============================================
+    const APP_STATE = {
+      currentSection: 0,
+      currentSet: 0,
+      sessionStartTime: new Date().toISOString(),
+      sessionData: {
+        lessonId: LESSON_ID,
+        lessonVersion: LESSON_VERSION,
+        items: []
+      }
+    };
+
+    const SECTIONS = ['precheck', 'practice'];
+
+    // ============================================
     // Utility Functions
     // ============================================
     function showSection(index) {
@@ -517,6 +568,9 @@
         document.getElementById(`${SECTIONS[index]}-section`).classList.add('active');
         APP_STATE.currentSection = index;
         updateNavButtons();
+        if (index === 1) {
+          renderPracticeSet(APP_STATE.currentSet);
+        }
       }
     }
 
@@ -525,21 +579,132 @@
       document.getElementById('next-btn').disabled = APP_STATE.currentSection === SECTIONS.length - 1;
     }
 
-    function saveToLocalStorage(key, data) {
+    function saveToLocalStorage() {
       try {
-        localStorage.setItem(key, JSON.stringify(data));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE.sessionData));
       } catch (e) {
         console.error('Failed to save to localStorage:', e);
       }
     }
 
-    function loadFromLocalStorage(key, defaultValue = null) {
+    function loadFromLocalStorage() {
       try {
-        const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : defaultValue;
+        const item = localStorage.getItem(STORAGE_KEY);
+        return item ? JSON.parse(item) : null;
       } catch (e) {
         console.error('Failed to load from localStorage:', e);
-        return defaultValue;
+        return null;
+      }
+    }
+
+    function recordAnswer(itemType, itemId, a, b, userAnswer, isCorrect, regroup) {
+      const silentTimeStart = sessionStorage.getItem(`q-${itemId}-start`);
+      const silentTime = silentTimeStart ? Math.round((Date.now() - parseInt(silentTimeStart)) / 1000) : 0;
+
+      const record = {
+        itemId: itemId,
+        type: itemType,
+        a: a,
+        b: b,
+        answer: a + b,
+        userAnswer: userAnswer,
+        isCorrect: isCorrect,
+        mistakeCode: isCorrect ? '-' : determineMistakeCode(a, b, userAnswer, regroup),
+        silentTime: silentTime,
+        attempts: 1
+      };
+
+      APP_STATE.sessionData.items.push(record);
+      saveToLocalStorage();
+    }
+
+    function determineMistakeCode(a, b, userAnswer, regroup) {
+      const correct = a + b;
+      const diff = correct - userAnswer;
+
+      if (userAnswer === correct) return '-';
+      if (diff === 1 || diff === -1) return 'M5';
+      if (!regroup && diff === -10) return 'M9';
+      if (regroup && diff === 10) return 'M10';
+      if (regroup && diff === -10) return 'M15';
+      if (userAnswer.toString().includes(String(correct))) return 'M11';
+
+      const tensA = Math.floor(a / 10);
+      const tensB = Math.floor(b / 10);
+      if (userAnswer === (tensA + tensB)) return 'M9';
+
+      return 'MX';
+    }
+
+    function drawRodsAndBeads(canvasId, tens, ones, animate = false) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+
+      canvas.width = 400 * dpr;
+      canvas.height = 250 * dpr;
+      ctx.scale(dpr, dpr);
+
+      const bgColor = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? '#1a1a1a'
+        : '#F2F7F3';
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, 400, 250);
+
+      const rodColor = '#FF7A45';
+      const beadColor = '#FF7A45';
+      const padding = 20;
+      const rodWidth = 12;
+      const rodHeight = 120;
+      const spacingH = 22;
+
+      // Draw rods (tens)
+      let x = padding;
+      for (let i = 0; i < tens; i++) {
+        ctx.fillStyle = rodColor;
+        ctx.fillRect(x, 40, rodWidth, rodHeight);
+
+        // Divider line
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, 100);
+        ctx.lineTo(x + rodWidth, 100);
+        ctx.stroke();
+
+        x += rodWidth + spacingH;
+      }
+
+      // Draw beads (ones)
+      x = padding;
+      for (let i = 0; i < ones; i++) {
+        ctx.fillStyle = beadColor;
+        ctx.beginPath();
+        ctx.arc(x + 8, 180 + (i % 2) * 20, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        if ((i + 1) % 2 === 0) {
+          x += spacingH;
+        }
+      }
+
+      // Label
+      ctx.fillStyle = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? '#f0f0f0'
+        : '#333';
+      ctx.font = '13px "Noto Sans Thai"';
+      ctx.fillText(`${tens} แท่ง ${ones} เม็ด = ${tens * 10 + ones}`, 20, 25);
+
+      // Animate if needed
+      if (animate && typeof anime !== 'undefined') {
+        anime({
+          targets: canvas,
+          opacity: [0, 1],
+          duration: 500,
+          easing: 'easeInOutQuad'
+        });
       }
     }
 
@@ -550,6 +715,8 @@
       const container = document.getElementById('precheck-content');
       container.innerHTML = '';
 
+      let selectedAnswers = {};
+
       PRECHECK_QUESTIONS.forEach((q, idx) => {
         const div = document.createElement('div');
         div.className = 'question';
@@ -558,13 +725,21 @@
         const optionsDiv = document.createElement('div');
         optionsDiv.className = 'options';
 
-        q.options.forEach(opt => {
+        // Shuffle options
+        const shuffled = [...q.options].sort(() => Math.random() - 0.5);
+
+        shuffled.forEach(opt => {
           const btn = document.createElement('button');
           btn.className = 'option-button';
           btn.textContent = opt.text;
           btn.onclick = () => {
-            recordAnswer('precheck', q.id, opt.value, opt.correct || false);
+            selectedAnswers[q.id] = opt;
+            document.querySelectorAll(`#precheck-content .question`)[idx]
+              .querySelectorAll('.option-button')
+              .forEach(b => b.classList.remove('selected'));
             btn.classList.add('selected');
+
+            recordAnswer('precheck', q.id, null, null, opt.value, !!opt.correct, false);
           };
           optionsDiv.appendChild(btn);
         });
@@ -573,7 +748,6 @@
         container.appendChild(div);
       });
 
-      // Add button to continue
       const continueBtn = document.createElement('button');
       continueBtn.textContent = 'เรียนตามปกติ';
       continueBtn.onclick = () => showSection(1);
@@ -581,167 +755,113 @@
     }
 
     // ============================================
-    // Part 1 Section
+    // Practice Section
     // ============================================
-    function initPart1() {
-      document.getElementById('part1-intro').style.display = 'block';
-      document.getElementById('part1-intro-done').onclick = () => {
-        document.getElementById('part1-intro').style.display = 'none';
-        startPart1Activity('a1');
-      };
-    }
+    function initPracticeNav() {
+      const nav = document.getElementById('set-nav');
+      nav.innerHTML = '';
 
-    function startPart1Activity(activity) {
-      const activities = ['a1', 'a2', 'a3'];
-      activities.forEach(act => {
-        document.getElementById(`activity-${act}`).style.display =
-          act === activity ? 'block' : 'none';
-      });
-
-      if (activity === 'a1') {
-        initA1();
-      } else if (activity === 'a2') {
-        initA2();
-      } else if (activity === 'a3') {
-        initA3();
+      for (let i = 0; i < 9; i++) {
+        const btn = document.createElement('button');
+        btn.className = `set-nav-btn ${i === 0 ? 'active' : ''}`;
+        btn.textContent = `ชุด ${i + 1}`;
+        btn.onclick = () => {
+          APP_STATE.currentSet = i;
+          document.querySelectorAll('.set-nav-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderPracticeSet(i);
+        };
+        nav.appendChild(btn);
       }
     }
 
-    function initA1() {
-      const container = document.getElementById('a1-controls');
-      container.innerHTML = `
-        <p>เป้าหมาย: ต่อให้ได้เลข <strong>47</strong></p>
-        <div class="button-group">
-          <button onclick="addRod()">+ แท่ง</button>
-          <button onclick="removeRod()">- แท่ง</button>
-          <button onclick="addBead()">+ เม็ด</button>
-          <button onclick="removeBead()">- เม็ด</button>
-        </div>
-        <div id="a1-current">ตอนนี้: 0 แท่ง 0 เม็ด = 0</div>
-        <button onclick="checkA1()">เช็ค</button>
-      `;
-      drawA1();
-    }
+    function renderPracticeSet(setIndex) {
+      const startIdx = setIndex * 10;
+      const endIdx = startIdx + 10;
+      const items = PRACTICE_ITEMS.slice(startIdx, endIdx);
 
-    function drawA1() {
-      // Simple placeholder for A1 canvas
-      const canvas = document.getElementById('a1-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#f0f0f0';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#333';
-      ctx.font = '16px Arial';
-      ctx.fillText('[A1 Canvas Placeholder]', 20, 30);
-    }
+      const container = document.getElementById('practice-content');
+      container.innerHTML = `<h3>ชุดที่ ${setIndex + 1}</h3>`;
 
-    function initA2() {
-      drawA2();
-    }
+      items.forEach((item, idx) => {
+        const itemNum = startIdx + idx + 1;
+        const itemId = `PR1-${String(itemNum).padStart(2, '0')}`;
 
-    function drawA2() {
-      const canvas = document.getElementById('a2-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#f0f0f0';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#333';
-      ctx.font = '16px Arial';
-      ctx.fillText('[A2 Canvas Placeholder]', 20, 30);
-    }
-
-    function initA3() {
-      drawA3();
-    }
-
-    function drawA3() {
-      const canvas = document.getElementById('a3-canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#f0f0f0';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#333';
-      ctx.font = '16px Arial';
-      ctx.fillText('[A3 Canvas Placeholder]', 20, 30);
-    }
-
-    // ============================================
-    // Part 2 Section
-    // ============================================
-    function initPart2() {
-      // Placeholder for Part 2 initialization
-    }
-
-    // ============================================
-    // Practice Section
-    // ============================================
-    function initPractice() {
-      const intro = document.getElementById('practice-intro');
-      intro.innerHTML = `
-        <div class="card">
-          <h3>Demonstration: 34 + 25</h3>
-          <p><strong>สิบ:</strong> 30 + 20 = 50</p>
-          <p><strong>หน่วย:</strong> 4 + 5 = 9</p>
-          <p><strong>รวม:</strong> 50 + 9 = 59</p>
-        </div>
-      `;
-
-      const content = document.getElementById('practice-content');
-      content.innerHTML = '<h3>ชุดฝึก 10 ข้อ</h3>';
-
-      PRACTICE_SET_1.forEach((item, idx) => {
-        const q = document.createElement('div');
-        q.className = 'card';
-        q.innerHTML = `
-          <h4>ข้อที่ ${idx + 1}</h4>
-          <p><strong>${item.a} + ${item.b} = ?</strong></p>
-          <input type="number" placeholder="ตอบ" id="practice-${idx}" min="0" max="999">
-          <div id="feedback-${idx}"></div>
+        const div = document.createElement('div');
+        div.className = 'practice-question';
+        div.innerHTML = `
+          <h4>ข้อที่ ${itemNum}: ${item.a} + ${item.b} = ?</h4>
+          <div class="canvas-container">
+            <canvas id="canvas-${itemId}" width="400" height="200"></canvas>
+          </div>
+          <div class="practice-controls">
+            <input type="number" id="answer-${itemId}" placeholder="ตอบ" min="0" max="999" aria-label="กรุณาใส่คำตอบ">
+            <button id="check-${itemId}">เช็ค</button>
+          </div>
+          <div id="feedback-${itemId}" class="feedback"></div>
         `;
-        content.appendChild(q);
+        container.appendChild(div);
 
-        const input = q.querySelector(`#practice-${idx}`);
-        input.onchange = () => {
+        // Draw canvas
+        setTimeout(() => {
+          const tens1 = Math.floor(item.a / 10);
+          const ones1 = item.a % 10;
+          drawRodsAndBeads(`canvas-${itemId}`, tens1, ones1, false);
+        }, 0);
+
+        // Set up interaction
+        const input = document.getElementById(`answer-${itemId}`);
+        const checkBtn = document.getElementById(`check-${itemId}`);
+        const feedback = document.getElementById(`feedback-${itemId}`);
+
+        // Track question start time
+        input.onfocus = () => {
+          if (!sessionStorage.getItem(`q-${itemId}-start`)) {
+            sessionStorage.setItem(`q-${itemId}-start`, Date.now().toString());
+          }
+        };
+
+        checkBtn.onclick = () => {
           const answer = parseInt(input.value, 10);
-          const feedback = q.querySelector(`#feedback-${idx}`);
+          if (isNaN(answer)) {
+            feedback.textContent = 'กรุณาใส่ตัวเลข';
+            feedback.className = 'feedback status-message info';
+            return;
+          }
+
           if (answer === item.answer) {
             feedback.textContent = '✓ ถูก!';
-            feedback.className = 'status-message good';
-            recordAnswer('practice', `Practice-${idx + 1}`, answer, true);
+            feedback.className = 'feedback status-message good';
+            recordAnswer('practice', itemId, item.a, item.b, answer, true, item.regroup);
+            input.disabled = true;
+            checkBtn.disabled = true;
           } else {
-            feedback.textContent = `✗ ตอบ ${answer} ไม่ถูกนะ`;
-            feedback.className = 'status-message info';
-            recordAnswer('practice', `Practice-${idx + 1}`, answer, false);
+            feedback.textContent = `✗ ตอบ ${answer} ไม่ถูกนะ ลองอีกครั้ง`;
+            feedback.className = 'feedback status-message info';
+            recordAnswer('practice', itemId, item.a, item.b, answer, false, item.regroup);
+          }
+        };
+
+        input.onkeypress = (e) => {
+          if (e.key === 'Enter') {
+            checkBtn.click();
           }
         };
       });
     }
 
     // ============================================
-    // Record Answer
-    // ============================================
-    function recordAnswer(section, questionId, answer, isCorrect) {
-      APP_STATE.sessionData.answers.push({
-        timestamp: Date.now(),
-        section,
-        questionId,
-        answer,
-        isCorrect
-      });
-      saveToLocalStorage('lp:addition:05', APP_STATE.sessionData);
-    }
-
-    // ============================================
     // Export Results
     // ============================================
     document.getElementById('export-btn').onclick = () => {
-      const data = loadFromLocalStorage('lp:addition:05', {});
+      const data = loadFromLocalStorage() || APP_STATE.sessionData;
       const exportData = {
-        topic: 'addition',
-        lesson: 'ADD-05',
+        lessonId: LESSON_ID,
+        lessonVersion: LESSON_VERSION,
         exportedAt: new Date().toISOString(),
-        ...data
+        items: data.items || []
       };
+
       const json = JSON.stringify(exportData, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -763,10 +883,13 @@
     // ============================================
     function init() {
       initPrecheck();
-      initPart1();
-      initPart2();
-      initPractice();
+      initPracticeNav();
       showSection(0);
+
+      // Check if we should show export button (for parent view)
+      if (window.location.search.includes('admin')) {
+        document.getElementById('export-btn').style.display = 'block';
+      }
     }
 
     document.addEventListener('DOMContentLoaded', init);
