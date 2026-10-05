@@ -366,7 +366,7 @@
     // ============================================
     const LESSON_ID = 'ADD-05';
     const LESSON_VERSION = 1;
-    const STORAGE_KEY = 'lp:addition:05';
+    const GOOGLE_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyzOTN5FfhWm4Q34Y1aydpwu53YIjftE3xXowo4QQc1Rmmt2GycrFPpJaMWtY-L-2ny/exec';
 
     // ============================================
     // Practice Data (90 items from Lesson Spec table 6.3)
@@ -549,12 +549,7 @@
     const APP_STATE = {
       currentSection: 0,
       currentSet: 0,
-      sessionStartTime: new Date().toISOString(),
-      sessionData: {
-        lessonId: LESSON_ID,
-        lessonVersion: LESSON_VERSION,
-        items: []
-      }
+      sessionStartTime: new Date().toISOString()
     };
 
     const SECTIONS = ['precheck', 'practice'];
@@ -577,24 +572,6 @@
     function updateNavButtons() {
       document.getElementById('prev-btn').disabled = APP_STATE.currentSection === 0;
       document.getElementById('next-btn').disabled = APP_STATE.currentSection === SECTIONS.length - 1;
-    }
-
-    function saveToLocalStorage() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(APP_STATE.sessionData));
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
-      }
-    }
-
-    function loadFromLocalStorage() {
-      try {
-        const item = localStorage.getItem(STORAGE_KEY);
-        return item ? JSON.parse(item) : null;
-      } catch (e) {
-        console.error('Failed to load from localStorage:', e);
-        return null;
-      }
     }
 
     function recordAnswer(itemType, itemId, a, b, userAnswer, isCorrect, regroup) {
@@ -620,28 +597,18 @@
         attempts: 1
       };
 
-      APP_STATE.sessionData.items.push(record);
-      saveToLocalStorage();
-
       // Send to Google Sheet via Apps Script webhook
       sendToGoogleSheet(record);
     }
 
     function sendToGoogleSheet(record) {
-      const WEBHOOK_URL = window.GOOGLE_SHEETS_WEBHOOK_URL || localStorage.getItem('GOOGLE_SHEETS_WEBHOOK_URL');
-
-      if (!WEBHOOK_URL) {
-        console.warn('Google Sheets webhook URL not configured. Data saved locally only.');
-        return;
-      }
-
       const payload = {
         lessonId: LESSON_ID,
         lessonVersion: LESSON_VERSION,
         ...record
       };
 
-      fetch(WEBHOOK_URL, {
+      fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: {
@@ -650,7 +617,6 @@
         body: JSON.stringify(payload)
       }).catch(err => {
         console.error('Failed to send data to Google Sheet:', err);
-        // Data is still saved locally, so no error shown to user
       });
     }
 
@@ -891,25 +857,11 @@
     }
 
     // ============================================
-    // Export Results
+    // Export Results (disabled - data goes to Google Sheet)
     // ============================================
+    // Export functionality removed: all data is sent to Google Sheet via webhook
     document.getElementById('export-btn').onclick = () => {
-      const data = loadFromLocalStorage() || APP_STATE.sessionData;
-      const exportData = {
-        lessonId: LESSON_ID,
-        lessonVersion: LESSON_VERSION,
-        exportedAt: new Date().toISOString(),
-        items: data.items || []
-      };
-
-      const json = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ADD-05-results-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      alert('ข้อมูลส่งไป Google Sheet โดยอัตโนมัติแล้ว');
     };
 
     // ============================================
