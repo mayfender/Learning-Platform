@@ -598,8 +598,13 @@
     }
 
     function recordAnswer(itemType, itemId, a, b, userAnswer, isCorrect, regroup) {
-      const silentTimeStart = sessionStorage.getItem(`q-${itemId}-start`);
-      const silentTime = silentTimeStart ? Math.round((Date.now() - parseInt(silentTimeStart)) / 1000) : 0;
+      let silentTime = 0;
+      try {
+        const silentTimeStart = sessionStorage.getItem(`q-${itemId}-start`);
+        silentTime = silentTimeStart ? Math.round((Date.now() - parseInt(silentTimeStart)) / 1000) : 0;
+      } catch (e) {
+        // Storage disabled (e.g., data: URLs)
+      }
 
       const record = {
         itemId: itemId,
@@ -816,8 +821,12 @@
 
         // Track question start time
         input.onfocus = () => {
-          if (!sessionStorage.getItem(`q-${itemId}-start`)) {
-            sessionStorage.setItem(`q-${itemId}-start`, Date.now().toString());
+          try {
+            if (!sessionStorage.getItem(`q-${itemId}-start`)) {
+              sessionStorage.setItem(`q-${itemId}-start`, Date.now().toString());
+            }
+          } catch (e) {
+            // Storage disabled (e.g., data: URLs)
           }
         };
 
