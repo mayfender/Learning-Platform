@@ -1,6 +1,6 @@
 # Project Status
 
-- อัปเดตล่าสุด: 2026-10-02
+- อัปเดตล่าสุด: 2026-10-05
 - เว็บ: https://mayfender.github.io/Learning-Platform/
 - Repo: https://github.com/mayfender/Learning-Platform
 
@@ -11,6 +11,7 @@
 **เพิ่งเสร็จ:** ADD-05 "แยกสิบ แยกหน่วย" (2026-10-05)
 - ✅ Learning Designer เขียน Lesson Spec ครบ (90 ข้อ, ชุด 1-9, ตรวจเฉลยแล้ว)
 - ✅ Builder สร้าง HTML complete (Canvas 2D วาด แท่ง+เม็ด, Anime.js จาก CDN, localStorage ตาม §10, 90 ข้อ ทั้ง 9 ชุด, set navigation, JSON export)
+- ✅ Push เข้า main (commit b1be493) lint ผ่าน CI รันเรื่องดำเนิน
 - 🔄 ถัดไป: พ่อทดสอบหน้า → ลูกเรียน → ส่งออกผล JSON → Designer วิเคราะห์
 
 ## Milestones
